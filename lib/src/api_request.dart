@@ -22,12 +22,17 @@ abstract class RequestAction<T, R extends ApiRequest> {
     _dio.options.headers.addAll({"Accept": "application/json"});
     if (ApiRequestOptions.instance != null) {
       _dio.options.baseUrl = ApiRequestOptions.instance!.baseUrl;
-
-      _dio.interceptors.add(InterceptorsWrapper(onError: (e, __) {
-        if (e.response?.statusCode == 401) {
-          ApiRequestOptions.instance?.unauthenticated!();
-        }
-      }));
+      if (ApiRequestOptions.instance?.unauthenticated != null) {
+        _dio.interceptors.add(InterceptorsWrapper(onError: (e, __) {
+          if (e.response?.statusCode == 401) {
+            ApiRequestOptions.instance?.unauthenticated!();
+          }
+        }));
+      }
+      if (ApiRequestOptions.instance?.defaultQueryParameters != null) {
+        _dio.options.queryParameters =
+            ApiRequestOptions.instance!.defaultQueryParameters;
+      }
       if (authRequired) {
         addToken();
       }
