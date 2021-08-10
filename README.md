@@ -57,3 +57,62 @@ class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
   String get path => 'posts';
 }
 ```
+## Call Request Action
+``` dart
+PostsResponse response = await PostsRequestAction().execute();
+```
+
+## ApiRequest
+when need to send data with this request create *ApiRequest*
+``` dart
+class LoginApiRequest extends ApiRequest{
+  final String email;
+  final String password;
+  
+  LoginApiRequest({required this.email,required this.password});
+
+  @override
+  Map<String, dynamic> toMap() => {
+    'email': this.email, 'password': this.password
+  };
+}
+```
+## Use ApiRequest with Action
+``` dart
+class AuthResponse{
+  final int? status;
+  final String? message;
+  final String? accessToken;
+
+  AuthResponse({this.status, this.message, this.accessToken});
+
+  factory AuthResponse.fromMap(Map<String, dynamic> map) {
+    return AuthResponse(
+      status: map['status'] as int,
+      message: map['message'] as String,
+      accessToken: map['accessToken'] as String,
+    );
+  }
+}
+
+class LoginRequestAction extends RequestAction<AuthResponse, LoginApiRequest>{
+  @override
+  bool get authRequired => false;
+
+  @override
+  Future<AuthResponse> execute({LoginApiRequest? request}) async {
+    return AuthResponse.fromMap(await post(request));
+  }
+
+  @override
+  String get path => 'login';
+  
+}
+```
+## Call Request Action
+``` dart
+AuthResponse response = await LoginRequestAction().execute(LoginApiRequest(
+email: 'test@test.com',
+password: '123123'
+));
+```
