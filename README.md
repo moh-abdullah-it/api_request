@@ -1,12 +1,12 @@
 # Api Request
 
-Api Request is an how to use aip request action in flutter with dio client;
+Api Request is an how to use api request action in flutter with dio client;
 
 ## Adding Api Request to your project
 
 In your project's `pubspec.yaml` file,
 
-* Add *api_request*'s latest version to your *dependencies*.
+* Add *api_request* latest version to your *dependencies*.
 
 ```yaml
 # pubspec.yaml
@@ -38,3 +38,22 @@ void main() {
 
 ```
 * and from any pace of your code you can change config
+
+## Request Action
+that is action  will execute to call api
+``` dart
+class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
+  @override
+  bool get authRequired => false; // or true if this action need to auth we will send access_token
+
+    // one method for this action
+  @override
+  Future<PostsResponse> execute({ApiRequest? request}) async {
+    return PostsResponse.fromList(await get());
+  }
+  
+  // path for this api request
+  @override
+  String get path => 'posts';
+}
+```
