@@ -58,11 +58,27 @@ class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
   String get path => 'posts';
 }
 
+String yourMethodToGetToken() {
+  return '1|hfkf9rfynfuynyf89erfynrfyepiruyfp';
+}
+
+Future<String> yourAysncMethodToGetToken() async {
+  return '1|hfkf9rfynfuynyf89erfynrfyepiruyfp';
+}
+
 void main() {
   //config api requests;
   ApiRequestOptions.instance?.config(
-    baseUrl: 'https://jsonplaceholder.typicode.com/',
-  );
+      // set base url for all request
+      baseUrl: 'https://jsonplaceholder.typicode.com/',
+      // set token as string api request action will with is if auth is required
+      token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
+      // we will call this method to get token in run time -- method must be return string
+      getToken: () => yourMethodToGetToken(),
+      // we will call this method to get token in run time -- method must be return Future<string>
+      getAsyncToken: () => yourAysncMethodToGetToken(),
+      // send default query params for all requests
+      defaultQueryParameters: {'locale': 'ar'});
   runApp(MyApp());
 }
 
