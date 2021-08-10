@@ -56,22 +56,22 @@ abstract class RequestAction<T, R extends ApiRequest> {
     }
   }
 
-  Future<Map<String, dynamic>> get([R? request]) async {
+  Future<dynamic> get([R? request]) async {
     var response = await dio.get(path, queryParameters: request?.toMap() ?? {});
     return response.data;
   }
 
-  Future<Map<String, dynamic>> post([R? request]) async {
+  Future<dynamic> post([R? request]) async {
     var response = await dio.post(path, data: request?.toMap() ?? {});
     return response.data;
   }
 
-  Future<Map<String, dynamic>> put([R? request]) async {
+  Future<dynamic> put([R? request]) async {
     var response = await dio.put(path, data: request?.toMap() ?? {});
     return response.data;
   }
 
-  Future<Map<String, dynamic>> delete([R? request]) async {
+  Future<dynamic> delete([R? request]) async {
     var response = await dio.delete(path, data: request?.toMap() ?? {});
     return response.data;
   }

@@ -27,7 +27,7 @@ class ApiRequestOptions {
   /// get access token use async callback function
   GetAsyncOption<String?>? getAsyncToken;
 
-  late Map<String, dynamic> defaultQueryParameters;
+  late Map<String, dynamic> defaultQueryParameters = {};
 
   void config(
       {String? baseUrl,
@@ -35,7 +35,7 @@ class ApiRequestOptions {
       GetOption<String?>? getToken,
       GetAsyncOption<String?>? getAsyncToken,
       GetOption? unauthenticated,
-      Map<String, Object>? defaultQueryParameters}) async {
+      Map<String, dynamic>? defaultQueryParameters}) async {
     this.baseUrl = baseUrl ?? this.baseUrl;
     this.token = token ?? this.token;
     this.getToken = getToken ?? this.getToken;
