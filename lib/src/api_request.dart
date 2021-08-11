@@ -9,9 +9,11 @@ abstract class ApiRequest {
 
 abstract class RequestAction<T, R extends ApiRequest> {
   String get path;
+  late String _dynamicPath;
   Future<T> execute({R? request});
   bool get authRequired;
   String? _token;
+  Map<String, dynamic> _dataMap = {};
 
   final Dio _dio = Dio();
 
@@ -57,22 +59,55 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   Future<dynamic> get([R? request]) async {
-    var response = await dio.get(path, queryParameters: request?.toMap() ?? {});
+    var response = await handleRequest(request).dio.get(
+          _dynamicPath,
+          queryParameters: _dataMap,
+        );
     return response.data;
   }
 
   Future<dynamic> post([R? request]) async {
-    var response = await dio.post(path, data: request?.toMap() ?? {});
+    var response = await handleRequest(request).dio.post(
+          _dynamicPath,
+          data: _dataMap,
+        );
     return response.data;
   }
 
   Future<dynamic> put([R? request]) async {
-    var response = await dio.put(path, data: request?.toMap() ?? {});
+    var response = await handleRequest(request).dio.put(
+          _dynamicPath,
+          data: _dataMap,
+        );
     return response.data;
   }
 
   Future<dynamic> delete([R? request]) async {
-    var response = await dio.delete(path, data: request?.toMap() ?? {});
+    var response = await handleRequest(request).dio.delete(
+          _dynamicPath,
+          data: _dataMap,
+        );
     return response.data;
+  }
+
+  RequestAction handleRequest(R? request) {
+    Map<String, dynamic> newData =
+        handleDynamicPathWithData(path, request?.toMap() ?? {});
+    this._dynamicPath = newData['path'];
+    this._dataMap = newData['data'];
+    return this;
+  }
+
+  Map<String, dynamic> handleDynamicPathWithData(
+      String path, Map<String, dynamic> map) {
+    Map<String, dynamic> newData = {};
+    map.keys.forEach((key) {
+      if (path.contains('{$key}')) {
+        path = path.replaceFirst('{$key}', map[key].toString());
+      } else {
+        newData[key] = map[key];
+      }
+    });
+    return {'path': path, 'data': newData};
   }
 }

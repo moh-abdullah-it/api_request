@@ -58,6 +58,28 @@ class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
   String get path => 'posts';
 }
 
+class PostApiRequest extends ApiRequest {
+  final int? id;
+  PostApiRequest({this.id});
+  @override
+  Map<String, dynamic> toMap() => {
+        'id': this.id,
+      };
+}
+
+class PostRequestAction extends RequestAction<Post, PostApiRequest> {
+  @override
+  bool get authRequired => false;
+
+  @override
+  Future<Post> execute({PostApiRequest? request}) async {
+    return Post.fromMap(await get(request));
+  }
+
+  @override
+  String get path => 'posts/{id}';
+}
+
 String yourMethodToGetToken() {
   return '1|hfkf9rfynfuynyf89erfynrfyepiruyfp';
 }
@@ -121,6 +143,13 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  _getPostData(int? id) async {
+    Post post = await PostRequestAction().execute(
+      request: PostApiRequest(id: id),
+    );
+    print('Post $post');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,6 +162,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 itemCount: posts?.length,
                 itemBuilder: (_, index) => ListTile(
                       title: Text(posts?[index].title ?? ''),
+                      onTap: () => _getPostData(posts?[index].id),
                     ))
             : CircularProgressIndicator(),
       ), // This trailing comma makes auto-formatting nicer for build methods.

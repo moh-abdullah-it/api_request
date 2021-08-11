@@ -116,3 +116,29 @@ email: 'test@test.com',
 password: '123123'
 ));
 ```
+## Dynamic Path
+ * example to send data in path you need to add vars in path like this */{var}/*
+ * and in your request data add var name with your value like this:
+```dart
+class PostApiRequest extends ApiRequest {
+  final int? id;
+  PostApiRequest({this.id});
+  @override
+  Map<String, dynamic> toMap() => {
+        'id': this.id,
+      };
+}
+
+class PostRequestAction extends RequestAction<Post, PostApiRequest> {
+  @override
+  bool get authRequired => false;
+
+  @override
+  Future<Post> execute({PostApiRequest? request}) async {
+    return Post.fromMap(await get(request));
+  }
+
+  @override
+  String get path => 'posts/{id}';
+}
+```
