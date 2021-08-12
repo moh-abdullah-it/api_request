@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 
 import 'api_request_options.dart';
 
-abstract class ApiRequest {
+enum ContentDataType { formData, bodyData }
+mixin ApiRequest {
+  ContentDataType? get contentDataType => null;
   Map<String, dynamic> toMap();
 }
 
@@ -13,7 +15,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   Future<T> execute({R? request});
   bool get authRequired;
   String? _token;
-  Map<String, dynamic> _dataMap = {};
+  var _dataMap;
 
   final Dio _dio = Dio();
 
@@ -95,6 +97,11 @@ abstract class RequestAction<T, R extends ApiRequest> {
         handleDynamicPathWithData(path, request?.toMap() ?? {});
     this._dynamicPath = newData['path'];
     this._dataMap = newData['data'];
+    if (request?.contentDataType == ContentDataType.formData) {
+      this._dataMap = FormData.fromMap(newData['data']);
+    } else {
+      this._dataMap = newData['data'];
+    }
     return this;
   }
 

@@ -1,3 +1,7 @@
+## 0.0.5
+* add contentDataType for request
+* convert `ApiRequest` to `mixin`
+
 ## 0.0.4
 * add dynamic path
   

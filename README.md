@@ -64,8 +64,8 @@ PostsResponse response = await PostsRequestAction().execute();
 
 ## ApiRequest
 when need to send data with this request create *ApiRequest*
-``` dart
-class LoginApiRequest extends ApiRequest{
+```dart
+class LoginApiRequest with ApiRequest{
   final String email;
   final String password;
   
@@ -78,7 +78,7 @@ class LoginApiRequest extends ApiRequest{
 }
 ```
 ## Use ApiRequest with Action
-``` dart
+```dart
 class AuthResponse{
   final int? status;
   final String? message;
@@ -110,17 +110,17 @@ class LoginRequestAction extends RequestAction<AuthResponse, LoginApiRequest>{
 }
 ```
 ## Call Request Action
-``` dart
-AuthResponse response = await LoginRequestAction().execute(LoginApiRequest(
-email: 'test@test.com',
-password: '123123'
-));
+```dart
+    AuthResponse response = await LoginRequestAction().execute(LoginApiRequest(
+    email: 'test@test.com',
+    password: '123123'
+    ));
 ```
 ## Dynamic Path
  * example to send data in path you need to add vars in path like this */{var}/*
  * and in your request data add var name with your value like this:
 ```dart
-class PostApiRequest extends ApiRequest {
+class PostApiRequest with ApiRequest {
   final int? id;
   PostApiRequest({this.id});
   @override

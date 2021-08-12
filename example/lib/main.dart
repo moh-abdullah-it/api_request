@@ -58,13 +58,15 @@ class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
   String get path => 'posts';
 }
 
-class PostApiRequest extends ApiRequest {
+class PostApiRequest with ApiRequest {
   final int? id;
   PostApiRequest({this.id});
   @override
   Map<String, dynamic> toMap() => {
         'id': this.id,
       };
+  @override
+  ContentDataType? get contentDataType => ContentDataType.formData;
 }
 
 class PostRequestAction extends RequestAction<Post, PostApiRequest> {
