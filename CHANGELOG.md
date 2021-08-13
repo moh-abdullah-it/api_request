@@ -1,3 +1,6 @@
+## 0.0.6
+* add Token to Header by Interceptors
+
 ## 0.0.5
 * add contentDataType for request
 * convert `ApiRequest` to `mixin`

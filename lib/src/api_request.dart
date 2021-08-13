@@ -38,26 +38,28 @@ abstract class RequestAction<T, R extends ApiRequest> {
             ApiRequestOptions.instance!.defaultQueryParameters;
       }
       if (authRequired) {
-        addToken();
+        _dio.interceptors
+            .add(InterceptorsWrapper(onRequest: (options, handler) async {
+          _token = await addToken();
+          options.headers.addAll({"Authorization": "Bearer ${_token}"});
+          handler.next(options);
+        }));
       }
     }
   }
   Dio get dio => _dio;
 
-  addToken() async {
+  Future<String?> addToken() async {
     if (ApiRequestOptions.instance?.token != null) {
-      _token = ApiRequestOptions.instance?.token;
+      return ApiRequestOptions.instance?.token;
     }
     if (ApiRequestOptions.instance?.getToken != null) {
-      _token = ApiRequestOptions.instance?.getToken!();
+      return ApiRequestOptions.instance?.getToken!();
     }
     if (ApiRequestOptions.instance?.getAsyncToken != null) {
-      _token = await ApiRequestOptions.instance?.getAsyncToken!();
+      return await ApiRequestOptions.instance?.getAsyncToken!();
     }
-    if (_token != null) {
-      _dio.options.headers.addAll(
-          {"Authorization": "Bearer ${ApiRequestOptions.instance?.token}"});
-    }
+    return null;
   }
 
   Future<dynamic> get([R? request]) async {
