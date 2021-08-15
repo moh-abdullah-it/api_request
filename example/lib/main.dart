@@ -46,7 +46,13 @@ class PostsResponse {
 }
 
 class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
-  PostsRequestAction() : super();
+  PostsRequestAction() : super(null);
+
+  @override
+  void onError(ApiRequestError error) {
+    print("Hi I Error On ${error.requestOptions?.uri.toString()}");
+    super.onError(error);
+  }
 
   @override
   bool get authRequired => false;
@@ -78,7 +84,13 @@ class PostRequestAction extends RequestAction<Post, PostApiRequest> {
   bool get authRequired => false;
 
   @override
-  String get path => 'posts/{id}';
+  String get path => 'postskjhlkjhlkh/{id}';
+
+  @override
+  void onError(ApiRequestError error) {
+    print("Hi I Error On ${error.requestOptions?.uri.toString()}");
+    super.onError(error);
+  }
 
   @override
   RequestMethod get method => RequestMethod.GET;
@@ -151,8 +163,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getPostData(int? id) async {
-    Post post = await PostRequestAction(PostApiRequest(id: id)).execute();
-    print('Post $post');
+    PostRequestAction action = PostRequestAction(PostApiRequest(id: id));
+    action.onChange(onSuccess: (response) {
+      print('response Post $response');
+    }, onError: (error) {
+      if (error is ApiRequestError) {
+        print("response Error ${error.requestOptions?.uri.toString()}");
+      }
+    });
+    action.onQueue();
   }
 
   @override

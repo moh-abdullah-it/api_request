@@ -32,25 +32,21 @@ class RequestClient extends DioMixin implements Dio {
     options.headers.addAll({Headers.acceptHeader: Headers.jsonContentType});
     if (ApiRequestOptions.instance != null) {
       if (ApiRequestOptions.instance?.unauthenticated != null) {
-        _addInterceptorOnce(UnauthenticatedInterceptor());
+        addInterceptorOnce(UnauthenticatedInterceptor());
       }
     }
   }
 
   configAuth(bool authRequired) {
     bool hasInterceptor = interceptors.contains(TokenInterceptor());
-    print(
-        "configAuth authRequired $authRequired hasInterceptor $hasInterceptor");
     if (!authRequired && hasInterceptor) {
       interceptors.remove(TokenInterceptor());
-      print("configAuth interceptors after remove ${interceptors.length}");
     } else if (authRequired) {
-      _addInterceptorOnce(TokenInterceptor());
-      print("configAuth interceptors after add ${interceptors.length}");
+      addInterceptorOnce(TokenInterceptor());
     }
   }
 
-  _addInterceptorOnce(Interceptor interceptor) {
+  addInterceptorOnce(Interceptor interceptor) {
     if (!interceptors.contains(interceptor)) {
       interceptors.add(interceptor);
     }

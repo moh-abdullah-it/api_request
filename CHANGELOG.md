@@ -1,3 +1,10 @@
+## 0.1.0
+* refactor `RequestAction`
+* add `onQueue`
+* listen to action `onInit`, `onStart`, `onSuccess`, `onError`
+* add `ApiRequestError`
+* add `onChange` to subscribe to stream
+
 ## 0.0.6
 * add Token to Header by Interceptors
 
