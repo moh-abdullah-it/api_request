@@ -1,6 +1,12 @@
 # Api Request
 
-Api Request is an how to use api request action in flutter with dio client;
+⚡ Classes that take care of one specific task.
+
+This package introduces a new way of organising the logic of your flutter api applications
+by focusing on the actions your api provide.
+
+Instead of creating service for all api's, it allows you to create a dart class that handles a specific api request
+and execute that class.
 
 ## Adding Api Request to your project
 
@@ -15,6 +21,7 @@ dependencies:
   api_request: ^<latest version>
 
 ```
+
 ## Config
 ```dart
 import 'package:api_request/api_request.dart';
@@ -41,29 +48,32 @@ void main() {
 
 ## Request Action
 that is action  will execute to call api
-``` dart
+```dart
 class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
-  @override
-  bool get authRequired => false; // or true if this action need to auth we will send access_token
+  PostsRequestAction() : super();
 
-    // one method for this action
   @override
-  Future<PostsResponse> execute({ApiRequest? request}) async {
-    return PostsResponse.fromList(await get());
-  }
-  
-  // path for this api request
+  bool get authRequired => false;
+
   @override
   String get path => 'posts';
+
+  @override
+  RequestMethod get method => RequestMethod.GET;
+
+  @override
+  ResponseBuilder<PostsResponse> get responseBuilder =>
+          (list) => PostsResponse.fromList(list);
 }
 ```
-## Call Request Action
-``` dart
-PostsResponse response = await PostsRequestAction().execute();
+
+## Call PostsRequestAction
+```dart
+  PostsResponse response = await PostsRequestAction().execute();
 ```
 
 ## ApiRequest
-when need to send data with this request create *ApiRequest*
+when need to send data with this request mix your class with *ApiRequest*
 ```dart
 class LoginApiRequest with ApiRequest{
   final String email;
@@ -77,6 +87,7 @@ class LoginApiRequest with ApiRequest{
   };
 }
 ```
+
 ## Use ApiRequest with Action
 ```dart
 class AuthResponse{
@@ -96,26 +107,33 @@ class AuthResponse{
 }
 
 class LoginRequestAction extends RequestAction<AuthResponse, LoginApiRequest>{
+  
+  LoginRequestAction(LoginApiRequest request) : super(request);
+  
   @override
   bool get authRequired => false;
 
   @override
-  Future<AuthResponse> execute({LoginApiRequest? request}) async {
-    return AuthResponse.fromMap(await post(request));
-  }
+  String get path => 'login';
 
   @override
-  String get path => 'login';
-  
+  RequestMethod get method => RequestMethod.POST;
+
+  @override
+  ResponseBuilder<AuthResponse> get responseBuilder => (map) => AuthResponse.fromMap(map);
+
 }
 ```
-## Call Request Action
+
+## Call LoginRequestAction Action
 ```dart
-    AuthResponse response = await LoginRequestAction().execute(LoginApiRequest(
+  LoginApiRequest request = LoginApiRequest(
     email: 'test@test.com',
     password: '123123'
-    ));
+  );
+  AuthResponse response = await LoginRequestAction(request).execute();
 ```
+
 ## Dynamic Path
  * example to send data in path you need to add vars in path like this */{var}/*
  * and in your request data add var name with your value like this:
@@ -130,15 +148,18 @@ class PostApiRequest with ApiRequest {
 }
 
 class PostRequestAction extends RequestAction<Post, PostApiRequest> {
+  PostRequestAction(PostApiRequest request) : super(request);
+
   @override
   bool get authRequired => false;
 
   @override
-  Future<Post> execute({PostApiRequest? request}) async {
-    return Post.fromMap(await get(request));
-  }
+  String get path => 'posts/{id}';
 
   @override
-  String get path => 'posts/{id}';
+  RequestMethod get method => RequestMethod.GET;
+
+  @override
+  ResponseBuilder<Post> get responseBuilder => (map) => Post.fromMap(map);
 }
 ```

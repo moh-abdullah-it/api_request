@@ -46,16 +46,20 @@ class PostsResponse {
 }
 
 class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
+  PostsRequestAction() : super();
+
   @override
   bool get authRequired => false;
 
   @override
-  Future<PostsResponse> execute({ApiRequest? request}) async {
-    return PostsResponse.fromList(await get());
-  }
+  String get path => 'posts';
 
   @override
-  String get path => 'posts';
+  RequestMethod get method => RequestMethod.GET;
+
+  @override
+  ResponseBuilder<PostsResponse> get responseBuilder =>
+      (list) => PostsResponse.fromList(list);
 }
 
 class PostApiRequest with ApiRequest {
@@ -65,21 +69,22 @@ class PostApiRequest with ApiRequest {
   Map<String, dynamic> toMap() => {
         'id': this.id,
       };
-  @override
-  ContentDataType? get contentDataType => ContentDataType.formData;
 }
 
 class PostRequestAction extends RequestAction<Post, PostApiRequest> {
+  PostRequestAction(PostApiRequest request) : super(request);
+
   @override
   bool get authRequired => false;
 
   @override
-  Future<Post> execute({PostApiRequest? request}) async {
-    return Post.fromMap(await get(request));
-  }
+  String get path => 'posts/{id}';
 
   @override
-  String get path => 'posts/{id}';
+  RequestMethod get method => RequestMethod.GET;
+
+  @override
+  ResponseBuilder<Post> get responseBuilder => (map) => Post.fromMap(map);
 }
 
 String yourMethodToGetToken() {
@@ -146,9 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getPostData(int? id) async {
-    Post post = await PostRequestAction().execute(
-      request: PostApiRequest(id: id),
-    );
+    Post post = await PostRequestAction(PostApiRequest(id: id)).execute();
     print('Post $post');
   }
 
