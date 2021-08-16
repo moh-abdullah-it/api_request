@@ -1,7 +1,9 @@
 import 'package:api_request/src/interceptors/token_interceptor.dart';
 import 'package:api_request/src/interceptors/unauthenticated_interceptor.dart';
 import 'package:dio/adapter.dart';
+import 'package:dio/adapter_browser.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/foundation.dart';
 
 import '../api_request.dart';
@@ -25,7 +27,8 @@ class RequestClient extends DioMixin implements Dio {
       baseUrl: ApiRequestOptions.instance!.baseUrl,
       queryParameters: ApiRequestOptions.instance?.defaultQueryParameters ?? {},
     );
-    httpClientAdapter = DefaultHttpClientAdapter();
+    httpClientAdapter =
+        kIsWeb ? BrowserHttpClientAdapter() : DefaultHttpClientAdapter();
     if (!kReleaseMode) {
       interceptors.add(LogInterceptor(responseBody: true));
     }

@@ -84,7 +84,7 @@ class PostRequestAction extends RequestAction<Post, PostApiRequest> {
   bool get authRequired => false;
 
   @override
-  String get path => 'postskjhlkjhlkh/{id}';
+  String get path => 'posts/{id}';
 
   @override
   void onError(ApiRequestError error) {

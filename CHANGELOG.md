@@ -1,3 +1,6 @@
+## 0.1.1
+* fix support web
+
 ## 0.1.0
 * refactor `RequestAction`
 * add `onQueue`
