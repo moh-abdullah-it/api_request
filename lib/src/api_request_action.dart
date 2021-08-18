@@ -14,9 +14,10 @@ typedef ResponseBuilder<T> = T Function(dynamic);
 abstract class RequestAction<T, R extends ApiRequest> {
   final RequestClient? _requestClient = RequestClient.instance;
   final StreamController<T> _streamController = StreamController<T>();
+  Stream<T> get stream => _streamController.stream;
   R? request;
 
-  bool get authRequired;
+  bool get authRequired => false;
 
   String get path;
 
@@ -33,19 +34,23 @@ abstract class RequestAction<T, R extends ApiRequest> {
   void onError(ApiRequestError error) {
     if (!_streamController.isClosed) {
       _streamController.sink.addError(error);
-      _streamController.close();
+      this.dispose();
     }
   }
 
   void onSuccess(T response) {
-    _streamController.sink.add(response);
-    _streamController.close();
+    if (!_streamController.isClosed) {
+      _streamController.sink.add(response);
+      this.dispose();
+    }
   }
 
   StreamSubscription<T> onChange(
-      {Function(T response)? onSuccess, Function(Object error)? onError}) {
-    return _streamController.stream
-        .listen(onSuccess, cancelOnError: true, onError: onError);
+      {Function(T response)? onSuccess,
+      Function()? onDone,
+      Function(Object error)? onError}) {
+    return stream.listen(onSuccess,
+        cancelOnError: true, onError: onError, onDone: onDone);
   }
 
   Future execute() async {
@@ -92,11 +97,11 @@ abstract class RequestAction<T, R extends ApiRequest> {
     this.onInit();
     _requestClient?.configAuth(authRequired);
     handleRequest(this.request);
-    _requestClient?.addInterceptorOnce(ErrorInterceptor(this, this.onError));
+    _requestClient?.addInterceptorOnce(_errorInterceptor());
   }
 
   Future<dynamic> get() async {
-    var response = await _requestClient?.get(
+    var response = await _requestClient?.dio.get(
       _dynamicPath,
       queryParameters: _dataMap,
     );
@@ -104,7 +109,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   Future<dynamic> post() async {
-    var response = await _requestClient?.post(
+    var response = await _requestClient?.dio.post(
       _dynamicPath,
       data: _dataMap,
     );
@@ -112,7 +117,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   Future<dynamic> put() async {
-    var response = await _requestClient?.put(
+    var response = await _requestClient?.dio.put(
       _dynamicPath,
       data: _dataMap,
     );
@@ -120,7 +125,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   Future<dynamic> delete() async {
-    var response = await _requestClient?.delete(
+    var response = await _requestClient?.dio.delete(
       _dynamicPath,
       data: _dataMap,
     );
@@ -152,5 +157,16 @@ abstract class RequestAction<T, R extends ApiRequest> {
       }
     });
     return {'path': path, 'data': newData};
+  }
+
+  ErrorInterceptor _errorInterceptor() {
+    return ErrorInterceptor(this, this.onError);
+  }
+
+  void dispose() {
+    if (!_streamController.isClosed) {
+      _streamController.close();
+    }
+    _requestClient?.removeInterceptor(_errorInterceptor());
   }
 }

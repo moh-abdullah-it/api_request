@@ -1,3 +1,13 @@
+## 0.5.0
+* you can access stream if action run onQueue
+* fix run package in web
+* use dio instance
+* dispose action after success or error
+
+## 0.1.2
+* fix run in mobile
+* reverse support web
+
 ## 0.1.1
 * fix support web
 

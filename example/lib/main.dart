@@ -87,6 +87,24 @@ class PostRequestAction extends RequestAction<Post, PostApiRequest> {
   String get path => 'posts/{id}';
 
   @override
+  void onInit() {
+    // TODO: implement onInit
+    super.onInit();
+  }
+
+  @override
+  void onStart() {
+    // TODO: implement onStart
+    super.onStart();
+  }
+
+  @override
+  void onSuccess(Post response) {
+    // TODO: implement onSuccess
+    super.onSuccess(response);
+  }
+
+  @override
   void onError(ApiRequestError error) {
     print("Hi I Error On ${error.requestOptions?.uri.toString()}");
     super.onError(error);

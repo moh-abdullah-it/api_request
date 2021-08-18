@@ -1,15 +1,15 @@
 import 'package:api_request/src/interceptors/token_interceptor.dart';
 import 'package:api_request/src/interceptors/unauthenticated_interceptor.dart';
-import 'package:dio/adapter.dart';
-import 'package:dio/adapter_browser.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/foundation.dart';
 
 import '../api_request.dart';
 
-class RequestClient extends DioMixin implements Dio {
+class RequestClient {
   static RequestClient? _instance;
+  final Dio _dio = Dio();
+
+  Dio get dio => _dio;
 
   RequestClient._() {
     intConfig();
@@ -23,16 +23,15 @@ class RequestClient extends DioMixin implements Dio {
   }
 
   intConfig() {
-    options = BaseOptions(
+    _dio.options = BaseOptions(
       baseUrl: ApiRequestOptions.instance!.baseUrl,
       queryParameters: ApiRequestOptions.instance?.defaultQueryParameters ?? {},
     );
-    httpClientAdapter =
-        kIsWeb ? BrowserHttpClientAdapter() : DefaultHttpClientAdapter();
     if (!kReleaseMode) {
-      interceptors.add(LogInterceptor(responseBody: true));
+      _dio.interceptors.add(LogInterceptor(responseBody: true));
     }
-    options.headers.addAll({Headers.acceptHeader: Headers.jsonContentType});
+    _dio.options.headers
+        .addAll({Headers.acceptHeader: Headers.jsonContentType});
     if (ApiRequestOptions.instance != null) {
       if (ApiRequestOptions.instance?.unauthenticated != null) {
         addInterceptorOnce(UnauthenticatedInterceptor());
@@ -41,17 +40,23 @@ class RequestClient extends DioMixin implements Dio {
   }
 
   configAuth(bool authRequired) {
-    bool hasInterceptor = interceptors.contains(TokenInterceptor());
+    bool hasInterceptor = _dio.interceptors.contains(TokenInterceptor());
     if (!authRequired && hasInterceptor) {
-      interceptors.remove(TokenInterceptor());
+      _dio.interceptors.remove(TokenInterceptor());
     } else if (authRequired) {
       addInterceptorOnce(TokenInterceptor());
     }
   }
 
   addInterceptorOnce(Interceptor interceptor) {
-    if (!interceptors.contains(interceptor)) {
-      interceptors.add(interceptor);
+    if (!_dio.interceptors.contains(interceptor)) {
+      _dio.interceptors.add(interceptor);
+    }
+  }
+
+  removeInterceptor(Interceptor interceptor) {
+    if (!_dio.interceptors.contains(interceptor)) {
+      _dio.interceptors.remove(interceptor);
     }
   }
 }

@@ -163,3 +163,58 @@ class PostRequestAction extends RequestAction<Post, PostApiRequest> {
   ResponseBuilder<Post> get responseBuilder => (map) => Post.fromMap(map);
 }
 ```
+
+## Action Events
+listing for action events:
+* onInit
+* onStart
+* onSuccess
+* onError
+
+```dart
+class PostRequestAction extends RequestAction<Post, PostApiRequest> {
+  PostRequestAction(PostApiRequest request) : super(request);
+  
+  /// action implement
+  
+  @override
+  void onInit() {
+    // TODO: implement onInit
+    super.onInit();
+  }
+
+  @override
+  void onStart() {
+    // TODO: implement onStart
+    super.onStart();
+  }
+
+  @override
+  void onSuccess(Post response) {
+    // TODO: implement onSuccess
+    super.onSuccess(response);
+  }
+
+  @override
+  void onError(ApiRequestError error) {
+    // TODO: implement onError
+    super.onError(error);
+  }
+}
+```
+
+## onQueue
+if you don't wait result from action , run action `onQueue`
+```dart
+PostRequestAction action = PostRequestAction(PostApiRequest(id: id)); 
+// Subscription for action
+action.onChange(onSuccess: (response) {
+  print('response Post $response');
+}, onError: (error) {
+  if (error is ApiRequestError) {
+    print("response Error ${error.requestOptions?.uri.toString()}");
+  }
+});
+// run action onQueue;
+action.onQueue();
+```
