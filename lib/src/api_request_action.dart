@@ -53,7 +53,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
         cancelOnError: true, onError: onError, onDone: onDone);
   }
 
-  Future execute() async {
+  Future<T> execute() async {
     this.onStart();
     T _response;
     switch (this.method) {

@@ -1,3 +1,6 @@
+## 0.5.1
+* fix execute return type
+
 ## 0.5.0
 * you can access stream if action run onQueue
 * fix run package in web
