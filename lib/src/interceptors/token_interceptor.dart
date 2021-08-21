@@ -1,3 +1,4 @@
+import 'package:api_request/api_request.dart';
 import 'package:dio/dio.dart';
 
 import '../api_request_options.dart';
@@ -10,7 +11,8 @@ class TokenInterceptor extends Interceptor {
     String? token = await getToken();
     print("configAuth token $token");
     if (token != null) {
-      options.headers.addAll({"Authorization": "Bearer $token"});
+      options.headers.addAll(
+          {"Authorization": "${ApiRequestOptions.instance?.tokenType}$token"});
     }
     super.onRequest(options, handler);
   }
