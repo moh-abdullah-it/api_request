@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:api_request/src/interceptors/error_interceptor.dart';
 import 'package:dio/dio.dart';
 
-import 'api_request.dart';
-import 'api_request_client.dart';
-import 'api_request_error.dart';
+import '../api_request.dart';
+import '../api_request_client.dart';
+import '../api_request_error.dart';
 
 enum RequestMethod { GET, POST, PUT, DELETE }
 
@@ -16,6 +16,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   final StreamController<T> _streamController = StreamController<T>();
   Stream<T> get stream => _streamController.stream;
   R? request;
+  ContentDataType? get contentDataType => null;
 
   bool get authRequired => false;
 
@@ -26,6 +27,8 @@ abstract class RequestAction<T, R extends ApiRequest> {
   late String _dynamicPath;
 
   ResponseBuilder<T> get responseBuilder;
+
+  Map<String, dynamic> get toMap => {};
 
   void onInit() {}
 
@@ -45,7 +48,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
     }
   }
 
-  StreamSubscription<T> onChange(
+  StreamSubscription<T> subscribe(
       {Function(T response)? onSuccess,
       Function()? onDone,
       Function(Object error)? onError}) {
@@ -133,11 +136,12 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   RequestAction handleRequest(R? request) {
-    Map<String, dynamic> newData =
-        handleDynamicPathWithData(path, request?.toMap() ?? {});
+    Map<String, dynamic> newData = handleDynamicPathWithData(
+        path, toMap.isNotEmpty ? toMap : request?.toMap() ?? {});
     this._dynamicPath = newData['path'];
     this._dataMap = newData['data'];
-    if (request?.contentDataType == ContentDataType.formData &&
+    if ((this.contentDataType == ContentDataType.formData ||
+            request?.contentDataType == ContentDataType.formData) &&
         method != RequestMethod.GET) {
       this._dataMap = FormData.fromMap(newData['data']);
     } else {

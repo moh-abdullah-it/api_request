@@ -45,9 +45,7 @@ class PostsResponse {
   }
 }
 
-class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
-  PostsRequestAction() : super(null);
-
+class PostsRequestAction extends ApiRequestAction<PostsResponse> {
   @override
   void onError(ApiRequestError error) {
     print("Hi I Error On ${error.requestOptions?.uri.toString()}");
@@ -68,17 +66,12 @@ class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
       (list) => PostsResponse.fromList(list);
 }
 
-class PostApiRequest with ApiRequest {
+class PostRequestAction extends ApiRequestAction<Post> {
   final int? id;
-  PostApiRequest({this.id});
-  @override
-  Map<String, dynamic> toMap() => {
-        'id': this.id,
-      };
-}
+  PostRequestAction({this.id});
 
-class PostRequestAction extends RequestAction<Post, PostApiRequest> {
-  PostRequestAction(PostApiRequest request) : super(request);
+  @override
+  Map<String, dynamic> get toMap => {'id': this.id};
 
   @override
   bool get authRequired => false;
@@ -128,16 +121,17 @@ Future<String> yourAysncMethodToGetToken() async {
 void main() {
   //config api requests;
   ApiRequestOptions.instance?.config(
-      // set base url for all request
-      baseUrl: 'https://jsonplaceholder.typicode.com/',
-      // set token as string api request action will with is if auth is required
-      token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
-      // we will call this method to get token in run time -- method must be return string
-      getToken: () => yourMethodToGetToken(),
-      // we will call this method to get token in run time -- method must be return Future<string>
-      getAsyncToken: () => yourAysncMethodToGetToken(),
-      // send default query params for all requests
-      defaultQueryParameters: {'locale': 'ar'});
+    // set base url for all request
+    baseUrl: 'https://jsonplaceholder.typicode.com/',
+    // set token as string api request action will with is if auth is required
+    token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
+    // we will call this method to get token in run time -- method must be return string
+    getToken: () => yourMethodToGetToken(),
+    // we will call this method to get token in run time -- method must be return Future<string>
+    getAsyncToken: () => yourAysncMethodToGetToken(),
+    // send default query params for all requests
+    //defaultQueryParameters: {'locale': 'ar'},
+  );
   runApp(MyApp());
 }
 
@@ -181,8 +175,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getPostData(int? id) async {
-    PostRequestAction action = PostRequestAction(PostApiRequest(id: id));
-    action.onChange(onSuccess: (response) {
+    PostRequestAction action = PostRequestAction(id: id);
+    action.subscribe(onSuccess: (response) {
       print('response Post $response');
     }, onError: (error) {
       if (error is ApiRequestError) {
