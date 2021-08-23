@@ -3,7 +3,7 @@ typedef GetAsyncOption<T> = Future<T> Function();
 
 class ApiRequestOptions {
   static String bearer = 'Bearer ';
-  String? tokenType;
+  String? tokenType = '';
   static ApiRequestOptions? get instance {
     if (_instance == null) {
       _instance = ApiRequestOptions();
@@ -46,6 +46,6 @@ class ApiRequestOptions {
     this.unauthenticated = unauthenticated ?? this.unauthenticated;
     this.defaultQueryParameters =
         defaultQueryParameters ?? this.defaultQueryParameters;
-    this.token = tokenType ?? this.tokenType;
+    this.tokenType = tokenType ?? this.tokenType;
   }
 }

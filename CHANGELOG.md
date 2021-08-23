@@ -1,3 +1,9 @@
+## 0.5.3
+* fix typing error
+
+## 0.5.2
+* modify token type api request options
+
 ## 0.5.1
 * fix execute return type
 
