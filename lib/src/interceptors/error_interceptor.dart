@@ -1,9 +1,9 @@
 import 'package:api_request/src/api_request_error.dart';
 import 'package:dio/dio.dart';
 
-import '../actions/request_action.dart';
+import '../../api_request.dart';
 
-class ErrorInterceptor extends Interceptor {
+class ErrorInterceptor extends ApiInterceptor {
   String _tag = 'onError_';
   Function obError;
 

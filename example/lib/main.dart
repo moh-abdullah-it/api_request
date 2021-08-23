@@ -121,15 +121,22 @@ Future<String> yourAysncMethodToGetToken() async {
 void main() {
   //config api requests;
   ApiRequestOptions.instance?.config(
-    // set base url for all request
+    /// set base url for all request
     baseUrl: 'https://jsonplaceholder.typicode.com/',
-    // set token as string api request action will with is if auth is required
+
+    /// set token type to 'Bearer '
+    tokenType: ApiRequestOptions.bearer,
+
+    /// set token as string api request action will with is if auth is required
     token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
-    // we will call this method to get token in run time -- method must be return string
+
+    /// we will call this method to get token in run time -- method must be return string
     getToken: () => yourMethodToGetToken(),
-    // we will call this method to get token in run time -- method must be return Future<string>
+
+    /// we will call this method to get token in run time -- method must be return Future<string>
     getAsyncToken: () => yourAysncMethodToGetToken(),
-    // send default query params for all requests
+
+    /// send default query params for all requests
     //defaultQueryParameters: {'locale': 'ar'},
   );
   runApp(MyApp());
@@ -174,15 +181,21 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  _getPostData(int? id) async {
+  _getPostData(int? id) {
     PostRequestAction action = PostRequestAction(id: id);
-    action.subscribe(onSuccess: (response) {
-      print('response Post $response');
-    }, onError: (error) {
-      if (error is ApiRequestError) {
-        print("response Error ${error.requestOptions?.uri.toString()}");
-      }
-    });
+    action.subscribe(
+      onSuccess: (response) {
+        print('response Post Id: ${response.id}');
+      },
+      onError: (error) {
+        if (error is ApiRequestError) {
+          print("response Error ${error.requestOptions?.uri.toString()}");
+        }
+      },
+      onDone: () {
+        print("Hi I done");
+      },
+    );
     action.onQueue();
   }
 

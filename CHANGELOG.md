@@ -1,3 +1,13 @@
+## 0.7.0
+* add `ApiRequestAction` for simple api request don't need to `ApiRequest` class
+* rename `onChnage` to `subscribe`
+* merge `defaultQueryParameters` with old instance
+* merge `interceptors` with old instance
+* add more to `ApiRequestOptions`:
+    * connectionTimeOut
+    * interceptors
+    * enableLog
+
 ## 0.5.3
 * fix typing error
 

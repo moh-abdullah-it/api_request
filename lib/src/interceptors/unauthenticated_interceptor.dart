@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 
-import '../api_request_options.dart';
+import '../../api_request.dart';
 
-class UnauthenticatedInterceptor extends Interceptor {
-  String _tag = 'unauthenticated';
+class UnauthenticatedInterceptor extends ApiInterceptor {
+  final String _tag = 'unauthenticated';
   @override
   void onError(DioError error, ErrorInterceptorHandler handler) {
     if (error.response?.statusCode == 401) {

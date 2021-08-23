@@ -1,3 +1,4 @@
+import 'package:api_request/src/interceptors/api_log_interceptor.dart';
 import 'package:api_request/src/interceptors/token_interceptor.dart';
 import 'package:api_request/src/interceptors/unauthenticated_interceptor.dart';
 import 'package:dio/dio.dart';
@@ -25,17 +26,22 @@ class RequestClient {
   intConfig() {
     _dio.options = BaseOptions(
       baseUrl: ApiRequestOptions.instance!.baseUrl,
-      queryParameters: ApiRequestOptions.instance?.defaultQueryParameters ?? {},
+      queryParameters: ApiRequestOptions.instance!.defaultQueryParameters,
+      connectTimeout: ApiRequestOptions.instance!.connectTimeout,
     );
-    if (!kReleaseMode) {
-      _dio.interceptors.add(LogInterceptor(responseBody: true));
+
+    if (!kReleaseMode && ApiRequestOptions.instance!.enableLog) {
+      addInterceptorOnce(ApiLogInterceptor());
     }
+
     _dio.options.headers
         .addAll({Headers.acceptHeader: Headers.jsonContentType});
-    if (ApiRequestOptions.instance != null) {
-      if (ApiRequestOptions.instance?.unauthenticated != null) {
-        addInterceptorOnce(UnauthenticatedInterceptor());
-      }
+
+    if (ApiRequestOptions.instance!.unauthenticated != null) {
+      addInterceptorOnce(UnauthenticatedInterceptor());
+    }
+    if (ApiRequestOptions.instance!.interceptors.isNotEmpty) {
+      ApiRequestOptions.instance!.interceptors.forEach(addInterceptorOnce);
     }
   }
 
