@@ -1,3 +1,6 @@
+## 0.7.2
+* modify `ApiRequestError` by use try catch
+
 ## 0.7.1
 * update documentation
 

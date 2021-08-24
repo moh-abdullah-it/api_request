@@ -47,12 +47,6 @@ class PostsResponse {
 
 class PostsRequestAction extends ApiRequestAction<PostsResponse> {
   @override
-  void onError(ApiRequestError error) {
-    print("Hi I Error On ${error.requestOptions?.uri.toString()}");
-    super.onError(error);
-  }
-
-  @override
   bool get authRequired => false;
 
   @override
@@ -80,19 +74,13 @@ class PostRequestAction extends ApiRequestAction<Post> {
   String get path => 'posts/{id}';
 
   @override
-  void onInit() {
-    // TODO: implement onInit
-    super.onInit();
-  }
+  RequestMethod get method => RequestMethod.GET;
 
   @override
-  void onStart() {
-    // TODO: implement onStart
-    super.onStart();
-  }
+  ResponseBuilder<Post> get responseBuilder => (map) => Post.fromMap(map);
 
   @override
-  void onSuccess(Post response) {
+  void onSuccess(Post? response) {
     // TODO: implement onSuccess
     super.onSuccess(response);
   }
@@ -102,12 +90,6 @@ class PostRequestAction extends ApiRequestAction<Post> {
     print("Hi I Error On ${error.requestOptions?.uri.toString()}");
     super.onError(error);
   }
-
-  @override
-  RequestMethod get method => RequestMethod.GET;
-
-  @override
-  ResponseBuilder<Post> get responseBuilder => (map) => Post.fromMap(map);
 }
 
 String yourMethodToGetToken() {
@@ -175,9 +157,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getData() async {
-    PostsResponse response = await PostsRequestAction().execute();
+    PostsResponse? response = await PostsRequestAction().execute();
     setState(() {
-      posts = response.posts;
+      posts = response?.posts;
     });
   }
 
@@ -185,11 +167,11 @@ class _MyHomePageState extends State<MyHomePage> {
     PostRequestAction action = PostRequestAction(id: id);
     action.subscribe(
       onSuccess: (response) {
-        print('response Post Id: ${response.id}');
+        print('response Post Id: ${response?.id}');
       },
       onError: (error) {
         if (error is ApiRequestError) {
-          print("response Error ${error.requestOptions?.uri.toString()}");
+          print("response Error ${error.message}");
         }
       },
       onDone: () {

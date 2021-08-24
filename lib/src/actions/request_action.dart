@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:api_request/src/interceptors/error_interceptor.dart';
 import 'package:dio/dio.dart';
 
 import '../api_request.dart';
@@ -12,9 +11,15 @@ enum RequestMethod { GET, POST, PUT, DELETE }
 typedef ResponseBuilder<T> = T Function(dynamic);
 
 abstract class RequestAction<T, R extends ApiRequest> {
+  RequestAction(this.request) {
+    this.onInit();
+    _requestClient?.configAuth(authRequired);
+    handleRequest(this.request);
+  }
+
   final RequestClient? _requestClient = RequestClient.instance;
-  final StreamController<T> _streamController = StreamController<T>();
-  Stream<T> get stream => _streamController.stream;
+  final StreamController<T?> _streamController = StreamController<T?>();
+  Stream<T?> get stream => _streamController.stream;
   R? request;
   ContentDataType? get contentDataType => null;
 
@@ -30,6 +35,8 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   Map<String, dynamic> get toMap => {};
 
+  var _dataMap;
+
   void onInit() {}
 
   void onStart() {}
@@ -41,24 +48,29 @@ abstract class RequestAction<T, R extends ApiRequest> {
     }
   }
 
-  void onSuccess(T response) {
+  void onSuccess(T? response) {
     if (!_streamController.isClosed) {
       _streamController.sink.add(response);
       this.dispose();
     }
   }
 
-  StreamSubscription<T> subscribe(
-      {Function(T response)? onSuccess,
+  StreamSubscription<T?> subscribe(
+      {Function(T? response)? onSuccess,
       Function()? onDone,
       Function(Object error)? onError}) {
-    return stream.listen(onSuccess,
-        cancelOnError: true, onError: onError, onDone: onDone);
+    return stream.listen(onSuccess, onError: onError, onDone: onDone);
   }
 
-  Future<T> execute() async {
+  Future<T?> execute() async {
+    return await _execute().catchError((error) {
+      this.onError(ApiRequestError(error));
+    });
+  }
+
+  Future<T?> _execute() async {
     this.onStart();
-    T _response;
+    T? _response;
     switch (this.method) {
       case RequestMethod.GET:
         _response = responseBuilder(await get());
@@ -78,29 +90,25 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   void onQueue() {
+    this.onStart();
+    Future<dynamic> _dynamicCall;
     switch (this.method) {
       case RequestMethod.GET:
-        get().then((value) => this.onSuccess(responseBuilder(value)));
+        _dynamicCall = get();
         break;
       case RequestMethod.POST:
-        post().then((value) => this.onSuccess(responseBuilder(value)));
+        _dynamicCall = post();
         break;
       case RequestMethod.PUT:
-        put().then((value) => this.onSuccess(responseBuilder(value)));
+        _dynamicCall = put();
         break;
       case RequestMethod.DELETE:
-        delete().then((value) => this.onSuccess(responseBuilder(value)));
+        _dynamicCall = delete();
         break;
     }
-  }
-
-  var _dataMap;
-
-  RequestAction(this.request) {
-    this.onInit();
-    _requestClient?.configAuth(authRequired);
-    handleRequest(this.request);
-    _requestClient?.addInterceptorOnce(_errorInterceptor());
+    _dynamicCall
+        .then((value) => this.onSuccess(responseBuilder(value)))
+        .catchError((error) => this.onError(ApiRequestError(error)));
   }
 
   Future<dynamic> get() async {
@@ -135,7 +143,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return response?.data;
   }
 
-  RequestAction handleRequest(R? request) {
+  handleRequest(R? request) {
     Map<String, dynamic> newData = handleDynamicPathWithData(
         path, toMap.isNotEmpty ? toMap : request?.toMap() ?? {});
     this._dynamicPath = newData['path'];
@@ -147,7 +155,6 @@ abstract class RequestAction<T, R extends ApiRequest> {
     } else {
       this._dataMap = newData['data'];
     }
-    return this;
   }
 
   Map<String, dynamic> handleDynamicPathWithData(
@@ -163,14 +170,9 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return {'path': path, 'data': newData};
   }
 
-  ErrorInterceptor _errorInterceptor() {
-    return ErrorInterceptor(this, this.onError);
-  }
-
   void dispose() {
     if (!_streamController.isClosed) {
       _streamController.close();
     }
-    _requestClient?.removeInterceptor(_errorInterceptor());
   }
 }

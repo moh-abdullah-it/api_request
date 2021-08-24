@@ -61,7 +61,7 @@ class RequestClient {
   }
 
   removeInterceptor(Interceptor interceptor) {
-    if (!_dio.interceptors.contains(interceptor)) {
+    if (_dio.interceptors.contains(interceptor)) {
       _dio.interceptors.remove(interceptor);
     }
   }

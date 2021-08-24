@@ -13,21 +13,13 @@ class ApiRequestError implements Exception {
   /// The original error/exception object; It's usually not null when `type`
   /// is DioErrorType.DEFAULT
   late dynamic error;
+  Map<String, dynamic>? errors;
 
-  StackTrace? _stackTrace;
-
-  set stackTrace(StackTrace? stack) => _stackTrace = stack;
-
-  StackTrace? get stackTrace => _stackTrace;
-
-  String get message => (error?.toString() ?? '');
+  String? message;
 
   @override
   String toString() {
     var msg = 'ApiRequest Error: $message';
-    if (_stackTrace != null) {
-      msg += '\n${stackTrace}';
-    }
     return msg;
   }
 
@@ -36,5 +28,14 @@ class ApiRequestError implements Exception {
     this.response = _dioError.response;
     this.error = _dioError.error;
     this.statusCode = _dioError.response?.statusCode;
+    message = (error?.toString() ?? '');
+    if (this.response?.data is Map) {
+      if (this.response?.data['errors'] is Map) {
+        this.errors = this.response?.data['errors'];
+      }
+      if (this.response?.data['message'] != null) {
+        message = this.response?.data['message'];
+      }
+    }
   }
 }
