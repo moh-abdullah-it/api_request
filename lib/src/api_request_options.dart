@@ -42,7 +42,7 @@ class ApiRequestOptions {
   /// get access token use callback function
   GetOption<String?>? getToken;
 
-  /// get access token use callback function
+  /// write what you wont if your server response unauthenticated with status code 401
   GetOption? unauthenticated;
 
   /// get access token use async callback function

@@ -1,3 +1,6 @@
+## 0.7.1
+* update documentation
+
 ## 0.7.0
 * add `ApiRequestAction` for simple api request don't need to `ApiRequest` class
 * rename `onChnage` to `subscribe`

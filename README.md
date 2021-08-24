@@ -8,6 +8,13 @@ by focusing on the actions your api provide.
 Instead of creating service for all api's, it allows you to create a dart class that handles a specific api request
 and execute that class.
 
+## Why
+* Help developers follow single responsibility principle (SRP)
+* Small dedicated classes makes the code easier to test
+* Action classes can be callable from multiple places in your app
+* Small dedicated classes really pay off in complex apps
+* Global Config
+
 ## Adding Api Request to your project
 
 In your project's `pubspec.yaml` file,
@@ -27,18 +34,25 @@ dependencies:
 import 'package:api_request/api_request.dart';
 
 void main() {
-  //global config api requests;
+  /// global config api requests;
   ApiRequestOptions.instance?.config(
-    // set base url for all request
+    /// set base url for all request
       baseUrl: 'https://jsonplaceholder.typicode.com/',
-      // set token as string api request action will with is if auth is required
+      /// set token type to 'Bearer '
+      tokenType: ApiRequestOptions.bearer,
+      /// set token as string api request action will with is if auth is required
       token: '1|test-token',
-      // we will call this method to get token in run time -- method must be return string
+      /// we will call this method to get token in run time -- method must be return string
       getToken: () => yourMethodToGetToken(),
-      // we will call this method to get token in run time -- method must be return Future<string>
+      /// we will call this method to get token in run time -- method must be return Future<string>
       getAsyncToken: () => yourAysncMethodToGetToken(),
-      // send default query params for all requests
-      defaultQueryParameters: {'locale': 'ar'}
+      /// send default query params for all requests
+      defaultQueryParameters: {'locale': 'ar'},
+      /// send default interceptors for all requests
+      interceptors: [],
+      /// enableLog for request && response default true
+      enableLog: true,
+    
   );
   runApp(MyApp());
 }
@@ -46,12 +60,11 @@ void main() {
 ```
 * and from any pace of your code you can change config
 
-## Request Action
-that is action  will execute to call api
+## ApiRequestAction Action
+that is sample call api request by create class extends by `ApiRequestAction<YourHandelResponse>`
 ```dart
-class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
-  PostsRequestAction() : super();
-
+class PostsRequestAction extends ApiRequestAction<PostsResponse> {
+  
   @override
   bool get authRequired => false;
 
@@ -67,7 +80,7 @@ class PostsRequestAction extends RequestAction<PostsResponse, ApiRequest> {
 }
 ```
 
-## Call PostsRequestAction
+## Call ApiRequestAction
 ```dart
   PostsResponse response = await PostsRequestAction().execute();
 ```
@@ -88,24 +101,8 @@ class LoginApiRequest with ApiRequest{
 }
 ```
 
-## Use ApiRequest with Action
+## Use ApiRequest with RequestAction
 ```dart
-class AuthResponse{
-  final int? status;
-  final String? message;
-  final String? accessToken;
-
-  AuthResponse({this.status, this.message, this.accessToken});
-
-  factory AuthResponse.fromMap(Map<String, dynamic> map) {
-    return AuthResponse(
-      status: map['status'] as int,
-      message: map['message'] as String,
-      accessToken: map['accessToken'] as String,
-    );
-  }
-}
-
 class LoginRequestAction extends RequestAction<AuthResponse, LoginApiRequest>{
   
   LoginRequestAction(LoginApiRequest request) : super(request);
@@ -138,17 +135,15 @@ class LoginRequestAction extends RequestAction<AuthResponse, LoginApiRequest>{
  * example to send data in path you need to add vars in path like this */{var}/*
  * and in your request data add var name with your value like this:
 ```dart
-class PostApiRequest with ApiRequest {
+class PostRequestAction extends ApiRequestAction<Post> {
   final int? id;
-  PostApiRequest({this.id});
+
+  PostRequestAction({this.id});
+  
   @override
   Map<String, dynamic> toMap() => {
-        'id': this.id,
-      };
-}
-
-class PostRequestAction extends RequestAction<Post, PostApiRequest> {
-  PostRequestAction(PostApiRequest request) : super(request);
+    'id': this.id,
+  };
 
   @override
   bool get authRequired => false;
@@ -172,9 +167,7 @@ listing for action events:
 * onError
 
 ```dart
-class PostRequestAction extends RequestAction<Post, PostApiRequest> {
-  PostRequestAction(PostApiRequest request) : super(request);
-  
+class PostRequestAction extends ApiRequestAction<Post> {
   /// action implement
   
   @override
@@ -204,17 +197,24 @@ class PostRequestAction extends RequestAction<Post, PostApiRequest> {
 ```
 
 ## onQueue
-if you don't wait result from action , run action `onQueue`
+if you don't wait result from action , run action `onQueue` and listen by `subscribe`:
+* `onSuccess`
+* `OnError`
+* `OnDone`
 ```dart
-PostRequestAction action = PostRequestAction(PostApiRequest(id: id)); 
-// Subscription for action
-action.onChange(onSuccess: (response) {
-  print('response Post $response');
-}, onError: (error) {
-  if (error is ApiRequestError) {
-    print("response Error ${error.requestOptions?.uri.toString()}");
-  }
-});
-// run action onQueue;
-action.onQueue();
+    PostRequestAction action = PostRequestAction(id: id);
+    action.subscribe(
+        onSuccess: (response) {
+          print('response Post Id: ${response.id}');
+        },
+        onError: (error) {
+        if (error is ApiRequestError) {
+          print("response Error ${error.requestOptions?.uri.toString()}");
+        }
+        },
+        onDone: () {
+          print("Hi I done");
+        },
+    );
+    action.onQueue();
 ```
