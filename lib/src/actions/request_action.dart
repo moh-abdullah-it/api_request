@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../api_request.dart';
 import '../api_request_client.dart';
 import '../api_request_error.dart';
+import '../utils/api_request_utils.dart';
 
 enum RequestMethod { GET, POST, PUT, DELETE }
 
@@ -144,7 +145,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   handleRequest(R? request) {
-    Map<String, dynamic> newData = handleDynamicPathWithData(
+    Map<String, dynamic> newData = ApiRequestUtils.handleDynamicPathWithData(
         path, toMap.isNotEmpty ? toMap : request?.toMap() ?? {});
     this._dynamicPath = newData['path'];
     this._dataMap = newData['data'];
@@ -155,19 +156,6 @@ abstract class RequestAction<T, R extends ApiRequest> {
     } else {
       this._dataMap = newData['data'];
     }
-  }
-
-  Map<String, dynamic> handleDynamicPathWithData(
-      String path, Map<String, dynamic> map) {
-    Map<String, dynamic> newData = {};
-    map.keys.forEach((key) {
-      if (path.contains('{$key}')) {
-        path = path.replaceFirst('{$key}', map[key].toString());
-      } else {
-        newData[key] = map[key];
-      }
-    });
-    return {'path': path, 'data': newData};
   }
 
   void dispose() {
