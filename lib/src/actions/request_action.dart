@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:api_request/api_request.dart';
 import 'package:dio/dio.dart';
 
 import '../api_request.dart';
@@ -16,9 +17,13 @@ abstract class RequestAction<T, R extends ApiRequest> {
     this.onInit();
     _requestClient?.configAuth(authRequired);
     handleRequest(this.request);
+    _performanceUtils?.init(this.runtimeType.toString(),
+        ApiRequestOptions.instance!.baseUrl + _dynamicPath);
   }
 
   final RequestClient? _requestClient = RequestClient.instance;
+  final ApiRequestPerformance? _performanceUtils =
+      ApiRequestPerformance.instance;
   final StreamController<T?> _streamController = StreamController<T?>();
   Stream<T?> get stream => _streamController.stream;
   R? request;
@@ -71,6 +76,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   Future<T?> _execute() async {
     this.onStart();
+    _performanceUtils?.startTrack();
     T? _response;
     switch (this.method) {
       case RequestMethod.GET:
@@ -86,11 +92,13 @@ abstract class RequestAction<T, R extends ApiRequest> {
         _response = responseBuilder(await delete());
         break;
     }
+    _performanceUtils?.endTrack();
     this.onSuccess(_response);
     return _response;
   }
 
   void onQueue() {
+    _performanceUtils?.startTrack();
     this.onStart();
     Future<dynamic> _dynamicCall;
     switch (this.method) {
@@ -109,8 +117,11 @@ abstract class RequestAction<T, R extends ApiRequest> {
     }
     _dynamicCall
         .then((value) => this.onSuccess(responseBuilder(value)))
-        .catchError((error) => this.onError(ApiRequestError(error)));
+        .catchError((error) => this.onError(ApiRequestError(error)))
+        .then((_) => _performanceUtils?.endTrack());
   }
+
+  PerformanceReport? get performanceReport => _performanceUtils?.getReport();
 
   Future<dynamic> get() async {
     var response = await _requestClient?.dio.get(

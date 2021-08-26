@@ -181,6 +181,10 @@ class _MyHomePageState extends State<MyHomePage> {
     action.onQueue();
   }
 
+  getReport() {
+    print("Report ${ApiRequestPerformance.instance.toString()}");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -196,6 +200,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       onTap: () => _getPostData(posts?[index].id),
                     ))
             : CircularProgressIndicator(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: getReport,
+        child: Icon(Icons.report),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
