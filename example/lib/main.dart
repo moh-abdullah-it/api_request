@@ -65,13 +65,10 @@ class PostRequestAction extends ApiRequestAction<Post> {
   PostRequestAction({this.id});
 
   @override
-  Map<String, dynamic> get toMap => {'id': this.id};
-
-  @override
   bool get authRequired => false;
 
   @override
-  String get path => 'posts/{id}';
+  String get path => 'posts/$id';
 
   @override
   RequestMethod get method => RequestMethod.GET;
@@ -157,10 +154,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getData() async {
-    PostsResponse? response = await PostsRequestAction().execute();
-    setState(() {
-      posts = response?.posts;
+    PostsRequestAction? action = PostsRequestAction();
+    action.subscribe(onSuccess: (response) {
+      setState(() {
+        posts = response?.posts;
+      });
     });
+    action.onQueue();
   }
 
   _getPostData(int? id) {
