@@ -146,21 +146,12 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Post>? posts = <Post>[];
+  final PostsRequestAction? action = PostsRequestAction();
 
   @override
   initState() {
     super.initState();
-    _getData();
-  }
-
-  _getData() async {
-    PostsRequestAction? action = PostsRequestAction();
-    action.subscribe(onSuccess: (response) {
-      setState(() {
-        posts = response?.posts;
-      });
-    });
-    action.onQueue();
+    action?.onQueue();
   }
 
   _getPostData(int? id) {
@@ -182,7 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   getReport() {
-    print("Report ${ApiRequestPerformance.instance.toString()}");
+    print("${ApiRequestPerformance.instance.toString()}");
   }
 
   @override
@@ -192,15 +183,30 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: (posts?.isNotEmpty ?? false)
+          child: StreamBuilder<PostsResponse?>(
+        stream: action?.stream,
+        builder: (_, snapshot) {
+          if (snapshot.hasData) {
+            return ListView.builder(
+                itemCount: snapshot.data?.posts?.length,
+                itemBuilder: (_, index) => ListTile(
+                      title: Text(snapshot.data?.posts?[index].title ?? ''),
+                      onTap: () =>
+                          _getPostData(snapshot.data?.posts?[index].id),
+                    ));
+          }
+          return CircularProgressIndicator();
+        },
+      )
+          /*child: (posts?.isNotEmpty ?? false)
             ? ListView.builder(
                 itemCount: posts?.length,
                 itemBuilder: (_, index) => ListTile(
                       title: Text(posts?[index].title ?? ''),
                       onTap: () => _getPostData(posts?[index].id),
                     ))
-            : CircularProgressIndicator(),
-      ),
+            : CircularProgressIndicator(),*/
+          ),
       floatingActionButton: FloatingActionButton(
         onPressed: getReport,
         child: Icon(Icons.report),
