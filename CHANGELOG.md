@@ -1,3 +1,7 @@
+## 0.8.0
+* add `ApiRequestPerformance` to extract performance report
+* convert events to `getter`, `setter` to access its from any where
+
 ## 0.7.2
 * modify `ApiRequestError` by use try catch
 

@@ -76,17 +76,18 @@ class PostRequestAction extends ApiRequestAction<Post> {
   @override
   ResponseBuilder<Post> get responseBuilder => (map) => Post.fromMap(map);
 
-  @override
-  void onSuccess(Post? response) {
-    // TODO: implement onSuccess
-    super.onSuccess(response);
-  }
+  /*@override
+  Function get onInit => () => print('Action Init');
 
   @override
-  void onError(ApiRequestError error) {
-    print("Hi I Error On ${error.requestOptions?.uri.toString()}");
-    super.onError(error);
-  }
+  Function get onStart => () => print('Action Start');
+
+  @override
+  SuccessHandler<Post> get onSuccess =>
+      (post) => print('Action Success ${post?.id}');
+
+  @override
+  ErrorHandler get onError => (error) => print('Action Error ${error.message}');*/
 }
 
 String yourMethodToGetToken() {
@@ -156,6 +157,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _getPostData(int? id) {
     PostRequestAction action = PostRequestAction(id: id);
+    // use action events setter
+    action.onStart = () => print('Action Start Form Ui');
+    action.onSuccess = (post) => print('Action Success Form Ui ${post?.id}');
+    action.onError = (error) => print('Action Error Form Ui ${error.message}');
+
+    // use action subscribe
     action.subscribe(
       onSuccess: (response) {
         print('response Post Id: ${response?.id}');
@@ -173,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   getReport() {
-    print("${ApiRequestPerformance.instance.toString()}");
+    print("${ApiRequestPerformance.instance?.actionsReport}");
   }
 
   @override

@@ -169,30 +169,19 @@ listing for action events:
 ```dart
 class PostRequestAction extends ApiRequestAction<Post> {
   /// action implement
-  
-  @override
-  void onInit() {
-    // TODO: implement onInit
-    super.onInit();
-  }
 
   @override
-  void onStart() {
-    // TODO: implement onStart
-    super.onStart();
-  }
+  Function get onInit => () => print('Action Init');
 
   @override
-  void onSuccess(Post response) {
-    // TODO: implement onSuccess
-    super.onSuccess(response);
-  }
+  Function get onStart => () => print('Action Start');
 
   @override
-  void onError(ApiRequestError error) {
-    // TODO: implement onError
-    super.onError(error);
-  }
+  SuccessHandler<Post> get onSuccess =>
+          (post) => print('Action Success ${post?.id}');
+
+  @override
+  ErrorHandler get onError => (error) => print('Action Error ${error.message}');
 }
 ```
 
@@ -202,19 +191,35 @@ if you don't wait result from action , run action `onQueue` and listen by `subsc
 * `OnError`
 * `OnDone`
 ```dart
-    PostRequestAction action = PostRequestAction(id: id);
-    action.subscribe(
-        onSuccess: (response) {
-          print('response Post Id: ${response.id}');
-        },
-        onError: (error) {
-        if (error is ApiRequestError) {
-          print("response Error ${error.requestOptions?.uri.toString()}");
-        }
-        },
-        onDone: () {
-          print("Hi I done");
-        },
-    );
-    action.onQueue();
+PostRequestAction action = PostRequestAction(id: id);
+// use action events setter
+action.onStart = () => print('Action Start Form Ui');
+action.onSuccess = (post) => print('Action Success Form Ui ${post?.id}');
+action.onError = (error) => print('Action Error Form Ui ${error.message}');
+
+// use action subscribe
+action.subscribe(
+    onSuccess: (response) {
+      print('response Post Id: ${response.id}');
+    },
+    onError: (error) {
+    if (error is ApiRequestError) {
+      print("response Error ${error.requestOptions?.uri.toString()}");
+    }
+    },
+    onDone: () {
+      print("Hi I done");
+    },
+);
+action.onQueue();
+```
+## Performance Report
+get performance report for all called actions
+* print in console log
+```dart
+  print("${ApiRequestPerformance.instance.toString()}");
+```
+* Map Reports
+```dart
+  Map<String?, PerformanceReport?> actionsReport = ApiRequestPerformance.instance?.actionsReport
 ```

@@ -11,6 +11,8 @@ import '../utils/api_request_utils.dart';
 enum RequestMethod { GET, POST, PUT, DELETE }
 
 typedef ResponseBuilder<T> = T Function(dynamic);
+typedef ErrorHandler = Function(ApiRequestError error);
+typedef SuccessHandler<T> = Function(T? response);
 
 abstract class RequestAction<T, R extends ApiRequest> {
   RequestAction(this.request) {
@@ -25,8 +27,10 @@ abstract class RequestAction<T, R extends ApiRequest> {
   final ApiRequestPerformance? _performanceUtils =
       ApiRequestPerformance.instance;
   final StreamController<T?> _streamController = StreamController<T?>();
+
   Stream<T?> get stream => _streamController.stream;
   R? request;
+
   ContentDataType? get contentDataType => null;
 
   bool get authRequired => false;
@@ -43,18 +47,25 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   var _dataMap;
 
-  void onInit() {}
+  Function onInit = () => {};
 
-  void onStart() {}
+  Function onStart = () => {};
 
-  void onError(ApiRequestError error) {
-    if (!_streamController.isClosed) {
+  ErrorHandler onError = (error) => {};
+
+  SuccessHandler<T> onSuccess = (response) => {};
+
+  void _streamError(ApiRequestError error) {
+    this.onError(error);
+    if (this._streamController.isClosed) {
       _streamController.sink.addError(error);
       this.dispose();
     }
   }
 
-  void onSuccess(T? response) {
+
+  void _streamSuccess(T? response) {
+    this.onSuccess(response);
     if (!_streamController.isClosed) {
       _streamController.sink.add(response);
       this.dispose();
@@ -70,7 +81,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   Future<T?> execute() async {
     return await _execute().catchError((error) {
-      this.onError(ApiRequestError(error));
+      this._streamError(ApiRequestError(error));
     });
   }
 
@@ -93,7 +104,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
         break;
     }
     _performanceUtils?.endTrack();
-    this.onSuccess(_response);
+    this._streamSuccess(_response);
     return _response;
   }
 
@@ -116,8 +127,8 @@ abstract class RequestAction<T, R extends ApiRequest> {
         break;
     }
     _dynamicCall
-        .then((value) => this.onSuccess(responseBuilder(value)))
-        .catchError((error) => this.onError(ApiRequestError(error)))
+        .then((value) => this._streamSuccess(responseBuilder(value)))
+        .catchError((error) => this._streamError(ApiRequestError(error)))
         .then((_) => _performanceUtils?.endTrack());
   }
 
