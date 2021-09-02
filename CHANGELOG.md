@@ -1,3 +1,7 @@
+## 0.8.5
+* modify `ApiRequestError` to to dynamic error
+* modify `subscribe` to call `execute` or `onQueue`
+
 ## 0.8.0
 * add `ApiRequestPerformance` to extract performance report
 * convert events to `getter`, `setter` to access its from any where

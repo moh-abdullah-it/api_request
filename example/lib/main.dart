@@ -58,6 +58,11 @@ class PostsRequestAction extends ApiRequestAction<PostsResponse> {
   @override
   ResponseBuilder<PostsResponse> get responseBuilder =>
       (list) => PostsResponse.fromList(list);
+
+  @override
+  ErrorHandler get onError => (error) {
+        print("Error Response $error");
+      };
 }
 
 class PostRequestAction extends ApiRequestAction<Post> {
@@ -76,7 +81,7 @@ class PostRequestAction extends ApiRequestAction<Post> {
   @override
   ResponseBuilder<Post> get responseBuilder => (map) => Post.fromMap(map);
 
-  /*@override
+  @override
   Function get onInit => () => print('Action Init');
 
   @override
@@ -87,7 +92,7 @@ class PostRequestAction extends ApiRequestAction<Post> {
       (post) => print('Action Success ${post?.id}');
 
   @override
-  ErrorHandler get onError => (error) => print('Action Error ${error.message}');*/
+  ErrorHandler get onError => (error) => print('Action Error ${error.message}');
 }
 
 String yourMethodToGetToken() {

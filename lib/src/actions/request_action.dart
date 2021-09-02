@@ -15,10 +15,10 @@ typedef ErrorHandler = Function(ApiRequestError error);
 typedef SuccessHandler<T> = Function(T? response);
 
 abstract class RequestAction<T, R extends ApiRequest> {
-  RequestAction(this.request) {
+  RequestAction(this._request) {
     this.onInit();
     _requestClient?.configAuth(authRequired);
-    handleRequest(this.request);
+    _handleRequest(this._request);
     _performanceUtils?.init(this.runtimeType.toString(),
         ApiRequestOptions.instance!.baseUrl + _dynamicPath);
   }
@@ -29,7 +29,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   final StreamController<T?> _streamController = StreamController<T?>();
 
   Stream<T?> get stream => _streamController.stream;
-  R? request;
+  R? _request;
 
   ContentDataType? get contentDataType => null;
 
@@ -57,12 +57,11 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   void _streamError(ApiRequestError error) {
     this.onError(error);
-    if (this._streamController.isClosed) {
+    if (!this._streamController.isClosed) {
       _streamController.sink.addError(error);
       this.dispose();
     }
   }
-
 
   void _streamSuccess(T? response) {
     this.onSuccess(response);
@@ -72,11 +71,12 @@ abstract class RequestAction<T, R extends ApiRequest> {
     }
   }
 
-  StreamSubscription<T?> subscribe(
+  RequestAction subscribe(
       {Function(T? response)? onSuccess,
       Function()? onDone,
       Function(Object error)? onError}) {
-    return stream.listen(onSuccess, onError: onError, onDone: onDone);
+    stream.listen(onSuccess, onError: onError, onDone: onDone);
+    return this;
   }
 
   Future<T?> execute() async {
@@ -166,7 +166,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return response?.data;
   }
 
-  handleRequest(R? request) {
+  _handleRequest(R? request) {
     Map<String, dynamic> newData = ApiRequestUtils.handleDynamicPathWithData(
         path, toMap.isNotEmpty ? toMap : request?.toMap() ?? {});
     this._dynamicPath = newData['path'];

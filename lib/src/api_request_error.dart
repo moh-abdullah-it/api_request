@@ -12,30 +12,47 @@ class ApiRequestError implements Exception {
 
   /// The original error/exception object; It's usually not null when `type`
   /// is DioErrorType.DEFAULT
-  late dynamic error;
+  dynamic error;
   Map<String, dynamic>? errors;
 
   String? message;
 
+  StackTrace? _stackTrace;
+
+  set stackTrace(StackTrace? stack) => _stackTrace = stack;
+
+  StackTrace? get stackTrace => _stackTrace;
+
   @override
   String toString() {
     var msg = 'ApiRequest Error: $message';
+    if (_stackTrace != null) {
+      msg += '\n${stackTrace}';
+    }
     return msg;
   }
 
-  ApiRequestError(DioError _dioError) {
-    this.requestOptions = _dioError.requestOptions;
-    this.response = _dioError.response;
-    this.error = _dioError.error;
-    this.statusCode = _dioError.response?.statusCode;
-    message = (error?.toString() ?? '');
-    if (this.response?.data is Map) {
-      if (this.response?.data['errors'] is Map) {
-        this.errors = this.response?.data['errors'];
+  ApiRequestError(dynamic apiError) {
+    if (apiError is DioError) {
+      this.requestOptions = apiError.requestOptions;
+      this.response = apiError.response;
+      this.error = apiError.error;
+      this.statusCode = apiError.response?.statusCode;
+      message = (error?.toString() ?? '');
+      if (this.response?.data is Map) {
+        if (this.response?.data['errors'] is Map) {
+          this.errors = this.response?.data['errors'];
+        }
+        if (this.response?.data['message'] != null) {
+          message = this.response?.data['message'];
+        }
       }
-      if (this.response?.data['message'] != null) {
-        message = this.response?.data['message'];
-      }
+    } else if (apiError is Error) {
+      this.message = apiError.toString();
+      this._stackTrace = apiError.stackTrace;
+      error = apiError;
+    } else {
+      throw Exception('Unknown Error');
     }
   }
 }
