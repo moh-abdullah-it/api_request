@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:api_request/api_request.dart';
+import 'package:api_request/src/api_request_options.dart';
 import 'package:dio/dio.dart';
 
 import '../api_request.dart';
@@ -57,6 +58,9 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   void _streamError(ApiRequestError error) {
     this.onError(error);
+    if (ApiRequestOptions.instance!.onError != null) {
+      ApiRequestOptions.instance!.onError!(error);
+    }
     if (!this._streamController.isClosed) {
       _streamController.sink.addError(error);
       this.dispose();

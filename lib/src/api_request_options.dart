@@ -51,6 +51,8 @@ class ApiRequestOptions {
   // set default query parameters to url
   late Map<String, dynamic> defaultQueryParameters = {};
 
+  Function(ApiRequestError error)? onError;
+
   void config(
       {String? baseUrl,
       String? token,
@@ -61,7 +63,8 @@ class ApiRequestOptions {
       String? tokenType,
       int? connectTimeout,
       bool? enableLog,
-      List<ApiInterceptor>? interceptors}) async {
+      List<ApiInterceptor>? interceptors,
+      Function(ApiRequestError error)? onError}) async {
     this.baseUrl = baseUrl ?? this.baseUrl;
     this.token = token ?? this.token;
     this.getToken = getToken ?? this.getToken;
@@ -84,5 +87,6 @@ class ApiRequestOptions {
     this.tokenType = tokenType ?? this.tokenType;
     this.connectTimeout = connectTimeout ?? this.connectTimeout;
     this.enableLog = enableLog ?? this.enableLog;
+    this.onError = onError ?? this.onError;
   }
 }

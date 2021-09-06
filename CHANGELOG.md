@@ -1,3 +1,6 @@
+## 1.0.0-pre-1
+* modify `onError` global error handler in `ApiRequestOptions`
+
 ## 0.8.5
 * modify `ApiRequestError` to to dynamic error
 * modify `subscribe` to call `execute` or `onQueue`
