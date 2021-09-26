@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 import '../api_request.dart';
 
 typedef GetOption<T> = T Function();
@@ -53,6 +55,8 @@ class ApiRequestOptions {
 
   Function(ApiRequestError error)? onError;
 
+  ListFormat listFormat = ListFormat.multiCompatible;
+
   void config(
       {String? baseUrl,
       String? token,
@@ -64,7 +68,8 @@ class ApiRequestOptions {
       int? connectTimeout,
       bool? enableLog,
       List<ApiInterceptor>? interceptors,
-      Function(ApiRequestError error)? onError}) async {
+      Function(ApiRequestError error)? onError,
+      ListFormat? listFormat}) async {
     this.baseUrl = baseUrl ?? this.baseUrl;
     this.token = token ?? this.token;
     this.getToken = getToken ?? this.getToken;
@@ -88,5 +93,6 @@ class ApiRequestOptions {
     this.connectTimeout = connectTimeout ?? this.connectTimeout;
     this.enableLog = enableLog ?? this.enableLog;
     this.onError = onError ?? this.onError;
+    this.listFormat = listFormat ?? this.listFormat;
   }
 }

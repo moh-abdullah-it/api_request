@@ -1,3 +1,6 @@
+## 1.0.0-pre-2
+* modify `listFormat` global option in `ApiRequestOptions`
+
 ## 1.0.0-pre-1
 * modify `onError` global error handler in `ApiRequestOptions`
 

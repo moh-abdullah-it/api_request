@@ -178,7 +178,8 @@ abstract class RequestAction<T, R extends ApiRequest> {
     if ((this.contentDataType == ContentDataType.formData ||
             request?.contentDataType == ContentDataType.formData) &&
         method != RequestMethod.GET) {
-      this._dataMap = FormData.fromMap(newData['data']);
+      this._dataMap = FormData.fromMap(
+          newData['data'], ApiRequestOptions.instance!.listFormat);
     } else {
       this._dataMap = newData['data'];
     }
