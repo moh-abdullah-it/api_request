@@ -1,12 +1,8 @@
 import 'dart:async';
 
 import 'package:api_request/api_request.dart';
-import 'package:api_request/src/api_request_options.dart';
 import 'package:dio/dio.dart';
 
-import '../api_request.dart';
-import '../api_request_client.dart';
-import '../api_request_error.dart';
 import '../utils/api_request_utils.dart';
 
 enum RequestMethod { GET, POST, PUT, DELETE }
