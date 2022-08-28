@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:api_request/api_request.dart';
+import 'package:api_request/src/api_request_exception.dart';
 import 'package:api_request/src/api_request_options.dart';
+import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
 import '../api_request.dart';
@@ -53,7 +55,6 @@ abstract class RequestAction<T, R extends ApiRequest> {
   Function onStart = () => {};
 
   ErrorHandler onError = (error) => {};
-
   SuccessHandler<T> onSuccess = (response) => {};
 
   void _streamError(ApiRequestError error) {
@@ -83,39 +84,85 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return this;
   }
 
-  Future<T?> execute() async {
-    return await _execute().catchError((error) {
-      this._streamError(ApiRequestError(error));
+  Future<Either<ApiRequestException, T?>> run() async {
+    Response? response;
+    Either<ApiRequestException, T?>? toReturn;
+    await _execute().then((value) {
+      response = value;
+    }).catchError((e) {
+      throw (e);
+      toReturn = left(ApiRequestException(
+          message: e.toString(), type: ApiExceptionType.custom));
     });
+
+    if (response != null) {
+      int statusCode = response?.statusCode ?? 0;
+      if (statusCode >= 200 && statusCode < 300) {
+        toReturn = right(responseBuilder(response?.data));
+      }
+      if (statusCode >= 400 && statusCode < 500) {
+        toReturn = left(ApiRequestException(
+            message: response?.data?["message"]?.toString() ??
+                response?.statusMessage ??
+                "client_error",
+            type: ApiExceptionType.client,
+            errors: response?.data?["errors"],
+            statusCode: response?.statusCode,
+            statusMessage: response?.statusMessage));
+      }
+      if (statusCode >= 500) {
+        toReturn = left(ApiRequestException(
+            message: "${response?.statusCode} : ${response?.statusMessage}",
+            type: ApiExceptionType.server,
+            statusCode: statusCode,
+            statusMessage: response?.statusMessage));
+      }
+    } else {
+      toReturn = left(
+          ApiRequestException(message: "error", type: ApiExceptionType.custom));
+    }
+
+    return toReturn!;
   }
 
-  Future<T?> _execute() async {
+  Future<T?> execute() async {
+    Response? res;
+    await _execute().then((value) {
+      res = value;
+    }).catchError((error) {
+      this._streamError(ApiRequestError(error));
+    });
+    return responseBuilder(res);
+  }
+
+  Future<Response?> _execute() async {
     this.onStart();
     _performanceUtils?.startTrack();
-    T? _response;
+    Response? _response;
     switch (this.method) {
       case RequestMethod.GET:
-        _response = responseBuilder(await get());
+        _response = await get();
         break;
       case RequestMethod.POST:
-        _response = responseBuilder(await post());
+        _response = await post();
         break;
       case RequestMethod.PUT:
-        _response = responseBuilder(await put());
+        _response = await put();
         break;
       case RequestMethod.DELETE:
-        _response = responseBuilder(await delete());
+        _response = await delete();
         break;
     }
     _performanceUtils?.endTrack();
-    this._streamSuccess(_response);
+    this._streamSuccess(responseBuilder(_response?.data));
+
     return _response;
   }
 
   void onQueue() {
     _performanceUtils?.startTrack();
     this.onStart();
-    Future<dynamic> _dynamicCall;
+    Future<Response?> _dynamicCall;
     switch (this.method) {
       case RequestMethod.GET:
         _dynamicCall = get();
@@ -131,43 +178,44 @@ abstract class RequestAction<T, R extends ApiRequest> {
         break;
     }
     _dynamicCall
-        .then((value) => this._streamSuccess(responseBuilder(value)))
+        .then((value) => this._streamSuccess(responseBuilder(value?.data)))
         .catchError((error) => this._streamError(ApiRequestError(error)))
         .then((_) => _performanceUtils?.endTrack());
   }
 
   PerformanceReport? get performanceReport => _performanceUtils?.getReport();
 
-  Future<dynamic> get() async {
+  Future<Response?> get() async {
     var response = await _requestClient?.dio.get(
       _dynamicPath,
       queryParameters: _dataMap,
     );
-    return response?.data;
+
+    return response;
   }
 
-  Future<dynamic> post() async {
+  Future<Response?> post() async {
     var response = await _requestClient?.dio.post(
       _dynamicPath,
       data: _dataMap,
     );
-    return response?.data;
+    return response;
   }
 
-  Future<dynamic> put() async {
+  Future<Response?> put() async {
     var response = await _requestClient?.dio.put(
       _dynamicPath,
       data: _dataMap,
     );
-    return response?.data;
+    return response;
   }
 
-  Future<dynamic> delete() async {
+  Future<Response?> delete() async {
     var response = await _requestClient?.dio.delete(
       _dynamicPath,
       data: _dataMap,
     );
-    return response?.data;
+    return response;
   }
 
   _handleRequest(R? request) {

@@ -58,11 +58,6 @@ class PostsRequestAction extends ApiRequestAction<PostsResponse> {
   @override
   ResponseBuilder<PostsResponse> get responseBuilder =>
       (list) => PostsResponse.fromList(list);
-
-  @override
-  ErrorHandler get onError => (error) {
-        print("Error Response $error");
-      };
 }
 
 class PostRequestAction extends ApiRequestAction<Post> {
@@ -86,13 +81,6 @@ class PostRequestAction extends ApiRequestAction<Post> {
 
   @override
   Function get onStart => () => print('Action Start');
-
-  @override
-  SuccessHandler<Post> get onSuccess =>
-      (post) => print('Action Success ${post?.id}');
-
-  @override
-  ErrorHandler get onError => (error) => print('Action Error ${error.message}');
 }
 
 String yourMethodToGetToken() {
@@ -106,26 +94,24 @@ Future<String> yourAysncMethodToGetToken() async {
 void main() {
   //config api requests;
   ApiRequestOptions.instance?.config(
+    /// set base url for all request
+    baseUrl: 'https://jsonplaceholder.typicode.com/',
 
-      /// set base url for all request
-      baseUrl: 'https://jsonplaceholder.typicode.com/',
+    /// set token type to 'Bearer '
+    tokenType: ApiRequestOptions.bearer,
 
-      /// set token type to 'Bearer '
-      tokenType: ApiRequestOptions.bearer,
+    /// set token as string api request action will with is if auth is required
+    token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
 
-      /// set token as string api request action will with is if auth is required
-      token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
+    /// we will call this method to get token in run time -- method must be return string
+    getToken: () => yourMethodToGetToken(),
 
-      /// we will call this method to get token in run time -- method must be return string
-      getToken: () => yourMethodToGetToken(),
+    /// we will call this method to get token in run time -- method must be return Future<string>
+    getAsyncToken: () => yourAysncMethodToGetToken(),
 
-      /// we will call this method to get token in run time -- method must be return Future<string>
-      getAsyncToken: () => yourAysncMethodToGetToken(),
-
-      /// send default query params for all requests
-      //defaultQueryParameters: {'locale': 'ar'},
-
-      onError: (error) => print("Global Error handler $error"));
+    /// send default query params for all requests
+    //defaultQueryParameters: {'locale': 'ar'},
+  );
   runApp(MyApp());
 }
 
@@ -155,35 +141,30 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<Post>? posts = <Post>[];
   final PostsRequestAction? action = PostsRequestAction();
+  bool loading = true;
 
   @override
   initState() {
     super.initState();
-    action?.onQueue();
+    action?.run().then((value) {
+      loading = false;
+      value.fold((l) => print(l.message), (r) {
+        posts = r?.posts;
+        setState(() {});
+      });
+    });
   }
 
   _getPostData(int? id) {
     PostRequestAction action = PostRequestAction(id: id);
     // use action events setter
+    action.run().then((value) {
+      value.fold(
+          (l) => print(l.message), (r) => print('response Post Id: ${r?.id}'));
+    });
     action.onStart = () => print('Action Start Form Ui');
-    action.onSuccess = (post) => print('Action Success Form Ui ${post?.id}');
-    action.onError = (error) => print('Action Error Form Ui ${error.message}');
 
     // use action subscribe
-    action.subscribe(
-      onSuccess: (response) {
-        print('response Post Id: ${response?.id}');
-      },
-      onError: (error) {
-        if (error is ApiRequestError) {
-          print("response Error ${error.message}");
-        }
-      },
-      onDone: () {
-        print("Hi I done");
-      },
-    );
-    action.onQueue();
   }
 
   getReport() {
@@ -197,34 +178,30 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-          child: StreamBuilder<PostsResponse?>(
-        stream: action?.stream,
-        builder: (_, snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-                itemCount: snapshot.data?.posts?.length,
-                itemBuilder: (_, index) => ListTile(
-                      title: Text(snapshot.data?.posts?[index].title ?? ''),
-                      onTap: () =>
-                          _getPostData(snapshot.data?.posts?[index].id),
-                    ));
-          }
-          return CircularProgressIndicator();
-        },
-      )
-          /*child: (posts?.isNotEmpty ?? false)
-            ? ListView.builder(
+        child: loading
+            ? CircularProgressIndicator()
+            : ListView.builder(
                 itemCount: posts?.length,
                 itemBuilder: (_, index) => ListTile(
                       title: Text(posts?[index].title ?? ''),
-                      onTap: () => _getPostData(posts?[index].id),
-                    ))
-            : CircularProgressIndicator(),*/
-          ),
+                      onTap: () {
+                        _getPostData(posts?[index].id);
+                      },
+                    )),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: getReport,
         child: Icon(Icons.report),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
+
+
+
+
+
+
+
+// add on success on error , subscripe
+// execute is back and rename new method
