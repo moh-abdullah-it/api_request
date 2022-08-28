@@ -146,6 +146,22 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   initState() {
     super.initState();
+    //older way
+
+    // action?.onError = (e) {
+    //   loading = false;
+    //   setState(() {});
+    //   print(e.toString());
+    // };
+    // action?.onSuccess = (s) {
+    //   loading = false;
+    //   posts = s?.posts;
+    //   setState(() {});
+    // };
+    // action?.onQueue();
+
+    // new way
+    //use run action to return with Either value or error
     action?.run().then((value) {
       loading = false;
       value.fold((l) => print(l.message), (r) {
@@ -157,14 +173,23 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _getPostData(int? id) {
     PostRequestAction action = PostRequestAction(id: id);
-    // use action events setter
+
+    //older way
+
+    // action.onError = (e) {
+    //   print(e.toString());
+    // };
+    // action.onSuccess = (s) {
+    //   print('response Post Id: ${s?.id}');
+    // };
+    // action.onQueue();
+
+    // new way
+    //use run action to return with Either value or error
     action.run().then((value) {
       value.fold(
           (l) => print(l.message), (r) => print('response Post Id: ${r?.id}'));
     });
-    action.onStart = () => print('Action Start Form Ui');
-
-    // use action subscribe
   }
 
   getReport() {

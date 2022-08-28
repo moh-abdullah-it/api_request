@@ -90,7 +90,6 @@ abstract class RequestAction<T, R extends ApiRequest> {
     await _execute().then((value) {
       response = value;
     }).catchError((e) {
-      throw (e);
       toReturn = left(ApiRequestException(
           message: e.toString(), type: ApiExceptionType.custom));
     });
