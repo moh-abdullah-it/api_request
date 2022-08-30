@@ -1,3 +1,7 @@
+## 1.0.0-pre-3
+* modify `run` method use Either `ApiRequestAction`
+* modify `ApiRequestAction` to handle api server errors
+
 ## 1.0.0-pre-2
 * modify `listFormat` global option in `ApiRequestOptions`
 
