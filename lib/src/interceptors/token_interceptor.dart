@@ -1,8 +1,6 @@
 import 'package:api_request/api_request.dart';
 import 'package:dio/dio.dart';
 
-import '../api_request_options.dart';
-
 class TokenInterceptor extends ApiInterceptor {
   final String _tag = 'token';
   @override

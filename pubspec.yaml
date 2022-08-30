@@ -3,14 +3,14 @@ description: api request for handle call api. every request is an action has exe
 version: 1.0.0-pre-2
 homepage: https://github.com/moh-abdullah-it/api_request
 environment:
-  sdk: ">=2.12.0 <3.0.0"
-  flutter: ">=2.0.0"
+  sdk: ">=2.17.0 <3.0.0"
+  flutter: ">=3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  dio: ^4.0.0
   dartz: ^0.10.1
+  dio: ^4.0.6
 
 dev_dependencies:
   flutter_test:
