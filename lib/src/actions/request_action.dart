@@ -124,6 +124,9 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return toReturn!;
   }
 
+  @Deprecated('''
+    this is deprecated user run instead
+''')
   Future<T?> execute() async {
     Response? res;
     await _execute().then((value) {
@@ -158,6 +161,9 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return _response;
   }
 
+  @Deprecated('''
+    this is deprecated use run instead
+''')
   void onQueue() {
     _performanceUtils?.startTrack();
     this.onStart();
