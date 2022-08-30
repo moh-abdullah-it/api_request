@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../api_request.dart';
+import 'api_request_error.dart';
 
 typedef GetOption<T> = T Function();
 typedef GetAsyncOption<T> = Future<T> Function();
