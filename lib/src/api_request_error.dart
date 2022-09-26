@@ -17,17 +17,13 @@ class ApiRequestError implements Exception {
 
   String? message;
 
-  StackTrace? _stackTrace;
-
-  set stackTrace(StackTrace? stack) => _stackTrace = stack;
-
-  StackTrace? get stackTrace => _stackTrace;
+  StackTrace? stackTrace;
 
   @override
   String toString() {
     var msg = 'ApiRequest Error: $message';
-    if (_stackTrace != null) {
-      msg += '\n${stackTrace}';
+    if (stackTrace != null) {
+      msg += '\n$stackTrace';
     }
     return msg;
   }
@@ -49,7 +45,7 @@ class ApiRequestError implements Exception {
       }
     } else if (apiError is Error) {
       this.message = apiError.toString();
-      this._stackTrace = apiError.stackTrace;
+      this.stackTrace = apiError.stackTrace;
       error = apiError;
     } else {
       throw Exception('Unknown Error');

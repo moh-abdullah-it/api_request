@@ -1,6 +1,9 @@
+## 1.0.0-pre-4
+* fix return response when status code not success
+
 ## 1.0.0-pre-3
 * modify `run` method use Either `ApiRequestAction`
-* modify `ApiRequestAction` to handle api server errors
+* modify `ApiRequestException` to handle api server errors
 
 ## 1.0.0-pre-2
 * modify `listFormat` global option in `ApiRequestOptions`
