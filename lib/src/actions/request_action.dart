@@ -188,36 +188,63 @@ abstract class RequestAction<T, R extends ApiRequest> {
   PerformanceReport? get performanceReport => _performanceUtils?.getReport();
 
   Future<Response?> get() async {
-    var response = await _requestClient?.dio.get(
-      _dynamicPath,
-      queryParameters: _dataMap,
-    );
+    try {
+      return await _requestClient?.dio.get(
+        _dynamicPath,
+        queryParameters: _dataMap,
+      );
+    } catch (e) {
+      if (e is DioError) {
+        return e.response;
+      }
+    }
 
-    return response;
+    return null;
   }
 
   Future<Response?> post() async {
-    var response = await _requestClient?.dio.post(
-      _dynamicPath,
-      data: _dataMap,
-    );
-    return response;
+    try {
+      return await _requestClient?.dio.post(
+        _dynamicPath,
+        data: _dataMap,
+      );
+    } catch (e) {
+      if (e is DioError) {
+        return e.response;
+      }
+    }
+
+    return null;
   }
 
   Future<Response?> put() async {
-    var response = await _requestClient?.dio.put(
-      _dynamicPath,
-      data: _dataMap,
-    );
-    return response;
+    try {
+      return await _requestClient?.dio.put(
+        _dynamicPath,
+        data: _dataMap,
+      );
+    } catch (e) {
+      if (e is DioError) {
+        return e.response;
+      }
+    }
+
+    return null;
   }
 
   Future<Response?> delete() async {
-    var response = await _requestClient?.dio.delete(
-      _dynamicPath,
-      data: _dataMap,
-    );
-    return response;
+    try {
+      return await _requestClient?.dio.delete(
+        _dynamicPath,
+        data: _dataMap,
+      );
+    } catch (e) {
+      if (e is DioError) {
+        return e.response;
+      }
+    }
+
+    return null;
   }
 
   _handleRequest(R? request) {

@@ -25,6 +25,7 @@ class RequestClient {
 
   intConfig() {
     _dio.options = BaseOptions(
+      receiveDataWhenStatusError: true,
       baseUrl: ApiRequestOptions.instance!.baseUrl,
       queryParameters: ApiRequestOptions.instance!.defaultQueryParameters,
       connectTimeout: ApiRequestOptions.instance!.connectTimeout,
