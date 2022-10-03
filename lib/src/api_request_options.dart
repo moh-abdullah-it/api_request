@@ -54,6 +54,9 @@ class ApiRequestOptions {
   // set default query parameters to url
   late Map<String, dynamic> defaultQueryParameters = {};
 
+  // set default header
+  late Map<String, dynamic> defaultHeaders = {};
+
   Function(ApiRequestError error)? onError;
 
   ListFormat listFormat = ListFormat.multiCompatible;
@@ -65,6 +68,7 @@ class ApiRequestOptions {
       GetAsyncOption<String?>? getAsyncToken,
       GetOption? unauthenticated,
       Map<String, dynamic>? defaultQueryParameters,
+      Map<String, dynamic>? defaultHeaders,
       String? tokenType,
       int? connectTimeout,
       bool? enableLog,
@@ -82,6 +86,11 @@ class ApiRequestOptions {
     } else {
       this.defaultQueryParameters =
           defaultQueryParameters ?? this.defaultQueryParameters;
+    }
+    if (this.defaultHeaders.isNotEmpty) {
+      this.defaultHeaders.addAll(defaultHeaders ?? {});
+    } else {
+      this.defaultHeaders = defaultHeaders ?? this.defaultHeaders;
     }
 
     if (this.interceptors.isNotEmpty) {

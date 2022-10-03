@@ -1,3 +1,6 @@
+## 1.0.0-pre-5
+* modify default headers to options
+
 ## 1.0.0-pre-4
 * fix return response when status code not success
 
