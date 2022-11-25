@@ -94,6 +94,8 @@ Future<String> yourAysncMethodToGetToken() async {
 void main() {
   //config api requests;
   ApiRequestOptions.instance?.config(
+    enableLog: false,
+
     /// set base url for all request
     baseUrl: 'https://jsonplaceholder.typicode.com/',
 
@@ -146,6 +148,12 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   initState() {
     super.initState();
+    SimpleApiRequest.withBuilder((data) => PostsResponse.fromList(data))
+        .get('/posts')
+        .then((response) => response?.fold((l) => null, (r) {
+              posts = r.posts;
+            }));
+
     //older way
 
     // action?.onError = (e) {
