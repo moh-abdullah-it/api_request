@@ -67,4 +67,9 @@ class RequestClient {
       _dio.interceptors.remove(interceptor);
     }
   }
+
+  static refreshConfig() {
+    print('Refresh');
+    _instance = RequestClient._();
+  }
 }

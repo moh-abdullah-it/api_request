@@ -1,3 +1,7 @@
+## 1.0.0-pre-6
+* modify `refreshConfig` to update config after change 
+* modify `SimpleApiRequest`
+
 ## 1.0.0-pre-5
 * modify default headers to options
 

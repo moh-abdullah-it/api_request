@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import '../api_request.dart';
+import 'api_request_client.dart';
 import 'api_request_error.dart';
 
 typedef GetOption<T> = T Function();
@@ -104,5 +105,9 @@ class ApiRequestOptions {
     this.enableLog = enableLog ?? this.enableLog;
     this.onError = onError ?? this.onError;
     this.listFormat = listFormat ?? this.listFormat;
+  }
+
+  static refreshConfig() {
+    RequestClient.refreshConfig();
   }
 }
