@@ -122,20 +122,19 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return toReturn!;
   }
 
-
   Future<Either<ActionRequestError?, T?>> execute() async {
     Response? response;
     ActionRequestError? apiRequestError;
     Either<ActionRequestError?, T?>? either;
-    try{
+    try {
       response = await _execute();
-      try{
+      try {
         either = right(responseBuilder(response?.data));
-      }catch(e) {
+      } catch (e) {
         apiRequestError = ActionRequestError(e, res: response);
         either = left(apiRequestError);
       }
-    }catch(e){
+    } catch (e) {
       apiRequestError = ActionRequestError(e);
       either = left(apiRequestError);
     }
@@ -197,34 +196,30 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   Future<Response?> get() async {
     return await _requestClient?.dio.get(
-        _dynamicPath,
-        queryParameters: _dataMap,
-      );
+      _dynamicPath,
+      queryParameters: _dataMap,
+    );
   }
 
   Future<Response?> post() async {
-      return await _requestClient?.dio.post(
-        _dynamicPath,
-        data: _dataMap,
-      );
+    return await _requestClient?.dio.post(
+      _dynamicPath,
+      data: _dataMap,
+    );
   }
 
   Future<Response?> put() async {
-
-      return await _requestClient?.dio.put(
-        _dynamicPath,
-        data: _dataMap,
-      );
-
+    return await _requestClient?.dio.put(
+      _dynamicPath,
+      data: _dataMap,
+    );
   }
 
   Future<Response?> delete() async {
-
-      return await _requestClient?.dio.delete(
-        _dynamicPath,
-        data: _dataMap,
-      );
-
+    return await _requestClient?.dio.delete(
+      _dynamicPath,
+      data: _dataMap,
+    );
   }
 
   _handleRequest(R? request) {

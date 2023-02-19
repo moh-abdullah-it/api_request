@@ -145,17 +145,17 @@ class SimpleApiRequest {
   static Future<Either<ActionRequestError, T?>?> _handleResponse<T>(
       {Response? response}) async {
     Either<ActionRequestError, T?>? either;
-    try{
+    try {
       either = right(responseBuilder != null
           ? responseBuilder!(response?.data)
           : response?.data);
-    }catch(e) {
-        either = left(ActionRequestError(e, res: response));
-      }
+    } catch (e) {
+      either = left(ActionRequestError(e, res: response));
+    }
     return either;
   }
 
   static Future<Either<ActionRequestError, T?>?> _handleError<T>(
-      {Object? error}) async  => left(ActionRequestError(error));
-
+          {Object? error}) async =>
+      left(ActionRequestError(error));
 }

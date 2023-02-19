@@ -173,13 +173,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
     action?.execute().then((value) {
       loading = false;
-      value.fold(
-              (l) => print(l?.message),
-              (r) {
-                posts = r?.posts;
-                setState(() {});
-              }
-              );
+      value.fold((l) => print(l?.message), (r) {
+        posts = r?.posts;
+        setState(() {});
+      });
     });
   }
 

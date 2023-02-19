@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+
 // Action Requests Types
-enum ActionErrorType{Api, Response, Unknown}
+enum ActionErrorType { Api, Response, Unknown }
 
 class ActionRequestError implements Exception {
   /// Request info.
@@ -42,7 +43,8 @@ class ActionRequestError implements Exception {
       this.statusCode = apiError.response?.statusCode;
       message = apiError.message;
       this.type = ActionErrorType.Api;
-      print("🛑️ 🛑️ 🛑️ 🛑️ 🛑️ 🛑 🛑️ 🛑 Start Action Request Error 🛑 🛑 🛑 🛑 🛑 🛑 🛑 🛑️ \n"
+      print(
+          "🛑️ 🛑️ 🛑️ 🛑️ 🛑️ 🛑 🛑️ 🛑 Start Action Request Error 🛑 🛑 🛑 🛑 🛑 🛑 🛑 🛑️ \n"
           "message: ${this.message}\n"
           "statusCode: ${this.statusCode}\n"
           "url: ${this.requestOptions?.uri.toString()}\n"
@@ -63,16 +65,15 @@ class ActionRequestError implements Exception {
       this.message = apiError.toString();
       this.stackTrace = apiError.stackTrace;
       error = apiError;
-      print("⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ Start Action Request Error ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ \n"
+      print(
+          "⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ Start Action Request Error ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ \n"
           "message: ${this.message}\n"
           "statusCode: ${res?.statusCode}\n"
           "url: ${res?.requestOptions.uri.toString()}\n"
           "method: ${res?.requestOptions.method}\n"
           "type: ${this.type.toString().split('.').last.toString()}: ${apiError.runtimeType}\n"
           "stackTrace: ${this.stackTrace}\n"
-          "response: ${res?.data}"
-
-      );
+          "response: ${res?.data}");
     } else {
       this.type = ActionErrorType.Unknown;
       print('Error: $apiError');
