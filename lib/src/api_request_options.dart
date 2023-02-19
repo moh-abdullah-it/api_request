@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 
 import '../api_request.dart';
-import 'api_request_client.dart';
 import 'api_request_error.dart';
 
 typedef GetOption<T> = T Function();
@@ -28,7 +27,7 @@ class ApiRequestOptions {
   /// Timeout in milliseconds for opening url.
   /// [Dio] will throw the [DioError] with [DioErrorType.connectTimeout] type
   ///  when time out.
-  int? connectTimeout = 0;
+  Duration? connectTimeout = Duration(seconds: 30);
 
   /// for Bearer token type.
   static String bearer = 'Bearer ';
@@ -71,7 +70,7 @@ class ApiRequestOptions {
       Map<String, dynamic>? defaultQueryParameters,
       Map<String, dynamic>? defaultHeaders,
       String? tokenType,
-      int? connectTimeout,
+      Duration? connectTimeout,
       bool? enableLog,
       List<ApiInterceptor>? interceptors,
       Function(ApiRequestError error)? onError,
