@@ -11,7 +11,7 @@ import '../utils/api_request_utils.dart';
 enum RequestMethod { GET, POST, PUT, DELETE }
 
 typedef ResponseBuilder<T> = T Function(dynamic);
-typedef ErrorHandler = Function(ApiRequestError error);
+typedef ErrorHandler = Function(ActionRequestError error);
 typedef SuccessHandler<T> = Function(T? response);
 
 abstract class RequestAction<T, R extends ApiRequest> {
@@ -54,7 +54,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   ErrorHandler onError = (error) => {};
   SuccessHandler<T> onSuccess = (response) => {};
 
-  void _streamError(ApiRequestError error) {
+  void _streamError(ActionRequestError error) {
     this.onError(error);
     if (ApiRequestOptions.instance!.onError != null) {
       ApiRequestOptions.instance!.onError!(error);
@@ -81,6 +81,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return this;
   }
 
+  @Deprecated("Please Use 'execute' this method will b delete")
   Future<Either<ApiRequestException, T?>> run() async {
     Response? response;
     Either<ApiRequestException, T?>? toReturn;
@@ -121,17 +122,24 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return toReturn!;
   }
 
-  @Deprecated('''
-    this is deprecated user run instead
-''')
-  Future<T?> execute() async {
-    Response? res;
-    await _execute().then((value) {
-      res = value;
-    }).catchError((error) {
-      this._streamError(ApiRequestError(error));
-    });
-    return responseBuilder(res);
+
+  Future<Either<ActionRequestError?, T?>> execute() async {
+    Response? response;
+    ActionRequestError? apiRequestError;
+    Either<ActionRequestError?, T?>? either;
+    try{
+      response = await _execute();
+      try{
+        either = right(responseBuilder(response?.data));
+      }catch(e) {
+        apiRequestError = ActionRequestError(e, res: response);
+        either = left(apiRequestError);
+      }
+    }catch(e){
+      apiRequestError = ActionRequestError(e);
+      either = left(apiRequestError);
+    }
+    return either;
   }
 
   Future<Response?> _execute() async {
@@ -153,7 +161,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
         break;
     }
     _performanceUtils?.endTrack();
-    this._streamSuccess(responseBuilder(_response?.data));
+    //this._streamSuccess(responseBuilder(_response?.data));
 
     return _response;
   }
@@ -181,70 +189,42 @@ abstract class RequestAction<T, R extends ApiRequest> {
     }
     _dynamicCall
         .then((value) => this._streamSuccess(responseBuilder(value?.data)))
-        .catchError((error) => this._streamError(ApiRequestError(error)))
+        .catchError((error) => this._streamError(ActionRequestError(error)))
         .then((_) => _performanceUtils?.endTrack());
   }
 
   PerformanceReport? get performanceReport => _performanceUtils?.getReport();
 
   Future<Response?> get() async {
-    try {
-      return await _requestClient?.dio.get(
+    return await _requestClient?.dio.get(
         _dynamicPath,
         queryParameters: _dataMap,
       );
-    } catch (e) {
-      if (e is DioError) {
-        return e.response;
-      }
-    }
-
-    return null;
   }
 
   Future<Response?> post() async {
-    try {
       return await _requestClient?.dio.post(
         _dynamicPath,
         data: _dataMap,
       );
-    } catch (e) {
-      if (e is DioError) {
-        return e.response;
-      }
-    }
-
-    return null;
   }
 
   Future<Response?> put() async {
-    try {
+
       return await _requestClient?.dio.put(
         _dynamicPath,
         data: _dataMap,
       );
-    } catch (e) {
-      if (e is DioError) {
-        return e.response;
-      }
-    }
 
-    return null;
   }
 
   Future<Response?> delete() async {
-    try {
+
       return await _requestClient?.dio.delete(
         _dynamicPath,
         data: _dataMap,
       );
-    } catch (e) {
-      if (e is DioError) {
-        return e.response;
-      }
-    }
 
-    return null;
   }
 
   _handleRequest(R? request) {

@@ -1,8 +1,8 @@
+import 'package:api_request/src/api_request_error.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
 import '../api_request.dart';
-import 'api_request_exception.dart';
 import 'utils/api_request_utils.dart';
 
 class SimpleApiRequest {
@@ -27,7 +27,7 @@ class SimpleApiRequest {
     return SimpleApiRequest._(withAuth);
   }
 
-  Future<Either<ApiRequestException, T?>?> get<T>(String path,
+  Future<Either<ActionRequestError, T?>?> get<T>(String path,
       {Map<String, dynamic>? queryParameters,
       Options? options,
       CancelToken? cancelToken,
@@ -46,7 +46,7 @@ class SimpleApiRequest {
     }
   }
 
-  Future<Either<ApiRequestException, T?>?> post<T>(String path,
+  Future<Either<ActionRequestError, T?>?> post<T>(String path,
       {Map<String, dynamic>? data,
       Map<String, dynamic>? queryParameters,
       Options? options,
@@ -69,7 +69,7 @@ class SimpleApiRequest {
     }
   }
 
-  Future<Either<ApiRequestException, T?>?> put<T>(String path,
+  Future<Either<ActionRequestError, T?>?> put<T>(String path,
       {data,
       Map<String, dynamic>? queryParameters,
       Options? options,
@@ -92,7 +92,7 @@ class SimpleApiRequest {
     }
   }
 
-  Future<Either<ApiRequestException, T?>?> delete<T>(String path,
+  Future<Either<ActionRequestError, T?>?> delete<T>(String path,
       {data,
       Map<String, dynamic>? queryParameters,
       Options? options,
@@ -142,50 +142,20 @@ class SimpleApiRequest {
     return newData;
   }
 
-  static Future<Either<ApiRequestException, T?>?> _handleResponse<T>(
+  static Future<Either<ActionRequestError, T?>?> _handleResponse<T>(
       {Response? response}) async {
-    Either<ApiRequestException, T?>? toReturn;
-    if (response != null) {
-      int statusCode = response.statusCode ?? 0;
-      if (statusCode >= 200 && statusCode < 300) {
-        toReturn = right(responseBuilder != null
-            ? responseBuilder!(response.data)
-            : response.data);
+    Either<ActionRequestError, T?>? either;
+    try{
+      either = right(responseBuilder != null
+          ? responseBuilder!(response?.data)
+          : response?.data);
+    }catch(e) {
+        either = left(ActionRequestError(e, res: response));
       }
-    } else {
-      toReturn = left(
-          ApiRequestException(message: "error", type: ApiExceptionType.custom));
-    }
-    return toReturn;
+    return either;
   }
 
-  static Future<Either<ApiRequestException, T?>?> _handleError<T>(
-      {Object? error}) async {
-    Either<ApiRequestException, T?>? toReturn;
-    if (error != null && error is DioError) {
-      int statusCode = error.response?.statusCode ?? 0;
-      if (statusCode >= 400 && statusCode < 500) {
-        toReturn = left(ApiRequestException(
-            message: error.response?.data?["message"]?.toString() ??
-                error.response?.statusMessage ??
-                "client_error",
-            type: ApiExceptionType.client,
-            errors: error.response?.data?["errors"],
-            statusCode: error.response?.statusCode,
-            statusMessage: error.response?.statusMessage));
-      }
-      if (statusCode >= 500) {
-        toReturn = left(ApiRequestException(
-            message:
-                "${error.response?.statusCode} : ${error.response?.statusMessage}",
-            type: ApiExceptionType.server,
-            statusCode: statusCode,
-            statusMessage: error.response?.statusMessage));
-      }
-    } else {
-      toReturn = left(
-          ApiRequestException(message: "error", type: ApiExceptionType.custom));
-    }
-    return toReturn;
-  }
+  static Future<Either<ActionRequestError, T?>?> _handleError<T>(
+      {Object? error}) async  => left(ActionRequestError(error));
+
 }

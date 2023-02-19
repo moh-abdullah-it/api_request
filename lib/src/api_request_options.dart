@@ -57,7 +57,7 @@ class ApiRequestOptions {
   // set default header
   late Map<String, dynamic> defaultHeaders = {};
 
-  Function(ApiRequestError error)? onError;
+  Function(ActionRequestError error)? onError;
 
   ListFormat listFormat = ListFormat.multiCompatible;
 
@@ -73,7 +73,7 @@ class ApiRequestOptions {
       Duration? connectTimeout,
       bool? enableLog,
       List<ApiInterceptor>? interceptors,
-      Function(ApiRequestError error)? onError,
+      Function(ActionRequestError error)? onError,
       ListFormat? listFormat}) async {
     this.baseUrl = baseUrl ?? this.baseUrl;
     this.token = token ?? this.token;

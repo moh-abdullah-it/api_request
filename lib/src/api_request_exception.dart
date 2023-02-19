@@ -1,5 +1,6 @@
 enum ApiExceptionType { client, server, custom }
 
+@Deprecated('Pleas Use ActionRequestError')
 class ApiRequestException {
   String message;
   int? statusCode;

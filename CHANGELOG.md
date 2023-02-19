@@ -1,3 +1,10 @@
+## 1.0.0-pre-7
+* modify `ActionRequestError` catch and handle errors
+* modify `execute` to handle response with errors
+* mark Deprecated to `run` method
+* mark Deprecated to `ApiRequestException` method
+* Upgrade dart 2.19 with flutter 3.7
+
 ## 1.0.0-pre-6
 * modify `refreshConfig` to update config after change 
 * modify `SimpleApiRequest`

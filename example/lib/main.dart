@@ -148,11 +148,11 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   initState() {
     super.initState();
-    SimpleApiRequest.withBuilder((data) => PostsResponse.fromList(data))
+    /*SimpleApiRequest.withBuilder((data) => PostsResponse.fromList(data))
         .get('/posts')
         .then((response) => response?.fold((l) => null, (r) {
               posts = r.posts;
-            }));
+            }));*/
 
     //older way
 
@@ -171,12 +171,15 @@ class _MyHomePageState extends State<MyHomePage> {
     // new way
     //use run action to return with Either value or error
 
-    action?.run().then((value) {
+    action?.execute().then((value) {
       loading = false;
-      value.fold((l) => print(l.message), (r) {
-        posts = r?.posts;
-        setState(() {});
-      });
+      value.fold(
+              (l) => print(l?.message),
+              (r) {
+                posts = r?.posts;
+                setState(() {});
+              }
+              );
     });
   }
 
@@ -195,9 +198,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // new way
     //use run action to return with Either value or error
-    action.run().then((value) {
+    action.execute().then((value) {
       value.fold(
-          (l) => print(l.message), (r) => print('response Post Id: ${r?.id}'));
+          (l) => print(l?.message), (r) => print('response Post Id: ${r?.id}'));
     });
   }
 
@@ -217,7 +220,7 @@ class _MyHomePageState extends State<MyHomePage> {
             : ListView.builder(
                 itemCount: posts?.length,
                 itemBuilder: (_, index) => ListTile(
-                      title: Text(posts?[index].title ?? ''),
+                      title: Text("${posts?[index].title}"),
                       onTap: () {
                         _getPostData(posts?[index].id);
                       },
