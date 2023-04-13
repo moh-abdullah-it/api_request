@@ -5,7 +5,6 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
 import '../api_request_error.dart';
-import '../api_request_exception.dart';
 import '../utils/api_request_utils.dart';
 
 enum RequestMethod { GET, POST, PUT, DELETE }
@@ -53,6 +52,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   ErrorHandler onError = (error) => {};
   SuccessHandler<T> onSuccess = (response) => {};
+  Function onDone = () => {};
 
   void _streamError(ActionRequestError error) {
     this.onError(error);
@@ -81,45 +81,24 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return this;
   }
 
-  @Deprecated("Please Use 'execute' this method will b delete")
-  Future<Either<ApiRequestException, T?>> run() async {
-    Response? response;
-    Either<ApiRequestException, T?>? toReturn;
-    await _execute().then((value) {
-      response = value;
-    }).catchError((e) {
-      toReturn = left(ApiRequestException(
-          message: e.toString(), type: ApiExceptionType.custom));
-    });
-
-    if (response != null) {
-      int statusCode = response?.statusCode ?? 0;
-      if (statusCode >= 200 && statusCode < 300) {
-        toReturn = right(responseBuilder(response?.data));
-      }
-      if (statusCode >= 400 && statusCode < 500) {
-        toReturn = left(ApiRequestException(
-            message: response?.data?["message"]?.toString() ??
-                response?.statusMessage ??
-                "client_error",
-            type: ApiExceptionType.client,
-            errors: response?.data?["errors"],
-            statusCode: response?.statusCode,
-            statusMessage: response?.statusMessage));
-      }
-      if (statusCode >= 500) {
-        toReturn = left(ApiRequestException(
-            message: "${response?.statusCode} : ${response?.statusMessage}",
-            type: ApiExceptionType.server,
-            statusCode: statusCode,
-            statusMessage: response?.statusMessage));
-      }
-    } else {
-      toReturn = left(
-          ApiRequestException(message: "error", type: ApiExceptionType.custom));
+  RequestAction listen(
+      {Function? onStart,
+      Function? onDone,
+      SuccessHandler<T>? onSuccess,
+      ErrorHandler? onError}) {
+    if (onStart != null) {
+      this.onStart = onStart;
     }
-
-    return toReturn!;
+    if (onDone != null) {
+      this.onDone = onDone;
+    }
+    if (onSuccess != null) {
+      this.onSuccess = onSuccess;
+    }
+    if (onError != null) {
+      this.onError = onError;
+    }
+    return this;
   }
 
   Future<Either<ActionRequestError?, T?>> execute() async {
@@ -130,6 +109,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
       response = await _execute();
       try {
         either = right(responseBuilder(response?.data));
+        this.onSuccess(responseBuilder(response?.data));
       } catch (e) {
         apiRequestError = ActionRequestError(e, res: response);
         either = left(apiRequestError);
@@ -138,6 +118,13 @@ abstract class RequestAction<T, R extends ApiRequest> {
       apiRequestError = ActionRequestError(e);
       either = left(apiRequestError);
     }
+    if (either.isLeft() && apiRequestError != null) {
+      this.onError(apiRequestError);
+      if (ApiRequestOptions.instance!.onError != null) {
+        ApiRequestOptions.instance!.onError!(apiRequestError);
+      }
+    }
+    this.onDone();
     return either;
   }
 
@@ -165,9 +152,6 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return _response;
   }
 
-  @Deprecated('''
-    this is deprecated use run instead
-''')
   void onQueue() {
     _performanceUtils?.startTrack();
     this.onStart();

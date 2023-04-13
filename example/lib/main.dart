@@ -78,9 +78,6 @@ class PostRequestAction extends ApiRequestAction<Post> {
 
   @override
   Function get onInit => () => print('Action Init');
-
-  @override
-  Function get onStart => () => print('Action Start');
 }
 
 String yourMethodToGetToken() {
@@ -101,6 +98,7 @@ void main() {
 
     /// set token type to 'Bearer '
     tokenType: ApiRequestOptions.bearer,
+    onError: (e) => print('Global Error'),
 
     /// set token as string api request action will with is if auth is required
     token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
@@ -142,7 +140,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Post>? posts = <Post>[];
-  final PostsRequestAction? action = PostsRequestAction();
+  final PostsRequestAction action = PostsRequestAction();
   bool loading = true;
 
   @override
@@ -171,7 +169,15 @@ class _MyHomePageState extends State<MyHomePage> {
     // new way
     //use run action to return with Either value or error
 
-    action?.execute().then((value) {
+    action
+        .listen(
+          onStart: () => print('hi onStart'),
+          onSuccess: (r) => print('hi onSuccess'),
+          onError: (e) => print('hi onError'),
+          onDone: () => print('hi onDone'),
+        )
+        .execute()
+        .then((value) {
       loading = false;
       value.fold((l) => print(l?.message), (r) {
         posts = r?.posts;
@@ -182,6 +188,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _getPostData(int? id) {
     PostRequestAction action = PostRequestAction(id: id);
+
+    action.listen(
+      onStart: () => print('hi onStart'),
+      onSuccess: (r) => print('response Post Id: ${r?.id}'),
+      onError: (e) => print('hi onError ${e.message}'),
+      onDone: () => print('hi onDone'),
+    );
 
     //older way
 
@@ -195,10 +208,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // new way
     //use run action to return with Either value or error
-    action.execute().then((value) {
-      value.fold(
-          (l) => print(l?.message), (r) => print('response Post Id: ${r?.id}'));
-    });
+    action.execute();
   }
 
   getReport() {
