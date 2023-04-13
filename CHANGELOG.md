@@ -1,6 +1,27 @@
+## 1.0.0-pre-8
+* Fix Events Global Error `onError`
+* Modify `listen` to action events
+
+## 1.0.0-pre-7
+* modify `ActionRequestError` catch and handle errors
+* modify `execute` to handle response with errors
+* mark Deprecated to `run` method
+* mark Deprecated to `ApiRequestException` method
+* Upgrade dart 2.19 with flutter 3.7
+
+## 1.0.0-pre-6
+* modify `refreshConfig` to update config after change 
+* modify `SimpleApiRequest`
+
+## 1.0.0-pre-5
+* modify default headers to options
+
+## 1.0.0-pre-4
+* fix return response when status code not success
+
 ## 1.0.0-pre-3
 * modify `run` method use Either `ApiRequestAction`
-* modify `ApiRequestAction` to handle api server errors
+* modify `ApiRequestException` to handle api server errors
 
 ## 1.0.0-pre-2
 * modify `listFormat` global option in `ApiRequestOptions`

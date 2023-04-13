@@ -27,7 +27,7 @@ class ApiRequestOptions {
   /// Timeout in milliseconds for opening url.
   /// [Dio] will throw the [DioError] with [DioErrorType.connectTimeout] type
   ///  when time out.
-  int? connectTimeout = 0;
+  Duration? connectTimeout = Duration(seconds: 30);
 
   /// for Bearer token type.
   static String bearer = 'Bearer ';
@@ -54,7 +54,10 @@ class ApiRequestOptions {
   // set default query parameters to url
   late Map<String, dynamic> defaultQueryParameters = {};
 
-  Function(ApiRequestError error)? onError;
+  // set default header
+  late Map<String, dynamic> defaultHeaders = {};
+
+  Function(ActionRequestError error)? onError;
 
   ListFormat listFormat = ListFormat.multiCompatible;
 
@@ -65,11 +68,12 @@ class ApiRequestOptions {
       GetAsyncOption<String?>? getAsyncToken,
       GetOption? unauthenticated,
       Map<String, dynamic>? defaultQueryParameters,
+      Map<String, dynamic>? defaultHeaders,
       String? tokenType,
-      int? connectTimeout,
+      Duration? connectTimeout,
       bool? enableLog,
       List<ApiInterceptor>? interceptors,
-      Function(ApiRequestError error)? onError,
+      Function(ActionRequestError error)? onError,
       ListFormat? listFormat}) async {
     this.baseUrl = baseUrl ?? this.baseUrl;
     this.token = token ?? this.token;
@@ -83,6 +87,11 @@ class ApiRequestOptions {
       this.defaultQueryParameters =
           defaultQueryParameters ?? this.defaultQueryParameters;
     }
+    if (this.defaultHeaders.isNotEmpty) {
+      this.defaultHeaders.addAll(defaultHeaders ?? {});
+    } else {
+      this.defaultHeaders = defaultHeaders ?? this.defaultHeaders;
+    }
 
     if (this.interceptors.isNotEmpty) {
       this.interceptors.addAll(interceptors ?? []);
@@ -95,5 +104,9 @@ class ApiRequestOptions {
     this.enableLog = enableLog ?? this.enableLog;
     this.onError = onError ?? this.onError;
     this.listFormat = listFormat ?? this.listFormat;
+  }
+
+  static refreshConfig() {
+    RequestClient.refreshConfig();
   }
 }

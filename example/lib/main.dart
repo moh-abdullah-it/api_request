@@ -78,9 +78,6 @@ class PostRequestAction extends ApiRequestAction<Post> {
 
   @override
   Function get onInit => () => print('Action Init');
-
-  @override
-  Function get onStart => () => print('Action Start');
 }
 
 String yourMethodToGetToken() {
@@ -94,11 +91,14 @@ Future<String> yourAysncMethodToGetToken() async {
 void main() {
   //config api requests;
   ApiRequestOptions.instance?.config(
+    enableLog: false,
+
     /// set base url for all request
     baseUrl: 'https://jsonplaceholder.typicode.com/',
 
     /// set token type to 'Bearer '
     tokenType: ApiRequestOptions.bearer,
+    onError: (e) => print('Global Error'),
 
     /// set token as string api request action will with is if auth is required
     token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
@@ -140,12 +140,18 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List<Post>? posts = <Post>[];
-  final PostsRequestAction? action = PostsRequestAction();
+  final PostsRequestAction action = PostsRequestAction();
   bool loading = true;
 
   @override
   initState() {
     super.initState();
+    /*SimpleApiRequest.withBuilder((data) => PostsResponse.fromList(data))
+        .get('/posts')
+        .then((response) => response?.fold((l) => null, (r) {
+              posts = r.posts;
+            }));*/
+
     //older way
 
     // action?.onError = (e) {
@@ -163,9 +169,17 @@ class _MyHomePageState extends State<MyHomePage> {
     // new way
     //use run action to return with Either value or error
 
-    action?.run().then((value) {
+    action
+        .listen(
+          onStart: () => print('hi onStart'),
+          onSuccess: (r) => print('hi onSuccess'),
+          onError: (e) => print('hi onError'),
+          onDone: () => print('hi onDone'),
+        )
+        .execute()
+        .then((value) {
       loading = false;
-      value.fold((l) => print(l.message), (r) {
+      value.fold((l) => print(l?.message), (r) {
         posts = r?.posts;
         setState(() {});
       });
@@ -174,6 +188,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _getPostData(int? id) {
     PostRequestAction action = PostRequestAction(id: id);
+
+    action.listen(
+      onStart: () => print('hi onStart'),
+      onSuccess: (r) => print('response Post Id: ${r?.id}'),
+      onError: (e) => print('hi onError ${e.message}'),
+      onDone: () => print('hi onDone'),
+    );
 
     //older way
 
@@ -187,10 +208,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // new way
     //use run action to return with Either value or error
-    action.run().then((value) {
-      value.fold(
-          (l) => print(l.message), (r) => print('response Post Id: ${r?.id}'));
-    });
+    action.execute();
   }
 
   getReport() {
@@ -209,7 +227,7 @@ class _MyHomePageState extends State<MyHomePage> {
             : ListView.builder(
                 itemCount: posts?.length,
                 itemBuilder: (_, index) => ListTile(
-                      title: Text(posts?[index].title ?? ''),
+                      title: Text("${posts?[index].title}"),
                       onTap: () {
                         _getPostData(posts?[index].id);
                       },
@@ -222,12 +240,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
-
-
-
-
-
 
 // add on success on error , subscripe
 // execute is back and rename new method

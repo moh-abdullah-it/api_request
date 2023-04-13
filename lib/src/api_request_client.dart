@@ -29,6 +29,7 @@ class RequestClient {
       baseUrl: ApiRequestOptions.instance!.baseUrl,
       queryParameters: ApiRequestOptions.instance!.defaultQueryParameters,
       connectTimeout: ApiRequestOptions.instance!.connectTimeout,
+      headers: ApiRequestOptions.instance!.defaultHeaders,
     );
 
     if (!kReleaseMode && ApiRequestOptions.instance!.enableLog) {
@@ -65,5 +66,10 @@ class RequestClient {
     if (_dio.interceptors.contains(interceptor)) {
       _dio.interceptors.remove(interceptor);
     }
+  }
+
+  static refreshConfig() {
+    print('Refresh');
+    _instance = RequestClient._();
   }
 }
