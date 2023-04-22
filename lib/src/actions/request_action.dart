@@ -10,10 +10,10 @@ import '../utils/api_request_utils.dart';
 enum RequestMethod { GET, POST, PUT, DELETE }
 
 typedef ResponseBuilder<T> = T Function(dynamic);
-typedef ErrorHandler = Function(ActionRequestError error);
+typedef ErrorHandler<E> = Function(ActionRequestError<E> error);
 typedef SuccessHandler<T> = Function(T? response);
 
-abstract class RequestAction<T, R extends ApiRequest> {
+abstract class RequestAction<T, E, R extends ApiRequest> {
   RequestAction(this._request) {
     this.onInit();
     _requestClient?.configAuth(authRequired);
@@ -50,11 +50,11 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   Function onStart = () => {};
 
-  ErrorHandler onError = (error) => {};
+  ErrorHandler<E> onError = (error) => {};
   SuccessHandler<T> onSuccess = (response) => {};
   Function onDone = () => {};
 
-  void _streamError(ActionRequestError error) {
+  void _streamError(ActionRequestError<E> error) {
     this.onError(error);
     if (ApiRequestOptions.instance!.onError != null) {
       ApiRequestOptions.instance!.onError!(error);
@@ -85,7 +85,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
       {Function? onStart,
       Function? onDone,
       SuccessHandler<T>? onSuccess,
-      ErrorHandler? onError}) {
+      ErrorHandler<E>? onError}) {
     if (onStart != null) {
       this.onStart = onStart;
     }
@@ -101,10 +101,10 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return this;
   }
 
-  Future<Either<ActionRequestError?, T?>> execute() async {
+  Future<Either<ActionRequestError<E>?, T?>> execute() async {
     Response? response;
-    ActionRequestError? apiRequestError;
-    Either<ActionRequestError?, T?>? either;
+    ActionRequestError<E>? apiRequestError;
+    Either<ActionRequestError<E>?, T?>? either;
     try {
       response = await _execute();
       try {

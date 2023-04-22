@@ -1,10 +1,11 @@
+import 'package:api_request/api_request.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 
 // Action Requests Types
 enum ActionErrorType { Api, Response, Unknown }
 
-class ActionRequestError implements Exception {
+class ActionRequestError<E> implements Exception {
   /// Request info.
   late RequestOptions? requestOptions;
 
@@ -16,6 +17,8 @@ class ActionRequestError implements Exception {
   /// Response info, it may be `null` if the request can't reach to
   /// the http server, for example, occurring a dns error, network is not available.
   Response? response;
+
+  E? apiErrorResponse;
 
   /// The original error/exception object; It's usually not null when `type`
   /// is DioErrorType.DEFAULT
@@ -43,6 +46,9 @@ class ActionRequestError implements Exception {
       this.statusCode = apiError.response?.statusCode;
       message = apiError.message;
       this.type = ActionErrorType.Api;
+      if(ApiRequestOptions.instance?.errorBuilder != null) {
+        this.apiErrorResponse = ApiRequestOptions.instance?.errorBuilder!(res?.data ?? response?.data);
+      }
       print(
           "🛑️ 🛑️ 🛑️ 🛑️ 🛑️ 🛑 🛑️ 🛑 Start Action Request Error 🛑 🛑 🛑 🛑 🛑 🛑 🛑 🛑️ \n"
           "message: ${this.message}\n"

@@ -1,4 +1,5 @@
 import 'package:api_request/api_request.dart';
+import 'package:example/ApiError.dart';
 import 'package:flutter/material.dart';
 
 class Post {
@@ -45,7 +46,7 @@ class PostsResponse {
   }
 }
 
-class PostsRequestAction extends ApiRequestAction<PostsResponse> {
+class PostsRequestAction extends ApiRequestAction<PostsResponse, ApiError> {
   @override
   bool get authRequired => false;
 
@@ -56,11 +57,16 @@ class PostsRequestAction extends ApiRequestAction<PostsResponse> {
   RequestMethod get method => RequestMethod.GET;
 
   @override
+  ErrorHandler<ApiError> get onError => (e) {
+    print(e.apiErrorResponse?.message);
+  };
+
+  @override
   ResponseBuilder<PostsResponse> get responseBuilder =>
       (list) => PostsResponse.fromList(list);
 }
 
-class PostRequestAction extends ApiRequestAction<Post> {
+class PostRequestAction extends ApiRequestAction<Post, ApiError> {
   final int? id;
   PostRequestAction({this.id});
 
@@ -68,7 +74,7 @@ class PostRequestAction extends ApiRequestAction<Post> {
   bool get authRequired => false;
 
   @override
-  String get path => 'posts/$id';
+  String get path => 'posts/245346562$id';
 
   @override
   RequestMethod get method => RequestMethod.GET;
@@ -95,6 +101,8 @@ void main() {
 
     /// set base url for all request
     baseUrl: 'https://jsonplaceholder.typicode.com/',
+
+    errorBuilder: (json) => ApiError.fromJson(json),
 
     /// set token type to 'Bearer '
     tokenType: ApiRequestOptions.bearer,
@@ -173,7 +181,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .listen(
           onStart: () => print('hi onStart'),
           onSuccess: (r) => print('hi onSuccess'),
-          onError: (e) => print('hi onError'),
+          onError: (e) => print('hi onError ${e.apiErrorResponse?.message}'),
           onDone: () => print('hi onDone'),
         )
         .execute()

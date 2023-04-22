@@ -59,6 +59,8 @@ class ApiRequestOptions {
 
   Function(ActionRequestError error)? onError;
 
+  Function(Map<String, dynamic> data)? errorBuilder;
+
   ListFormat listFormat = ListFormat.multiCompatible;
 
   void config(
@@ -74,6 +76,7 @@ class ApiRequestOptions {
       bool? enableLog,
       List<ApiInterceptor>? interceptors,
       Function(ActionRequestError error)? onError,
+       Function(Map<String, dynamic> data)? errorBuilder,
       ListFormat? listFormat}) async {
     this.baseUrl = baseUrl ?? this.baseUrl;
     this.token = token ?? this.token;
@@ -103,6 +106,7 @@ class ApiRequestOptions {
     this.connectTimeout = connectTimeout ?? this.connectTimeout;
     this.enableLog = enableLog ?? this.enableLog;
     this.onError = onError ?? this.onError;
+    this.errorBuilder = errorBuilder ?? this.errorBuilder;
     this.listFormat = listFormat ?? this.listFormat;
   }
 
