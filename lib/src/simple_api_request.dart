@@ -1,4 +1,3 @@
-import 'package:api_request/src/api_request_error.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 

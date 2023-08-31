@@ -39,15 +39,16 @@ class ActionRequestError<E> implements Exception {
   }
 
   ActionRequestError(dynamic apiError, {Response? res}) {
-    if (apiError is DioError) {
+    if (apiError is DioException) {
       this.requestOptions = apiError.requestOptions;
       this.response = apiError.response;
       this.error = apiError.error;
       this.statusCode = apiError.response?.statusCode;
       message = apiError.message;
       this.type = ActionErrorType.Api;
-      if(ApiRequestOptions.instance?.errorBuilder != null) {
-        this.apiErrorResponse = ApiRequestOptions.instance?.errorBuilder!(res?.data ?? response?.data);
+      if (ApiRequestOptions.instance?.errorBuilder != null) {
+        this.apiErrorResponse = ApiRequestOptions
+            .instance?.errorBuilder!(res?.data ?? response?.data);
       }
       print(
           "🛑️ 🛑️ 🛑️ 🛑️ 🛑️ 🛑 🛑️ 🛑 Start Action Request Error 🛑 🛑 🛑 🛑 🛑 🛑 🛑 🛑️ \n"

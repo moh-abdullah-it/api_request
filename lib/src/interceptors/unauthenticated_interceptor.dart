@@ -5,7 +5,7 @@ import '../../api_request.dart';
 class UnauthenticatedInterceptor extends ApiInterceptor {
   final String _tag = 'unauthenticated';
   @override
-  void onError(DioError error, ErrorInterceptorHandler handler) {
+  void onError(DioException error, ErrorInterceptorHandler handler) {
     if (error.response?.statusCode == 401) {
       ApiRequestOptions.instance?.unauthenticated!();
     }

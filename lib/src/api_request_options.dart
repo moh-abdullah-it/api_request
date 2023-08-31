@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 
 import '../api_request.dart';
-import 'api_request_error.dart';
 
 typedef GetOption<T> = T Function();
 typedef GetAsyncOption<T> = Future<T> Function();
@@ -25,7 +24,7 @@ class ApiRequestOptions {
   bool enableLog = true;
 
   /// Timeout in milliseconds for opening url.
-  /// [Dio] will throw the [DioError] with [DioErrorType.connectTimeout] type
+  /// [Dio] will throw the [DioException] with [DioExceptionType.connectTimeout] type
   ///  when time out.
   Duration? connectTimeout = Duration(seconds: 30);
 
@@ -76,7 +75,7 @@ class ApiRequestOptions {
       bool? enableLog,
       List<ApiInterceptor>? interceptors,
       Function(ActionRequestError error)? onError,
-       Function(Map<String, dynamic> data)? errorBuilder,
+      Function(Map<String, dynamic> data)? errorBuilder,
       ListFormat? listFormat}) async {
     this.baseUrl = baseUrl ?? this.baseUrl;
     this.token = token ?? this.token;

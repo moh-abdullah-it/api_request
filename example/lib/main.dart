@@ -58,8 +58,8 @@ class PostsRequestAction extends ApiRequestAction<PostsResponse, ApiError> {
 
   @override
   ErrorHandler<ApiError> get onError => (e) {
-    print(e.apiErrorResponse?.message);
-  };
+        print(e.apiErrorResponse?.message);
+      };
 
   @override
   ResponseBuilder<PostsResponse> get responseBuilder =>

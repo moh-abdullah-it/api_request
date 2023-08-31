@@ -1,6 +1,5 @@
-## 1.0.0-pre-8
-* Fix Events Global Error `onError`
-* Modify `listen` to action events
+## 1.0.0
+* upgrade `dependencies`
 
 ## 1.0.0-pre-7
 * modify `ActionRequestError` catch and handle errors

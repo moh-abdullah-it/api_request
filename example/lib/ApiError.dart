@@ -5,10 +5,10 @@ class ApiError {
 
   ApiError.fromJson(Map<String, dynamic> json) {
     message = json['message'];
-    if(json['errors'] is Map) {
+    if (json['errors'] is Map) {
       errorMessage = ErrorMessage.fromJson(json['errors']);
     }
-    if(json['errors'] is List) {
+    if (json['errors'] is List) {
       errorsMessages = <ErrorMessage>[];
       json['errors'].forEach((item) {
         errorsMessages?.add(ErrorMessage.fromJson(item));

@@ -76,7 +76,7 @@ class ApiLogInterceptor extends ApiInterceptor {
   }
 
   @override
-  void onError(DioError err, ErrorInterceptorHandler handler) async {
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (error) {
       logPrint('*** ApiRequestError ***:');
       logPrint('uri: ${err.requestOptions.uri}');
