@@ -46,7 +46,7 @@ class PostsResponse {
   }
 }
 
-class PostsRequestAction extends ApiRequestAction<PostsResponse, ApiError> {
+class PostsRequestAction extends ApiRequestAction<PostsResponse> {
   @override
   bool get authRequired => false;
 
@@ -57,16 +57,11 @@ class PostsRequestAction extends ApiRequestAction<PostsResponse, ApiError> {
   RequestMethod get method => RequestMethod.GET;
 
   @override
-  ErrorHandler<ApiError> get onError => (e) {
-        print(e.apiErrorResponse?.message);
-      };
-
-  @override
   ResponseBuilder<PostsResponse> get responseBuilder =>
       (list) => PostsResponse.fromList(list);
 }
 
-class PostRequestAction extends ApiRequestAction<Post, ApiError> {
+class PostRequestAction extends ApiRequestAction<Post> {
   final int? id;
   PostRequestAction({this.id});
 

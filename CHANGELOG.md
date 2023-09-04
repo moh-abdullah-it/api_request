@@ -1,3 +1,6 @@
+## 1.0.1
+* remove api error from `ApiRequestAction`
+
 ## 1.0.0
 * upgrade `dependencies`
 

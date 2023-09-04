@@ -12,7 +12,7 @@ typedef ResponseBuilder<T> = T Function(dynamic);
 typedef ErrorHandler<E> = Function(ActionRequestError<E> error);
 typedef SuccessHandler<T> = Function(T? response);
 
-abstract class RequestAction<T, E, R extends ApiRequest> {
+abstract class RequestAction<T, R extends ApiRequest> {
   RequestAction(this._request) {
     this.onInit();
     _requestClient?.configAuth(authRequired);
@@ -49,11 +49,11 @@ abstract class RequestAction<T, E, R extends ApiRequest> {
 
   Function onStart = () => {};
 
-  ErrorHandler<E> onError = (error) => {};
+  ErrorHandler onError = (error) => {};
   SuccessHandler<T> onSuccess = (response) => {};
   Function onDone = () => {};
 
-  void _streamError(ActionRequestError<E> error) {
+  void _streamError(ActionRequestError error) {
     this.onError(error);
     if (ApiRequestOptions.instance!.onError != null) {
       ApiRequestOptions.instance!.onError!(error);
@@ -84,7 +84,7 @@ abstract class RequestAction<T, E, R extends ApiRequest> {
       {Function? onStart,
       Function? onDone,
       SuccessHandler<T>? onSuccess,
-      ErrorHandler<E>? onError}) {
+      ErrorHandler? onError}) {
     if (onStart != null) {
       this.onStart = onStart;
     }
@@ -100,10 +100,10 @@ abstract class RequestAction<T, E, R extends ApiRequest> {
     return this;
   }
 
-  Future<Either<ActionRequestError<E>?, T?>> execute() async {
+  Future<Either<ActionRequestError?, T?>> execute() async {
     Response? response;
-    ActionRequestError<E>? apiRequestError;
-    Either<ActionRequestError<E>?, T?>? either;
+    ActionRequestError? apiRequestError;
+    Either<ActionRequestError?, T?>? either;
     try {
       response = await _execute();
       try {
