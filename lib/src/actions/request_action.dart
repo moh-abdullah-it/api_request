@@ -33,6 +33,8 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   bool get authRequired => false;
 
+  bool get disableGlobalOnError => false;
+
   String get path;
 
   RequestMethod get method;
@@ -55,7 +57,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   void _streamError(ActionRequestError error) {
     this.onError(error);
-    if (ApiRequestOptions.instance!.onError != null) {
+    if (ApiRequestOptions.instance!.onError != null && !disableGlobalOnError) {
       ApiRequestOptions.instance!.onError!(error);
     }
     if (!this._streamController.isClosed) {
@@ -119,7 +121,8 @@ abstract class RequestAction<T, R extends ApiRequest> {
     }
     if (either.isLeft() && apiRequestError != null) {
       this.onError(apiRequestError);
-      if (ApiRequestOptions.instance!.onError != null) {
+      if (ApiRequestOptions.instance!.onError != null &&
+          !disableGlobalOnError) {
         ApiRequestOptions.instance!.onError!(apiRequestError);
       }
     }

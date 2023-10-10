@@ -1,3 +1,6 @@
+## 1.0.2
+* add `disableGlobalOnError` to disable global error tracking
+
 ## 1.0.1
 * remove api error from `ApiRequestAction`
 

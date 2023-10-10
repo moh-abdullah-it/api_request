@@ -66,6 +66,9 @@ class PostRequestAction extends ApiRequestAction<Post> {
   PostRequestAction({this.id});
 
   @override
+  bool get disableGlobalOnError => true;
+
+  @override
   bool get authRequired => false;
 
   @override
