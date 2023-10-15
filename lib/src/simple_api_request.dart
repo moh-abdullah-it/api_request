@@ -1,5 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart';
 
 import '../api_request.dart';
 import 'utils/api_request_utils.dart';

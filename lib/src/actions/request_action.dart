@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:api_request/api_request.dart';
 import 'package:dartz/dartz.dart';
-import 'package:dio/dio.dart';
 
 import '../utils/api_request_utils.dart';
 
@@ -16,9 +15,6 @@ abstract class RequestAction<T, R extends ApiRequest> {
   RequestAction(this._request) {
     this.onInit();
     _requestClient?.configAuth(authRequired);
-    _handleRequest(this._request);
-    _performanceUtils?.init(this.runtimeType.toString(),
-        ApiRequestOptions.instance!.baseUrl + _dynamicPath);
   }
 
   final RequestClient? _requestClient = RequestClient.instance;
@@ -50,6 +46,8 @@ abstract class RequestAction<T, R extends ApiRequest> {
   Function onInit = () => {};
 
   Function onStart = () => {};
+
+  Map<String, dynamic> _query = {};
 
   ErrorHandler onError = (error) => {};
   SuccessHandler<T> onSuccess = (response) => {};
@@ -131,6 +129,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   Future<Response?> _execute() async {
+    _handleRequest(this._request);
     this.onStart();
     _performanceUtils?.startTrack();
     Response? _response;
@@ -155,6 +154,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   void onQueue() {
+    _handleRequest(this._request);
     _performanceUtils?.startTrack();
     this.onStart();
     Future<Response?> _dynamicCall;
@@ -209,8 +209,11 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   _handleRequest(R? request) {
-    Map<String, dynamic> newData = ApiRequestUtils.handleDynamicPathWithData(
-        path, toMap.isNotEmpty ? toMap : request?.toMap() ?? {});
+    Map<String, dynamic> mapData =
+        toMap.isNotEmpty ? toMap : request?.toMap() ?? {};
+    mapData.addAll(_query);
+    Map<String, dynamic> newData =
+        ApiRequestUtils.handleDynamicPathWithData(path, mapData);
     this._dynamicPath = newData['path'];
     this._dataMap = newData['data'];
     if ((this.contentDataType == ContentDataType.formData ||
@@ -221,11 +224,18 @@ abstract class RequestAction<T, R extends ApiRequest> {
     } else {
       this._dataMap = newData['data'];
     }
+    _performanceUtils?.init(this.runtimeType.toString(),
+        ApiRequestOptions.instance!.baseUrl + _dynamicPath);
   }
 
   void dispose() {
     if (!_streamController.isClosed) {
       _streamController.close();
     }
+  }
+
+  RequestAction where(String key, dynamic value) {
+    _query[key] = value;
+    return this;
   }
 }

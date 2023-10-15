@@ -1,5 +1,4 @@
 import 'package:api_request/api_request.dart';
-import 'package:dio/dio.dart';
 
 class ApiLogInterceptor extends ApiInterceptor {
   final String _tag = 'log';

@@ -1,3 +1,6 @@
+## 1.0.3
+* add `where` to Query Builder
+
 ## 1.0.2
 * add `disableGlobalOnError` to disable global error tracking
 
@@ -6,7 +9,6 @@
 
 ## 1.0.0
 * upgrade `dependencies`
-
 ## 1.0.0-pre-7
 * modify `ActionRequestError` catch and handle errors
 * modify `execute` to handle response with errors

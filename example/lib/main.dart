@@ -62,8 +62,7 @@ class PostsRequestAction extends ApiRequestAction<PostsResponse> {
 }
 
 class PostRequestAction extends ApiRequestAction<Post> {
-  final int? id;
-  PostRequestAction({this.id});
+  PostRequestAction();
 
   @override
   bool get disableGlobalOnError => true;
@@ -72,7 +71,7 @@ class PostRequestAction extends ApiRequestAction<Post> {
   bool get authRequired => false;
 
   @override
-  String get path => 'posts/245346562$id';
+  String get path => 'posts/{id}';
 
   @override
   RequestMethod get method => RequestMethod.GET;
@@ -95,7 +94,7 @@ Future<String> yourAysncMethodToGetToken() async {
 void main() {
   //config api requests;
   ApiRequestOptions.instance?.config(
-    enableLog: false,
+    enableLog: true,
 
     /// set base url for all request
     baseUrl: 'https://jsonplaceholder.typicode.com/',
@@ -176,6 +175,8 @@ class _MyHomePageState extends State<MyHomePage> {
     //use run action to return with Either value or error
 
     action
+        .where('test', 'test')
+        .where('if', 2)
         .listen(
           onStart: () => print('hi onStart'),
           onSuccess: (r) => print('hi onSuccess'),
@@ -193,14 +194,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getPostData(int? id) {
-    PostRequestAction action = PostRequestAction(id: id);
-
-    action.listen(
-      onStart: () => print('hi onStart'),
-      onSuccess: (r) => print('response Post Id: ${r?.id}'),
-      onError: (e) => print('hi onError ${e.message}'),
-      onDone: () => print('hi onDone'),
-    );
+    PostRequestAction()
+        .where('id', id)
+        .listen(
+          onStart: () => print('hi onStart'),
+          onSuccess: (r) => print('response Post Id: ${r?.id}'),
+          onError: (e) => print('hi onError ${e.message}'),
+          onDone: () => print('hi onDone'),
+        )
+        .execute();
 
     //older way
 
@@ -214,7 +216,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // new way
     //use run action to return with Either value or error
-    action.execute();
+    // action.execute();
   }
 
   getReport() {

@@ -1,5 +1,3 @@
-import 'package:dio/dio.dart';
-
 import '../api_request.dart';
 
 typedef GetOption<T> = T Function();
