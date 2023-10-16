@@ -1,3 +1,6 @@
+## 1.0.4
+* fix Unsupported operation: Cannot modify unmodifiable map
+
 ## 1.0.3
 * add `where` to Query Builder
 

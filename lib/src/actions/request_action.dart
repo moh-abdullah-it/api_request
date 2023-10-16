@@ -210,7 +210,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   _handleRequest(R? request) {
     Map<String, dynamic> mapData =
-        toMap.isNotEmpty ? toMap : request?.toMap() ?? {};
+        Map.of(toMap.isNotEmpty ? toMap : request?.toMap() ?? {});
     mapData.addAll(_query);
     Map<String, dynamic> newData =
         ApiRequestUtils.handleDynamicPathWithData(path, mapData);
