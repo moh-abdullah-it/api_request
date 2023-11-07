@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:api_request/api_request.dart';
 import 'package:dartz/dartz.dart';
@@ -104,8 +105,14 @@ abstract class RequestAction<T, R extends ApiRequest> {
     Response? response;
     ActionRequestError? apiRequestError;
     Either<ActionRequestError?, T?>? either;
+    log('${authRequired} -- ${await ApiRequestOptions.instance?.getTokenString()}');
     try {
-      response = await _execute();
+      if (authRequired == false ||
+          (await ApiRequestOptions.instance?.getTokenString()) != null) {
+        response = await _execute();
+      } else {
+        log('You Need To Login to Request This action: ${this.runtimeType}');
+      }
       try {
         either = right(responseBuilder(response?.data));
         this.onSuccess(responseBuilder(response?.data));

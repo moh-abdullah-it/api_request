@@ -110,4 +110,17 @@ class ApiRequestOptions {
   static refreshConfig() {
     RequestClient.refreshConfig();
   }
+
+  Future<String?> getTokenString() async {
+    if (ApiRequestOptions.instance?.token != null) {
+      return token;
+    }
+    if (ApiRequestOptions.instance?.getToken != null) {
+      return getToken!.call();
+    }
+    if (ApiRequestOptions.instance?.getAsyncToken != null) {
+      return await getAsyncToken!.call();
+    }
+    return null;
+  }
 }

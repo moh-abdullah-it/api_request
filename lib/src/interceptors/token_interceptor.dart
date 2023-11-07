@@ -5,26 +5,13 @@ class TokenInterceptor extends ApiInterceptor {
   @override
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
-    String? token = await getToken();
+    String? token = await ApiRequestOptions.instance?.getTokenString();
     print("configAuth token $token");
     if (token != null) {
       options.headers.addAll(
           {"Authorization": "${ApiRequestOptions.instance?.tokenType}$token"});
     }
     super.onRequest(options, handler);
-  }
-
-  Future<String?> getToken() async {
-    if (ApiRequestOptions.instance?.token != null) {
-      return ApiRequestOptions.instance?.token;
-    }
-    if (ApiRequestOptions.instance?.getToken != null) {
-      return ApiRequestOptions.instance?.getToken!();
-    }
-    if (ApiRequestOptions.instance?.getAsyncToken != null) {
-      return await ApiRequestOptions.instance?.getAsyncToken!();
-    }
-    return null;
   }
 
   @override

@@ -106,10 +106,10 @@ void main() {
     onError: (e) => print('Global Error'),
 
     /// set token as string api request action will with is if auth is required
-    token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
+    //token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
 
     /// we will call this method to get token in run time -- method must be return string
-    getToken: () => yourMethodToGetToken(),
+    //getToken: () => yourMethodToGetToken(),
 
     /// we will call this method to get token in run time -- method must be return Future<string>
     getAsyncToken: () => yourAysncMethodToGetToken(),
