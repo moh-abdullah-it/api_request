@@ -1,3 +1,7 @@
+## 1.0.7
+* add `whereQuery`, `whereMapQuery` to build query builder
+* add `where`, `whereMap` to request data
+
 ## 1.0.6
 * print form data in log
 

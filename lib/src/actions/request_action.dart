@@ -48,6 +48,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   Function onStart = () => {};
 
+  Map<String, dynamic> _data = {};
   Map<String, dynamic> _query = {};
 
   ErrorHandler onError = (error) => {};
@@ -188,37 +189,32 @@ abstract class RequestAction<T, R extends ApiRequest> {
   PerformanceReport? get performanceReport => _performanceUtils?.getReport();
 
   Future<Response?> get() async {
+    _query.addAll(Map.of(_dataMap));
     return await _requestClient?.dio.get(
       _dynamicPath,
-      queryParameters: _dataMap,
+      queryParameters: _query,
     );
   }
 
   Future<Response?> post() async {
-    return await _requestClient?.dio.post(
-      _dynamicPath,
-      data: _dataMap,
-    );
+    return await _requestClient?.dio
+        .post(_dynamicPath, data: _dataMap, queryParameters: _query);
   }
 
   Future<Response?> put() async {
-    return await _requestClient?.dio.put(
-      _dynamicPath,
-      data: _dataMap,
-    );
+    return await _requestClient?.dio
+        .put(_dynamicPath, data: _dataMap, queryParameters: _query);
   }
 
   Future<Response?> delete() async {
-    return await _requestClient?.dio.delete(
-      _dynamicPath,
-      data: _dataMap,
-    );
+    return await _requestClient?.dio
+        .delete(_dynamicPath, data: _dataMap, queryParameters: _query);
   }
 
   _handleRequest(R? request) {
     Map<String, dynamic> mapData =
         Map.of(toMap.isNotEmpty ? toMap : request?.toMap() ?? {});
-    mapData.addAll(_query);
+    mapData.addAll(_data);
     Map<String, dynamic> newData =
         ApiRequestUtils.handleDynamicPathWithData(path, mapData);
     this._dynamicPath = newData['path'];
@@ -242,7 +238,22 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   RequestAction where(String key, dynamic value) {
+    _data[key] = value;
+    return this;
+  }
+
+  RequestAction whereMap(Map<String, dynamic> map) {
+    _data.addAll(Map.of(map));
+    return this;
+  }
+
+  RequestAction whereQuery(String key, dynamic value) {
     _query[key] = value;
+    return this;
+  }
+
+  RequestAction whereMapQuery(Map<String, dynamic> map) {
+    _query.addAll(Map.of(map));
     return this;
   }
 }

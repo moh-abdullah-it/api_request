@@ -175,8 +175,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //use run action to return with Either value or error
 
     action
-        .where('test', 'test')
-        .where('if', 2)
+        .whereQuery('test', 'test')
         .listen(
           onStart: () => print('hi onStart'),
           onSuccess: (r) => print('hi onSuccess'),
@@ -196,6 +195,7 @@ class _MyHomePageState extends State<MyHomePage> {
   _getPostData(int? id) {
     PostRequestAction()
         .where('id', id)
+        .whereMapQuery({'id': 'test'})
         .listen(
           onStart: () => print('hi onStart'),
           onSuccess: (r) => print('response Post Id: ${r?.id}'),
