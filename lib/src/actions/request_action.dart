@@ -102,38 +102,39 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return this;
   }
 
-  Future<Either<ActionRequestError?, T?>> execute() async {
+  Future<Either<ActionRequestError?, T?>?> execute() async {
     Response? response;
     ActionRequestError? apiRequestError;
     Either<ActionRequestError?, T?>? either;
     log('${authRequired} -- ${await ApiRequestOptions.instance?.getTokenString()}');
-    try {
-      if (authRequired == false ||
-          (await ApiRequestOptions.instance?.getTokenString()) != null) {
-        response = await _execute();
-      } else {
-        log('You Need To Login to Request This action: ${this.runtimeType}');
-      }
+    if (authRequired == false ||
+        (await ApiRequestOptions.instance?.getTokenString()) != null) {
       try {
-        either = right(responseBuilder(response?.data));
-        this.onSuccess(responseBuilder(response?.data));
+        response = await _execute();
+        try {
+          either = right(responseBuilder(response?.data));
+          this.onSuccess(responseBuilder(response?.data));
+        } catch (e) {
+          apiRequestError = ActionRequestError(e, res: response);
+          either = left(apiRequestError);
+        }
       } catch (e) {
-        apiRequestError = ActionRequestError(e, res: response);
+        apiRequestError = ActionRequestError(e);
         either = left(apiRequestError);
       }
-    } catch (e) {
-      apiRequestError = ActionRequestError(e);
-      either = left(apiRequestError);
-    }
-    if (either.isLeft() && apiRequestError != null) {
-      this.onError(apiRequestError);
-      if (ApiRequestOptions.instance!.onError != null &&
-          !disableGlobalOnError) {
-        ApiRequestOptions.instance!.onError!(apiRequestError);
+      if (either.isLeft() && apiRequestError != null) {
+        this.onError(apiRequestError);
+        if (ApiRequestOptions.instance!.onError != null &&
+            !disableGlobalOnError) {
+          ApiRequestOptions.instance!.onError!(apiRequestError);
+        }
       }
+      this.onDone();
+      return either;
+    } else {
+      log('You Need To Login to Request This action: ${this.runtimeType}');
     }
-    this.onDone();
-    return either;
+    return null;
   }
 
   Future<Response?> _execute() async {

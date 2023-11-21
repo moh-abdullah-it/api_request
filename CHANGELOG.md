@@ -1,3 +1,6 @@
+## 1.0.8
+* change execute return to `Either<ActionRequestError?, T?>?` may be return null
+
 ## 1.0.7
 * add `whereQuery`, `whereMapQuery` to build query builder
 * add `where`, `whereMap` to request data
