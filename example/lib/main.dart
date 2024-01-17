@@ -176,6 +176,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     action
         .whereQuery('test', 'test')
+        .withHeader('test-me', 'try-me')
         .listen(
           onStart: () => print('hi onStart'),
           onSuccess: (r) => print('hi onSuccess'),

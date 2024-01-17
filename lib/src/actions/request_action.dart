@@ -54,6 +54,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   ErrorHandler onError = (error) => {};
   SuccessHandler<T> onSuccess = (response) => {};
   Function onDone = () => {};
+  Map<String, dynamic> _headers = {};
 
   void _streamError(ActionRequestError error) {
     this.onError(error);
@@ -191,25 +192,29 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   Future<Response?> get() async {
     _query.addAll(Map.of(_dataMap));
-    return await _requestClient?.dio.get(
-      _dynamicPath,
-      queryParameters: _query,
-    );
+    return await _requestClient?.dio.get(_dynamicPath,
+        queryParameters: _query, options: Options(headers: _headers));
   }
 
   Future<Response?> post() async {
-    return await _requestClient?.dio
-        .post(_dynamicPath, data: _dataMap, queryParameters: _query);
+    return await _requestClient?.dio.post(_dynamicPath,
+        data: _dataMap,
+        queryParameters: _query,
+        options: Options(headers: _headers));
   }
 
   Future<Response?> put() async {
-    return await _requestClient?.dio
-        .put(_dynamicPath, data: _dataMap, queryParameters: _query);
+    return await _requestClient?.dio.put(_dynamicPath,
+        data: _dataMap,
+        queryParameters: _query,
+        options: Options(headers: _headers));
   }
 
   Future<Response?> delete() async {
-    return await _requestClient?.dio
-        .delete(_dynamicPath, data: _dataMap, queryParameters: _query);
+    return await _requestClient?.dio.delete(_dynamicPath,
+        data: _dataMap,
+        queryParameters: _query,
+        options: Options(headers: _headers));
   }
 
   _handleRequest(R? request) {
@@ -255,6 +260,16 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   RequestAction whereMapQuery(Map<String, dynamic> map) {
     _query.addAll(Map.of(map));
+    return this;
+  }
+
+  RequestAction withHeaders(Map<String, dynamic> headers) {
+    _headers.addAll(Map.of(headers));
+    return this;
+  }
+
+  RequestAction withHeader(String key, dynamic value) {
+    _headers[key] = value;
     return this;
   }
 }

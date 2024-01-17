@@ -1,3 +1,6 @@
+## 1.0.9
+* add `withHeader`, `withHeaders` to add action headers in runtime.
+
 ## 1.0.8
 * change execute return to `Either<ActionRequestError?, T?>?` may be return null
 
