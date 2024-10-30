@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:developer';
-
 import 'package:api_request/api_request.dart';
 import 'package:dartz/dartz.dart';
 
@@ -22,6 +21,8 @@ abstract class RequestAction<T, R extends ApiRequest> {
   final ApiRequestPerformance? _performanceUtils =
       ApiRequestPerformance.instance;
   final StreamController<T?> _streamController = StreamController<T?>();
+
+  TestResponse? _testResponse;
 
   Stream<T?> get stream => _streamController.stream;
   R? _request;
@@ -80,6 +81,11 @@ abstract class RequestAction<T, R extends ApiRequest> {
       Function()? onDone,
       Function(Object error)? onError}) {
     stream.listen(onSuccess, onError: onError, onDone: onDone);
+    return this;
+  }
+
+  RequestAction test(TestResponse testResponse) {
+    this._testResponse = testResponse;
     return this;
   }
 
@@ -192,11 +198,18 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   Future<Response?> get() async {
     _query.addAll(Map.of(_dataMap));
+    if (_testResponse != null) {
+      return await _buildTestResponse("GET");
+    }
+
     return await _requestClient?.dio.get(_dynamicPath,
         queryParameters: _query, options: Options(headers: _headers));
   }
 
   Future<Response?> post() async {
+    if (_testResponse != null) {
+      return await _buildTestResponse("POST");
+    }
     return await _requestClient?.dio.post(_dynamicPath,
         data: _dataMap,
         queryParameters: _query,
@@ -204,6 +217,9 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   Future<Response?> put() async {
+    if (_testResponse != null) {
+      return await _buildTestResponse("PUT");
+    }
     return await _requestClient?.dio.put(_dynamicPath,
         data: _dataMap,
         queryParameters: _query,
@@ -211,6 +227,9 @@ abstract class RequestAction<T, R extends ApiRequest> {
   }
 
   Future<Response?> delete() async {
+    if (_testResponse != null) {
+      return await _buildTestResponse("DELETE");
+    }
     return await _requestClient?.dio.delete(_dynamicPath,
         data: _dataMap,
         queryParameters: _query,
@@ -271,5 +290,30 @@ abstract class RequestAction<T, R extends ApiRequest> {
   RequestAction withHeader(String key, dynamic value) {
     _headers[key] = value;
     return this;
+  }
+
+  Future<Response?> _buildTestResponse(String method) async {
+    await Future.delayed((Duration(seconds: 1)));
+    RequestOptions options = RequestOptions(
+      method: "$method",
+      path: _dynamicPath,
+      headers: _headers,
+      queryParameters: _query,
+      data: _dataMap,
+    );
+    if ((_testResponse?.statusCode ?? 300) >= 300) {
+      throw DioException.badResponse(
+        statusCode: _testResponse?.statusCode ?? 0,
+        requestOptions: options,
+        response: Response(
+            statusCode: _testResponse?.statusCode,
+            requestOptions: options,
+            data: _testResponse?.data),
+      );
+    }
+    return Response(
+        statusCode: _testResponse?.statusCode,
+        requestOptions: options,
+        data: _testResponse?.data);
   }
 }
