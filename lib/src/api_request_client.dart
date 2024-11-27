@@ -22,10 +22,10 @@ class RequestClient {
     return _instance;
   }
 
-  intConfig() {
+  intConfig() async {
     _dio.options = BaseOptions(
       receiveDataWhenStatusError: true,
-      baseUrl: ApiRequestOptions.instance!.baseUrl,
+      baseUrl: await ApiRequestOptions.instance!.getBaseUrlString(),
       queryParameters: ApiRequestOptions.instance!.defaultQueryParameters,
       connectTimeout: ApiRequestOptions.instance!.connectTimeout,
       headers: ApiRequestOptions.instance!.defaultHeaders,
@@ -68,7 +68,6 @@ class RequestClient {
   }
 
   static refreshConfig() {
-    print('Refresh');
     _instance = RequestClient._();
   }
 }

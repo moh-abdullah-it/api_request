@@ -1,7 +1,9 @@
 import 'package:api_request/api_request.dart';
 import 'package:example/ApiError.dart';
 import 'package:flutter/material.dart';
+import 'package:json/json.dart';
 
+@JsonCodable()
 class Post {
   final int id;
   final int userId;

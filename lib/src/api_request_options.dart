@@ -34,7 +34,11 @@ class ApiRequestOptions {
 
   /// base url for your api
   /// You can set it ApiRequestOptions.instance.baseUrl = 'https://example.com';
-  late String baseUrl;
+  late String? baseUrl;
+
+  GetOption<String>? getBaseUrl;
+
+  GetAsyncOption<String>? getAsyncBaseUrl;
 
   /// access token
   String? token;
@@ -62,6 +66,8 @@ class ApiRequestOptions {
 
   void config(
       {String? baseUrl,
+      GetOption<String>? getBaseUrl,
+      GetAsyncOption<String>? getAsyncBaseUrl,
       String? token,
       GetOption<String?>? getToken,
       GetAsyncOption<String?>? getAsyncToken,
@@ -76,6 +82,8 @@ class ApiRequestOptions {
       Function(Map<String, dynamic> data)? errorBuilder,
       ListFormat? listFormat}) async {
     this.baseUrl = baseUrl ?? this.baseUrl;
+    this.getBaseUrl = getBaseUrl ?? this.getBaseUrl;
+    this.getAsyncBaseUrl = getAsyncBaseUrl ?? this.getAsyncBaseUrl;
     this.token = token ?? this.token;
     this.getToken = getToken ?? this.getToken;
     this.getAsyncToken = getAsyncToken ?? this.getAsyncToken;
@@ -122,5 +130,18 @@ class ApiRequestOptions {
       return await getAsyncToken!.call();
     }
     return null;
+  }
+
+  Future<String> getBaseUrlString() async {
+
+    if (ApiRequestOptions.instance?.getBaseUrl != null) {
+      baseUrl = getBaseUrl!.call();
+    }
+
+    if (ApiRequestOptions.instance?.getAsyncBaseUrl != null) {
+      baseUrl = await getAsyncBaseUrl!.call();
+    }
+      assert(baseUrl != null , 'BaseUrl cannot be Null');
+    return baseUrl!;
   }
 }
