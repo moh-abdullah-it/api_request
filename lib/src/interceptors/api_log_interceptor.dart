@@ -59,14 +59,15 @@ class ApiLogInterceptor extends ApiInterceptor {
       options.headers.forEach((key, v) => _printKV(' $key', v));
     }
     if (requestBody) {
-      logPrint('data:');
+
       if (options.data is FormData) {
         _printKV(
-            'fields: ',
+            'Data Fields: ',
             options.data.fields
-                .map((MapEntry entry) => '${entry.key}: ${entry.value}'));
-        _printKV('files: ', options.data.files);
+                .map((MapEntry entry) => '${entry.key}: ${entry.value}').toString());
+        _printKV('Data Files: ', options.data.files);
       } else {
+        logPrint('data:');
         _printAll(options.data);
       }
     }

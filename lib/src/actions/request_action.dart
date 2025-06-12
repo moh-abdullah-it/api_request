@@ -253,7 +253,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
       this._dataMap = newData['data'];
     }
     _performanceUtils?.init(this.runtimeType.toString(),
-        ApiRequestOptions.instance!.baseUrl + _dynamicPath);
+        ApiRequestOptions.instance!.baseUrl! + _dynamicPath);
   }
 
   void dispose() {
