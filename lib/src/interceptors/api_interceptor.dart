@@ -18,14 +18,14 @@ import '../../api_request.dart';
 ///     options.headers['X-Custom-Header'] = 'custom-value';
 ///     super.onRequest(options, handler);
 ///   }
-/// 
+///
 ///   @override
 ///   void onResponse(Response response, ResponseInterceptorHandler handler) {
 ///     // Process response data
 ///     print('Response received: ${response.statusCode}');
 ///     super.onResponse(response, handler);
 ///   }
-/// 
+///
 ///   @override
 ///   void onError(DioException error, ErrorInterceptorHandler handler) {
 ///     // Handle errors

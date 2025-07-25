@@ -16,14 +16,14 @@ enum ActionErrorType {
   /// such as network timeouts, connection failures, or HTTP status errors.
   /// These errors typically originate from Dio exceptions.
   Api,
-  
+
   /// Response parsing or processing errors.
   ///
   /// This type indicates errors that occur while processing the server
   /// response, such as JSON parsing failures or response builder errors.
   /// These errors typically occur after receiving a response.
   Response,
-  
+
   /// Unknown or unexpected errors.
   ///
   /// This type indicates errors that don't fit into the other categories.
@@ -141,7 +141,7 @@ class ActionRequestError<E> implements Exception {
   /// For [ActionErrorType.Api] errors, this contains the original [DioException].
   /// For [ActionErrorType.Response] errors, this contains the parsing error.
   dynamic error;
-  
+
   /// Validation errors from the server response.
   ///
   /// If the server returns validation errors in a 'errors' field,

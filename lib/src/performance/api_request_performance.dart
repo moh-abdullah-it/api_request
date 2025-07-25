@@ -14,7 +14,7 @@ import '../../api_request.dart';
 /// ```dart
 /// // Performance is automatically tracked
 /// final result = await GetPostsAction().execute();
-/// 
+///
 /// // Access the performance report
 /// final report = action.performanceReport;
 /// print('Request took: ${report?.duration?.inMilliseconds}ms');
@@ -26,11 +26,11 @@ import '../../api_request.dart';
 ///
 /// ```dart
 /// final performance = ApiRequestPerformance.instance;
-/// 
+///
 /// // Print all performance reports
 /// print('All API Performance:');
 /// print(performance.toString());
-/// 
+///
 /// // Access individual reports
 /// performance.actionsReport.forEach((url, report) {
 ///   if (report?.duration != null && report!.duration!.inSeconds > 2) {
@@ -48,14 +48,14 @@ import '../../api_request.dart';
 /// final reports = performance.actionsReport.values
 ///   .where((report) => report?.duration != null)
 ///   .toList();
-/// 
+///
 /// // Find slowest requests
 /// reports.sort((a, b) => b!.duration!.compareTo(a!.duration!));
 /// print('Slowest requests:');
 /// reports.take(5).forEach((report) {
 ///   print('${report!.actionName}: ${report.duration}');
 /// });
-/// 
+///
 /// // Calculate average request time
 /// final avgMs = reports
 ///   .map((r) => r!.duration!.inMilliseconds)
@@ -71,7 +71,7 @@ import '../../api_request.dart';
 /// class PerformanceMonitor {
 ///   static void trackSlowRequests() {
 ///     final performance = ApiRequestPerformance.instance;
-///     
+///
 ///     performance.actionsReport.forEach((url, report) {
 ///       if (report?.duration != null && report!.duration!.inSeconds > 3) {
 ///         Analytics.track('slow_api_request', {
@@ -115,13 +115,13 @@ class ApiRequestPerformance {
   /// });
   /// ```
   Map<String?, PerformanceReport?> actionsReport = {};
-  
+
   /// The timestamp when the current request tracking started
   late DateTime _startTime;
-  
+
   /// The name/type of the current action being tracked
   String? _actionName;
-  
+
   /// The full URL path of the current request being tracked
   String? _fullPath;
 

@@ -12,7 +12,7 @@
 /// ```dart
 /// final result = await GetPostsAction().execute();
 /// final report = action.performanceReport;
-/// 
+///
 /// if (report != null) {
 ///   print('Request completed in: ${report.duration?.inMilliseconds}ms');
 ///   print('Action: ${report.actionName}');
@@ -66,7 +66,7 @@ class PerformanceReport {
   /// print('Action: ${report.actionName}'); // "Action: GetPostsAction"
   /// ```
   final String? actionName;
-  
+
   /// The complete URL that was requested.
   ///
   /// This includes the base URL and the resolved path with any dynamic
@@ -78,7 +78,7 @@ class PerformanceReport {
   /// print('URL: ${report.fullPath}'); // "URL: https://api.example.com/posts/123"
   /// ```
   final String? fullPath;
-  
+
   /// The total time taken to complete the request.
   ///
   /// This duration is measured from the moment [ApiRequestPerformance.startTrack]

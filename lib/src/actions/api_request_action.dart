@@ -13,12 +13,12 @@ import 'package:api_request/api_request.dart';
 /// class GetPostsAction extends ApiRequestAction<List<Post>> {
 ///   @override
 ///   String get path => '/posts';
-///   
+///
 ///   @override
 ///   RequestMethod get method => RequestMethod.GET;
-///   
+///
 ///   @override
-///   ResponseBuilder<List<Post>> get responseBuilder => 
+///   ResponseBuilder<List<Post>> get responseBuilder =>
 ///     (data) => (data as List).map((item) => Post.fromJson(item)).toList();
 /// }
 ///
@@ -41,12 +41,12 @@ import 'package:api_request/api_request.dart';
 /// class GetUserPostsAction extends ApiRequestAction<List<Post>> {
 ///   @override
 ///   String get path => '/users/{userId}/posts';
-///   
+///
 ///   @override
 ///   RequestMethod get method => RequestMethod.GET;
-///   
+///
 ///   @override
-///   ResponseBuilder<List<Post>> get responseBuilder => 
+///   ResponseBuilder<List<Post>> get responseBuilder =>
 ///     (data) => (data as List).map((item) => Post.fromJson(item)).toList();
 /// }
 ///

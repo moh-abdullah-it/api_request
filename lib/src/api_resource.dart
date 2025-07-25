@@ -23,7 +23,7 @@ import 'utils/api_request_utils.dart';
 /// class PostsResource extends ApiResource {
 ///   @override
 ///   String get path => '/posts';
-///   
+///
 ///   @override
 ///   bool get authRequired => false;
 /// }
@@ -32,7 +32,7 @@ import 'utils/api_request_utils.dart';
 /// final result = await resource
 ///   .withBuilder((data) => (data as List).map((item) => Post.fromJson(item)).toList())
 ///   .get<List<Post>>();
-/// 
+///
 /// result?.fold(
 ///   (error) => print('Error: ${error.message}'),
 ///   (posts) => print('Loaded ${posts?.length} posts'),
@@ -47,7 +47,7 @@ import 'utils/api_request_utils.dart';
 /// class UserPostsResource extends ApiResource {
 ///   @override
 ///   String get path => '/users/{userId}/posts';
-///   
+///
 ///   @override
 ///   Map<String, dynamic> get toMap => {'userId': 123};
 /// }

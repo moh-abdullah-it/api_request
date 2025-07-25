@@ -1,3 +1,12 @@
+## 1.1.1
+* Enhanced comprehensive dartdoc documentation across all library files
+* Added detailed class-level documentation for ApiResource with usage examples and comparison guidance
+* Added extensive documentation for SimpleApiRequest covering all HTTP methods, factory constructors, and error handling patterns
+* Enhanced ApiRequestUtils with complete method documentation and path variable resolution examples
+* Improved documentation consistency with cross-references, parameter descriptions, and return value explanations
+* Added migration guidance and best practices throughout the codebase
+* Enhanced code examples with real-world usage patterns and error handling demonstrations
+
 ## 1.1.0
 * Completely rewrote README.md with modern structure and comprehensive documentation
 * Added professional header with badges and clear feature highlights

@@ -30,7 +30,7 @@ import '../../api_request.dart';
 ///   unauthenticated: () async {
 ///     // Clear expired token
 ///     await TokenService.clearToken();
-///     
+///
 ///     // Redirect to login
 ///     Navigator.pushNamedAndRemoveUntil(
 ///       context, '/login', (route) => false,
@@ -81,7 +81,7 @@ import '../../api_request.dart';
 /// class LoginAction extends RequestAction<AuthResponse, LoginRequest> {
 ///   @override
 ///   bool get disableGlobalOnError => true;  // Handle 401 locally
-///   
+///
 ///   // Custom error handling in onError callback
 /// }
 /// ```
@@ -108,7 +108,7 @@ import '../../api_request.dart';
 class UnauthenticatedInterceptor extends ApiInterceptor {
   /// Internal tag for interceptor identification
   final String _tag = 'unauthenticated';
-  
+
   /// Intercepts request errors to handle 401 Unauthorized responses.
   ///
   /// This method is called whenever an HTTP request fails with an error.

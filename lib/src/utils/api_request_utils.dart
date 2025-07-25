@@ -36,7 +36,7 @@ class ApiRequestUtils {
   ///   '/users/{id}/posts',
   ///   {'id': 123, 'limit': 10, 'offset': 0}
   /// );
-  /// 
+  ///
   /// print(result['path']);  // '/users/123/posts'
   /// print(result['data']);  // {'limit': 10, 'offset': 0}
   /// ```

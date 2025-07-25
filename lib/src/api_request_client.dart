@@ -73,7 +73,7 @@ import '../api_request.dart';
 class RequestClient {
   /// The singleton instance of the request client
   static RequestClient? _instance;
-  
+
   /// The underlying Dio HTTP client instance
   final Dio _dio = Dio();
 

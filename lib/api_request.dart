@@ -28,10 +28,10 @@
 /// class GetPostAction extends ApiRequestAction<Post> {
 ///   @override
 ///   String get path => '/posts/{id}';
-///   
+///
 ///   @override
 ///   RequestMethod get method => RequestMethod.GET;
-///   
+///
 ///   @override
 ///   ResponseBuilder<Post> get responseBuilder => (data) => Post.fromJson(data);
 /// }

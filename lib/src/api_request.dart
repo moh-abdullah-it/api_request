@@ -16,7 +16,7 @@ enum ContentDataType {
   /// ContentDataType? get contentDataType => ContentDataType.formData;
   /// ```
   formData,
-  
+
   /// JSON body data serialization (default).
   ///
   /// Use this for standard API requests where data is sent as JSON
@@ -63,7 +63,7 @@ enum ContentDataType {
 ///   };
 ///
 ///   @override
-///   ContentDataType? get contentDataType => 
+///   ContentDataType? get contentDataType =>
 ///     image != null ? ContentDataType.formData : ContentDataType.bodyData;
 /// }
 /// ```
@@ -106,11 +106,11 @@ mixin ApiRequest {
   /// Example:
   /// ```dart
   /// @override
-  /// ContentDataType? get contentDataType => 
+  /// ContentDataType? get contentDataType =>
   ///   hasFiles ? ContentDataType.formData : ContentDataType.bodyData;
   /// ```
   ContentDataType? get contentDataType => ContentDataType.bodyData;
-  
+
   /// Converts the request object to a map for HTTP transmission.
   ///
   /// This method should return a [Map<String, dynamic>] containing all

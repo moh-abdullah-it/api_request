@@ -155,10 +155,10 @@ import 'utils/api_request_utils.dart';
 class SimpleApiRequest {
   /// The HTTP client instance used for making requests
   final RequestClient _requestClient;
-  
+
   /// Optional response builder for parsing responses
   final ResponseBuilder? _responseBuilder;
-  
+
   /// Whether this instance requires authentication
   final bool _withAuth;
 

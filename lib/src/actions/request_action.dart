@@ -13,13 +13,13 @@ import '../utils/api_request_utils.dart';
 enum RequestMethod {
   /// HTTP GET method for retrieving data
   GET,
-  
+
   /// HTTP POST method for creating new resources
   POST,
-  
+
   /// HTTP PUT method for updating existing resources
   PUT,
-  
+
   /// HTTP DELETE method for removing resources
   DELETE
 }
@@ -87,16 +87,16 @@ typedef SuccessHandler<T> = Function(T? response);
 /// ```dart
 /// class CreatePostAction extends RequestAction<Post, CreatePostRequest> {
 ///   CreatePostAction(CreatePostRequest request) : super(request);
-///   
+///
 ///   @override
 ///   String get path => '/posts';
-///   
+///
 ///   @override
 ///   RequestMethod get method => RequestMethod.POST;
-///   
+///
 ///   @override
 ///   bool get authRequired => true;
-///   
+///
 ///   @override
 ///   ResponseBuilder<Post> get responseBuilder => (data) => Post.fromJson(data);
 /// }
@@ -155,11 +155,11 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   /// The singleton HTTP client instance for making requests
   final RequestClient? _requestClient = RequestClient.instance;
-  
+
   /// The singleton performance monitoring instance for tracking request timing
   final ApiRequestPerformance? _performanceUtils =
       ApiRequestPerformance.instance;
-      
+
   /// Stream controller for reactive programming support
   final StreamController<T?> _streamController = StreamController<T?>();
 
@@ -177,7 +177,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   /// action.onQueue();
   /// ```
   Stream<T?> get stream => _streamController.stream;
-  
+
   /// The request data object passed to the constructor
   R? _request;
 
@@ -306,7 +306,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   /// Additional data parameters to include in the request
   Map<String, dynamic> _data = {};
-  
+
   /// Query parameters to append to the request URL
   Map<String, dynamic> _query = {};
 
@@ -325,7 +325,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   /// );
   /// ```
   ErrorHandler onError = (error) => {};
-  
+
   /// Success handler callback for successful responses.
   ///
   /// This callback is invoked after successful request execution and
@@ -341,7 +341,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   /// );
   /// ```
   SuccessHandler<T> onSuccess = (response) => {};
-  
+
   /// Completion handler callback called after request finishes.
   ///
   /// This callback is invoked after request completion, regardless of
@@ -357,7 +357,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   /// );
   /// ```
   Function onDone = () => {};
-  
+
   /// Custom headers to include with the request
   Map<String, dynamic> _headers = {};
 
@@ -497,7 +497,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   /// Example:
   /// ```dart
   /// final result = await GetPostAction().where('id', 123).execute();
-  /// 
+  ///
   /// if (result != null) {
   ///   result.fold(
   ///     (error) => showError('Failed to load post: ${error.message}'),
@@ -603,7 +603,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   ///   (data) => handleSuccess(data),
   ///   onError: (error) => handleError(error),
   /// );
-  /// 
+  ///
   /// action.onQueue(); // Starts the request
   /// ```
   ///
@@ -661,7 +661,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   /// ```dart
   /// final result = await action.execute();
   /// final report = action.performanceReport;
-  /// 
+  ///
   /// if (report != null) {
   ///   print('Request took ${report.duration.inMilliseconds}ms');
   ///   print('URL: ${report.url}');

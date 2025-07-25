@@ -64,15 +64,15 @@ import 'package:api_request/api_request.dart';
 /// class GetUserProfileAction extends ApiRequestAction<UserProfile> {
 ///   @override
 ///   String get path => '/user/profile';
-///   
+///
 ///   @override
 ///   RequestMethod get method => RequestMethod.GET;
-///   
+///
 ///   @override
 ///   bool get authRequired => true;  // Triggers TokenInterceptor
-///   
+///
 ///   @override
-///   ResponseBuilder<UserProfile> get responseBuilder => 
+///   ResponseBuilder<UserProfile> get responseBuilder =>
 ///     (data) => UserProfile.fromJson(data);
 /// }
 /// ```
@@ -90,7 +90,7 @@ import 'package:api_request/api_request.dart';
 class TokenInterceptor extends ApiInterceptor {
   /// Internal tag for interceptor identification
   final String _tag = 'token';
-  
+
   /// Intercepts outgoing requests to add authentication tokens.
   ///
   /// This method is called before each HTTP request that requires authentication.

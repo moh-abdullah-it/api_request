@@ -7,10 +7,10 @@
 enum ApiExceptionType {
   /// Client-side errors (4xx status codes)
   client,
-  
-  /// Server-side errors (5xx status codes)  
+
+  /// Server-side errors (5xx status codes)
   server,
-  
+
   /// Custom application errors
   custom
 }
@@ -54,26 +54,26 @@ enum ApiExceptionType {
 class ApiRequestException {
   /// The error message describing what went wrong
   String message;
-  
+
   /// The HTTP status code of the failed request
   int? statusCode;
-  
+
   /// The HTTP status message
   String? statusMessage;
-  
+
   /// The type of exception that occurred
   ApiExceptionType type;
-  
+
   /// Additional error details (e.g., validation errors)
   dynamic errors;
-  
+
   /// Creates a new [ApiRequestException].
   ///
   /// Parameters:
   /// - [message]: Required error message
   /// - [type]: Required exception type
   /// - [statusCode]: Optional HTTP status code
-  /// - [statusMessage]: Optional HTTP status message  
+  /// - [statusMessage]: Optional HTTP status message
   /// - [errors]: Optional additional error details
   ///
   /// @deprecated Use [ActionRequestError] constructor instead.

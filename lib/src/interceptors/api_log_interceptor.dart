@@ -49,7 +49,7 @@ import 'package:api_request/api_request.dart';
 /// // Log to file
 /// var file = File('./api_logs.txt');
 /// var sink = file.openWrite();
-/// 
+///
 /// final logInterceptor = ApiLogInterceptor(
 ///   logPrint: sink.writeln,
 /// );
@@ -61,7 +61,7 @@ import 'package:api_request/api_request.dart';
 /// ```dart
 /// // Use Flutter's debugPrint
 /// import 'package:flutter/foundation.dart';
-/// 
+///
 /// final logInterceptor = ApiLogInterceptor(
 ///   logPrint: debugPrint,
 /// );
@@ -82,7 +82,7 @@ import 'package:api_request/api_request.dart';
 /// headers:
 ///  Authorization: Bearer abc123
 ///  Content-Type: application/json
-/// 
+///
 /// *** Api Response ***
 /// uri: https://api.example.com/posts/123
 /// statusCode: 200
