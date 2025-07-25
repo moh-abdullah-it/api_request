@@ -29,7 +29,8 @@ class PostCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Theme.of(context).primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -37,9 +38,9 @@ class PostCard extends StatelessWidget {
                     child: Text(
                       'ID: ${post.id}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                   ),
                   if (onDelete != null)
@@ -54,8 +55,8 @@ class PostCard extends StatelessWidget {
               Text(
                 post.title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                      fontWeight: FontWeight.bold,
+                    ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -63,8 +64,8 @@ class PostCard extends StatelessWidget {
               Text(
                 post.body,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -75,8 +76,8 @@ class PostCard extends StatelessWidget {
                   Text(
                     'User ID: ${post.userId}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[500],
-                    ),
+                          color: Colors.grey[500],
+                        ),
                   ),
                   const Icon(
                     Icons.arrow_forward_ios,

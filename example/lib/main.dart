@@ -35,7 +35,7 @@ void main() {
 
       // Token configuration
       tokenType: ApiRequestOptions.bearer,
-      
+
       // Global error handler
       onError: (error) {
         print('🚨 Global API Error: ${error.message}');
@@ -116,15 +116,15 @@ class _PostsListScreenState extends State<PostsListScreen> {
     });
 
     try {
-      final result = AppConfig.useMockData 
+      final result = AppConfig.useMockData
           ? await MockPostService.getAllPosts()
           : await PostService.getAllPosts();
-      
+
       result?.fold(
         (error) {
           if (mounted) {
             setState(() {
-              errorMessage = AppConfig.useMockData 
+              errorMessage = AppConfig.useMockData
                   ? 'Mock API Error: ${error.message}'
                   : 'Failed to load posts: ${error.message}';
               isLoading = false;
@@ -185,10 +185,10 @@ class _PostsListScreenState extends State<PostsListScreen> {
 
     if (confirmed == true) {
       try {
-        final result = AppConfig.useMockData 
+        final result = AppConfig.useMockData
             ? await MockPostService.deletePost(post.id)
             : await PostService.deletePost(post.id);
-        
+
         result?.fold(
           (error) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -242,7 +242,8 @@ class _PostsListScreenState extends State<PostsListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppConfig.useMockData ? 'Posts Demo (Mock)' : 'Posts Demo (Live)'),
+        title: Text(
+            AppConfig.useMockData ? 'Posts Demo (Mock)' : 'Posts Demo (Live)'),
         actions: [
           if (!AppConfig.useMockData)
             IconButton(
@@ -251,14 +252,15 @@ class _PostsListScreenState extends State<PostsListScreen> {
               tooltip: 'Performance Report',
             ),
           IconButton(
-            icon: Icon(AppConfig.useMockData ? Icons.offline_bolt : Icons.cloud),
+            icon:
+                Icon(AppConfig.useMockData ? Icons.offline_bolt : Icons.cloud),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Data Source'),
                   content: Text(
-                    AppConfig.useMockData 
+                    AppConfig.useMockData
                         ? 'Currently using mock data for demonstration. To use live API, set AppConfig.useMockData to false.'
                         : 'Currently using live API data from ${AppConfig.baseUrl}',
                   ),
@@ -271,7 +273,8 @@ class _PostsListScreenState extends State<PostsListScreen> {
                 ),
               );
             },
-            tooltip: AppConfig.useMockData ? 'Using Mock Data' : 'Using Live API',
+            tooltip:
+                AppConfig.useMockData ? 'Using Mock Data' : 'Using Live API',
           ),
         ],
       ),

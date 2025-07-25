@@ -133,7 +133,6 @@ class ApiRequestOptions {
   }
 
   Future<String> getBaseUrlString() async {
-
     if (ApiRequestOptions.instance?.getBaseUrl != null) {
       baseUrl = getBaseUrl!.call();
     }
@@ -141,7 +140,7 @@ class ApiRequestOptions {
     if (ApiRequestOptions.instance?.getAsyncBaseUrl != null) {
       baseUrl = await getAsyncBaseUrl!.call();
     }
-      assert(baseUrl != null , 'BaseUrl cannot be Null');
+    assert(baseUrl != null, 'BaseUrl cannot be Null');
     return baseUrl!;
   }
 }

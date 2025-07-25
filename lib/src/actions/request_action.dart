@@ -4,7 +4,6 @@ import 'dart:developer';
 import 'package:api_request/api_request.dart';
 import 'package:fpdart/fpdart.dart';
 
-
 import '../utils/api_request_utils.dart';
 
 enum RequestMethod { GET, POST, PUT, DELETE }
@@ -106,8 +105,9 @@ abstract class RequestAction<T, R extends ApiRequest> {
 
   Future<Either<ActionRequestError, T>?> execute() async {
     log('${authRequired} -- ${await ApiRequestOptions.instance?.getTokenString()}');
-    
-    if (authRequired && (await ApiRequestOptions.instance?.getTokenString()) == null) {
+
+    if (authRequired &&
+        (await ApiRequestOptions.instance?.getTokenString()) == null) {
       log('You Need To Login to Request This action: ${this.runtimeType}');
       return null;
     }
@@ -115,7 +115,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
     try {
       final response = await _execute();
       final result = await _parseResponse(response);
-      
+
       return result.fold(
         (error) {
           _handleError(error);
@@ -134,7 +134,8 @@ abstract class RequestAction<T, R extends ApiRequest> {
     }
   }
 
-  Future<Either<ActionRequestError, T>> _parseResponse(Response? response) async {
+  Future<Either<ActionRequestError, T>> _parseResponse(
+      Response? response) async {
     try {
       final parsedData = responseBuilder(response?.data);
       return right(parsedData);

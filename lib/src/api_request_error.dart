@@ -48,8 +48,8 @@ class ActionRequestError<E> implements Exception {
       if (ApiRequestOptions.instance?.errorBuilder != null) {
         final errorData = res?.data ?? response?.data;
         if (errorData is Map<String, dynamic>) {
-          this.apiErrorResponse = ApiRequestOptions
-              .instance?.errorBuilder!(errorData);
+          this.apiErrorResponse =
+              ApiRequestOptions.instance?.errorBuilder!(errorData);
         }
       }
       print(

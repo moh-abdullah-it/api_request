@@ -154,8 +154,7 @@ class SimpleApiRequest {
 
   Map<String, dynamic> _handleRequest(String path,
       {Map<String, dynamic>? data, bool isFormData = true}) {
-    final newData =
-        ApiRequestUtils.handleDynamicPathWithData(path, data ?? {});
+    final newData = ApiRequestUtils.handleDynamicPathWithData(path, data ?? {});
     if (isFormData && newData['data'] is Map<String, dynamic>) {
       newData['data'] = FormData.fromMap(
           newData['data'], ApiRequestOptions.instance!.listFormat);

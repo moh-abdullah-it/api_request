@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:example/main.dart';
 
 void main() {
-  testWidgets('Posts app loads and displays mock data', (WidgetTester tester) async {
+  testWidgets('Posts app loads and displays mock data',
+      (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const PostsApp());
 
@@ -19,9 +20,10 @@ void main() {
 
     // Verify that posts are displayed
     expect(find.byType(ListView), findsOneWidget);
-    
+
     // Verify demo mode banner is shown
-    expect(find.text('Demo Mode: Using mock data (network requests disabled)'), findsOneWidget);
+    expect(find.text('Demo Mode: Using mock data (network requests disabled)'),
+        findsOneWidget);
 
     // Verify at least one post card is displayed
     expect(find.text('Welcome to API Request Package'), findsOneWidget);

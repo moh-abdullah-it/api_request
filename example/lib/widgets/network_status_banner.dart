@@ -24,9 +24,9 @@ class NetworkStatusBanner extends StatelessWidget {
             child: Text(
               'Demo Mode: Using mock data (network requests disabled)',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.orange[800],
-                fontWeight: FontWeight.w500,
-              ),
+                    color: Colors.orange[800],
+                    fontWeight: FontWeight.w500,
+                  ),
             ),
           ),
           TextButton(

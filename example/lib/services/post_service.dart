@@ -70,11 +70,14 @@ class GetPostsAction extends ApiRequestAction<List<Post>> {
 
   @override
   ResponseBuilder<List<Post>> get responseBuilder => (data) {
-    if (data is List) {
-      return data.map((json) => Post.fromJson(json as Map<String, dynamic>)).toList();
-    }
-    throw FormatException('Expected a list of posts, got: ${data.runtimeType}');
-  };
+        if (data is List) {
+          return data
+              .map((json) => Post.fromJson(json as Map<String, dynamic>))
+              .toList();
+        }
+        throw FormatException(
+            'Expected a list of posts, got: ${data.runtimeType}');
+      };
 }
 
 /// Action to get a single post
@@ -90,11 +93,12 @@ class GetPostAction extends ApiRequestAction<Post> {
 
   @override
   ResponseBuilder<Post> get responseBuilder => (data) {
-    if (data is Map<String, dynamic>) {
-      return Post.fromJson(data);
-    }
-    throw FormatException('Expected a post object, got: ${data.runtimeType}');
-  };
+        if (data is Map<String, dynamic>) {
+          return Post.fromJson(data);
+        }
+        throw FormatException(
+            'Expected a post object, got: ${data.runtimeType}');
+      };
 }
 
 /// Request data for creating a post
@@ -111,10 +115,10 @@ class CreatePostRequest with ApiRequest {
 
   @override
   Map<String, dynamic> toMap() => {
-    'userId': userId,
-    'title': title,
-    'body': body,
-  };
+        'userId': userId,
+        'title': title,
+        'body': body,
+      };
 }
 
 /// Action to create a post
@@ -132,11 +136,12 @@ class CreatePostAction extends RequestAction<Post, CreatePostRequest> {
 
   @override
   ResponseBuilder<Post> get responseBuilder => (data) {
-    if (data is Map<String, dynamic>) {
-      return Post.fromJson(data);
-    }
-    throw FormatException('Expected a post object, got: ${data.runtimeType}');
-  };
+        if (data is Map<String, dynamic>) {
+          return Post.fromJson(data);
+        }
+        throw FormatException(
+            'Expected a post object, got: ${data.runtimeType}');
+      };
 }
 
 /// Request data for updating a post
@@ -155,11 +160,11 @@ class UpdatePostRequest with ApiRequest {
 
   @override
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'userId': userId,
-    'title': title,
-    'body': body,
-  };
+        'id': id,
+        'userId': userId,
+        'title': title,
+        'body': body,
+      };
 }
 
 /// Action to update a post
@@ -177,11 +182,12 @@ class UpdatePostAction extends RequestAction<Post, UpdatePostRequest> {
 
   @override
   ResponseBuilder<Post> get responseBuilder => (data) {
-    if (data is Map<String, dynamic>) {
-      return Post.fromJson(data);
-    }
-    throw FormatException('Expected a post object, got: ${data.runtimeType}');
-  };
+        if (data is Map<String, dynamic>) {
+          return Post.fromJson(data);
+        }
+        throw FormatException(
+            'Expected a post object, got: ${data.runtimeType}');
+      };
 }
 
 /// Action to delete a post
@@ -196,5 +202,6 @@ class DeletePostAction extends ApiRequestAction<bool> {
   RequestMethod get method => RequestMethod.DELETE;
 
   @override
-  ResponseBuilder<bool> get responseBuilder => (data) => true; // Delete typically returns empty response
+  ResponseBuilder<bool> get responseBuilder =>
+      (data) => true; // Delete typically returns empty response
 }

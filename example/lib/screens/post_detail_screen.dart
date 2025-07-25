@@ -31,10 +31,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     });
 
     try {
-      final result = AppConfig.useMockData 
+      final result = AppConfig.useMockData
           ? await MockPostService.getPost(widget.postId)
           : await PostService.getPost(widget.postId);
-      
+
       result?.fold(
         (error) {
           if (mounted) {
@@ -85,10 +85,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
     if (confirmed == true && post != null) {
       try {
-        final result = AppConfig.useMockData 
+        final result = AppConfig.useMockData
             ? await MockPostService.deletePost(post!.id)
             : await PostService.deletePost(post!.id);
-        
+
         result?.fold(
           (error) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -204,9 +204,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor.withOpacity(0.1),
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
@@ -219,7 +221,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                       ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.grey.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(16),
@@ -238,24 +241,24 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   Text(
                     'Title',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.bold,
-                    ),
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     post!.title,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 20),
                   Text(
                     'Content',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.bold,
-                    ),
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 8),
                   Text(

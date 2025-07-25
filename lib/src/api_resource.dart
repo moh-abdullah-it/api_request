@@ -1,11 +1,9 @@
-
 import 'package:fpdart/fpdart.dart';
 
 import '../api_request.dart';
 import 'utils/api_request_utils.dart';
 
 abstract class ApiResource {
-  
   bool get authRequired => false;
 
   String get path;
@@ -25,13 +23,13 @@ abstract class ApiResource {
     return this;
   }
 
-  Future<Either<ActionRequestError, T?>?> _get<T>(
-      String path, { Map<String, dynamic>? queryParameters,
-        Options? options,
-        CancelToken? cancelToken,
-        ProgressCallback? onReceiveProgress}) async {
+  Future<Either<ActionRequestError, T?>?> _get<T>(String path,
+      {Map<String, dynamic>? queryParameters,
+      Options? options,
+      CancelToken? cancelToken,
+      ProgressCallback? onReceiveProgress}) async {
     var handler =
-    _handleRequest(path, data: queryParameters, isFormData: false);
+        _handleRequest(path, data: queryParameters, isFormData: false);
     try {
       Response? response = await _requestClient?.dio.get(handler['path'],
           queryParameters: handler['data'],
@@ -48,7 +46,7 @@ abstract class ApiResource {
       {Map<String, dynamic>? data, bool isFormData = true}) {
     _requestClient?.configAuth(authRequired);
     Map<String, dynamic> newData =
-    ApiRequestUtils.handleDynamicPathWithData(path, data ?? {});
+        ApiRequestUtils.handleDynamicPathWithData(path, data ?? {});
     if (isFormData) {
       newData['data'] = FormData.fromMap(
           newData['data'], ApiRequestOptions.instance!.listFormat);
@@ -56,7 +54,7 @@ abstract class ApiResource {
     return newData;
   }
 
-   Future<Either<ActionRequestError, T?>?> _handleResponse<T>(
+  Future<Either<ActionRequestError, T?>?> _handleResponse<T>(
       {Response? response}) async {
     Either<ActionRequestError, T?>? either;
     try {
@@ -70,6 +68,6 @@ abstract class ApiResource {
   }
 
   static Future<Either<ActionRequestError, T?>?> _handleError<T>(
-      {Object? error}) async =>
+          {Object? error}) async =>
       left(ActionRequestError(error));
 }
