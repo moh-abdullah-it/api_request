@@ -46,8 +46,11 @@ class ActionRequestError<E> implements Exception {
       message = apiError.message;
       this.type = ActionErrorType.Api;
       if (ApiRequestOptions.instance?.errorBuilder != null) {
-        this.apiErrorResponse = ApiRequestOptions
-            .instance?.errorBuilder!(res?.data ?? response?.data);
+        final errorData = res?.data ?? response?.data;
+        if (errorData is Map<String, dynamic>) {
+          this.apiErrorResponse = ApiRequestOptions
+              .instance?.errorBuilder!(errorData);
+        }
       }
       print(
           "🛑️ 🛑️ 🛑️ 🛑️ 🛑️ 🛑 🛑️ 🛑 Start Action Request Error 🛑 🛑 🛑 🛑 🛑 🛑 🛑 🛑️ \n"

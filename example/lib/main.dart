@@ -1,256 +1,361 @@
 import 'package:api_request/api_request.dart';
-import 'package:example/ApiError.dart';
 import 'package:flutter/material.dart';
-import 'package:json/json.dart';
+import 'config/app_config.dart';
+import 'models/api_error.dart';
+import 'models/post.dart';
+import 'services/post_service.dart';
+import 'services/mock_post_service.dart';
+import 'widgets/post_card.dart';
+import 'widgets/network_status_banner.dart';
+import 'screens/post_detail_screen.dart';
 
-@JsonCodable()
-class Post {
-  final int id;
-  final int userId;
-  final String title;
-  final String body;
-  const Post({
-    required this.id,
-    required this.userId,
-    required this.title,
-    required this.body,
-  });
-
-  @override
-  String toString() {
-    return 'Post{' +
-        ' id: $id,' +
-        ' userId: $userId,' +
-        ' title: $title,' +
-        ' body: $body,' +
-        '}';
-  }
-
-  factory Post.fromMap(Map<String, dynamic> map) {
-    return Post(
-      id: map['id'],
-      userId: map['userId'],
-      title: map['title'],
-      body: map['body'],
-    );
-  }
+/// Example token provider functions
+String getStaticToken() {
+  return 'your-static-token-here';
 }
 
-class PostsResponse {
-  List<Post>? posts;
-  PostsResponse({this.posts});
-
-  PostsResponse.fromList(List<dynamic>? data) {
-    if (data is List) {
-      this.posts = <Post>[];
-      data.forEach((item) => this.posts?.add(Post.fromMap(item)));
-    }
-  }
-}
-
-class PostsRequestAction extends ApiRequestAction<PostsResponse> {
-  @override
-  bool get authRequired => false;
-
-  @override
-  String get path => 'posts';
-
-  @override
-  RequestMethod get method => RequestMethod.GET;
-
-  @override
-  ResponseBuilder<PostsResponse> get responseBuilder =>
-      (list) => PostsResponse.fromList(list);
-}
-
-class PostRequestAction extends ApiRequestAction<Post> {
-  PostRequestAction();
-
-  @override
-  bool get disableGlobalOnError => true;
-
-  @override
-  bool get authRequired => false;
-
-  @override
-  String get path => 'posts/{id}';
-
-  @override
-  RequestMethod get method => RequestMethod.GET;
-
-  @override
-  ResponseBuilder<Post> get responseBuilder => (map) => Post.fromMap(map);
-
-  @override
-  Function get onInit => () => print('Action Init');
-}
-
-String yourMethodToGetToken() {
-  return '1|hfkf9rfynfuynyf89erfynrfyepiruyfp';
-}
-
-Future<String> yourAysncMethodToGetToken() async {
-  return '1|hfkf9rfynfuynyf89erfynrfyepiruyfp';
+Future<String> getAsyncToken() async {
+  // Simulate async token retrieval (e.g., from secure storage)
+  await Future.delayed(const Duration(milliseconds: 100));
+  return 'your-async-token-here';
 }
 
 void main() {
-  //config api requests;
-  ApiRequestOptions.instance?.config(
-    enableLog: true,
+  // Configure API requests globally (only if not using mock data)
+  if (!AppConfig.useMockData) {
+    ApiRequestOptions.instance?.config(
+      // Enable request/response logging in debug mode
+      enableLog: AppConfig.enableNetworkLogs,
 
-    /// set base url for all request
-    baseUrl: 'https://jsonplaceholder.typicode.com/',
+      // Base URL for all API requests
+      baseUrl: AppConfig.baseUrl,
 
-    errorBuilder: (json) => ApiError.fromJson(json),
+      // Custom error builder for parsing API errors
+      errorBuilder: (json) => ApiError.fromJson(json),
 
-    /// set token type to 'Bearer '
-    tokenType: ApiRequestOptions.bearer,
-    onError: (e) => print('Global Error'),
+      // Token configuration
+      tokenType: ApiRequestOptions.bearer,
+      
+      // Global error handler
+      onError: (error) {
+        print('🚨 Global API Error: ${error.message}');
+        // You could also send errors to crash reporting service here
+      },
 
-    /// set token as string api request action will with is if auth is required
-    //token: '1|hfkf9rfynfuynyf89erfynrfyepiruyfp',
+      // Token providers (uncomment as needed)
+      // token: 'static-token-here',
+      // getToken: getStaticToken,
+      getAsyncToken: getAsyncToken,
 
-    /// we will call this method to get token in run time -- method must be return string
-    //getToken: () => yourMethodToGetToken(),
+      // Default headers for all requests
+      defaultHeaders: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
 
-    /// we will call this method to get token in run time -- method must be return Future<string>
-    getAsyncToken: () => yourAysncMethodToGetToken(),
+      // Default query parameters (e.g., for localization)
+      // defaultQueryParameters: {'locale': 'en'},
 
-    /// send default query params for all requests
-    //defaultQueryParameters: {'locale': 'ar'},
-  );
-  runApp(MyApp());
+      // Connection timeout
+      connectTimeout: AppConfig.networkTimeout,
+    );
+  }
+
+  runApp(const PostsApp());
 }
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class PostsApp extends StatelessWidget {
+  const PostsApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Api Request Demo',
+      title: 'Posts Demo - API Request Package',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        useMaterial3: true,
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          elevation: 0,
+        ),
+        cardTheme: CardThemeData(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
-      home: MyHomePage(title: 'Api Request Demo Home Page'),
+      home: const PostsListScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  final String title;
+class PostsListScreen extends StatefulWidget {
+  const PostsListScreen({Key? key}) : super(key: key);
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<PostsListScreen> createState() => _PostsListScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  List<Post>? posts = <Post>[];
-  final PostsRequestAction action = PostsRequestAction();
-  bool loading = true;
+class _PostsListScreenState extends State<PostsListScreen> {
+  List<Post> posts = [];
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
-  initState() {
+  void initState() {
     super.initState();
-    /*SimpleApiRequest.withBuilder((data) => PostsResponse.fromList(data))
-        .get('/posts')
-        .then((response) => response?.fold((l) => null, (r) {
-              posts = r.posts;
-            }));*/
+    _loadPosts();
+  }
 
-    //older way
-
-    // action?.onError = (e) {
-    //   loading = false;
-    //   setState(() {});
-    //   print(e.toString());
-    // };
-    // action?.onSuccess = (s) {
-    //   loading = false;
-    //   posts = s?.posts;
-    //   setState(() {});
-    // };
-    // action?.onQueue();
-
-    // new way
-    //use run action to return with Either value or error
-
-    action
-        .whereQuery('test', 'test')
-        .withHeader('test-me', 'try-me')
-        .listen(
-          onStart: () => print('hi onStart'),
-          onSuccess: (r) => print('hi onSuccess'),
-          onError: (e) => print('hi onError ${e.apiErrorResponse?.message}'),
-          onDone: () => print('hi onDone'),
-        )
-        .execute()
-        .then((value) {
-      loading = false;
-      value?.fold((l) => print(l?.message), (r) {
-        posts = r?.posts;
-        setState(() {});
-      });
+  Future<void> _loadPosts() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
     });
+
+    try {
+      final result = AppConfig.useMockData 
+          ? await MockPostService.getAllPosts()
+          : await PostService.getAllPosts();
+      
+      result?.fold(
+        (error) {
+          if (mounted) {
+            setState(() {
+              errorMessage = AppConfig.useMockData 
+                  ? 'Mock API Error: ${error.message}'
+                  : 'Failed to load posts: ${error.message}';
+              isLoading = false;
+            });
+          }
+        },
+        (loadedPosts) {
+          if (mounted) {
+            setState(() {
+              posts = loadedPosts;
+              isLoading = false;
+            });
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          errorMessage = 'Unexpected error: $e';
+          isLoading = false;
+        });
+      }
+    }
   }
 
-  _getPostData(int? id) {
-    PostRequestAction()
-        .where('id', id)
-        .whereMapQuery({'id': 'test'})
-        .listen(
-          onStart: () => print('hi onStart'),
-          onSuccess: (r) => print('response Post Id: ${r?.id}'),
-          onError: (e) => print('hi onError ${e.message}'),
-          onDone: () => print('hi onDone'),
-        )
-        .execute();
+  Future<void> _navigateToPost(Post post) async {
+    final wasDeleted = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => PostDetailScreen(postId: post.id),
+      ),
+    );
 
-    //older way
-
-    // action.onError = (e) {
-    //   print(e.toString());
-    // };
-    // action.onSuccess = (s) {
-    //   print('response Post Id: ${s?.id}');
-    // };
-    // action.onQueue();
-
-    // new way
-    //use run action to return with Either value or error
-    // action.execute();
+    // Refresh the list if the post was deleted
+    if (wasDeleted == true) {
+      _loadPosts();
+    }
   }
 
-  getReport() {
-    print("${ApiRequestPerformance.instance?.actionsReport}");
+  Future<void> _deletePost(Post post) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Post'),
+        content: Text('Are you sure you want to delete "${post.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final result = AppConfig.useMockData 
+            ? await MockPostService.deletePost(post.id)
+            : await PostService.deletePost(post.id);
+        
+        result?.fold(
+          (error) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to delete post: ${error.message}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          },
+          (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Post deleted successfully'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            _loadPosts(); // Refresh the list
+          },
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unexpected error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showPerformanceReport() {
+    final report = ApiRequestPerformance.instance?.actionsReport;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Performance Report'),
+        content: SingleChildScrollView(
+          child: Text(report?.toString() ?? 'No performance data available'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(AppConfig.useMockData ? 'Posts Demo (Mock)' : 'Posts Demo (Live)'),
+        actions: [
+          if (!AppConfig.useMockData)
+            IconButton(
+              icon: const Icon(Icons.analytics),
+              onPressed: _showPerformanceReport,
+              tooltip: 'Performance Report',
+            ),
+          IconButton(
+            icon: Icon(AppConfig.useMockData ? Icons.offline_bolt : Icons.cloud),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Data Source'),
+                  content: Text(
+                    AppConfig.useMockData 
+                        ? 'Currently using mock data for demonstration. To use live API, set AppConfig.useMockData to false.'
+                        : 'Currently using live API data from ${AppConfig.baseUrl}',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            tooltip: AppConfig.useMockData ? 'Using Mock Data' : 'Using Live API',
+          ),
+        ],
       ),
-      body: Center(
-        child: loading
-            ? CircularProgressIndicator()
-            : ListView.builder(
-                itemCount: posts?.length,
-                itemBuilder: (_, index) => ListTile(
-                      title: Text("${posts?[index].title}"),
-                      onTap: () {
-                        _getPostData(posts?[index].id);
-                      },
-                    )),
+      body: Column(
+        children: [
+          const NetworkStatusBanner(),
+          Expanded(child: _buildBody()),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: getReport,
-        child: Icon(Icons.report),
+        onPressed: _loadPosts,
+        tooltip: 'Refresh',
+        child: const Icon(Icons.refresh),
       ),
     );
   }
-}
 
-// add on success on error , subscripe
-// execute is back and rename new method
+  Widget _buildBody() {
+    if (isLoading) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading posts...'),
+          ],
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 64,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.red),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadPosts,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (posts.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox,
+              size: 64,
+              color: Colors.grey,
+            ),
+            SizedBox(height: 16),
+            Text('No posts found'),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: posts.length,
+      itemBuilder: (context, index) {
+        final post = posts[index];
+        return PostCard(
+          post: post,
+          onTap: () => _navigateToPost(post),
+          onDelete: () => _deletePost(post),
+        );
+      },
+    );
+  }
+}

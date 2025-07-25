@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:developer';
 
 import 'package:api_request/api_request.dart';
-import 'package:dartz/dartz.dart';
+import 'package:fpdart/fpdart.dart';
+
 
 import '../utils/api_request_utils.dart';
 
@@ -103,39 +104,51 @@ abstract class RequestAction<T, R extends ApiRequest> {
     return this;
   }
 
-  Future<Either<ActionRequestError?, T?>?> execute() async {
-    Response? response;
-    ActionRequestError? apiRequestError;
-    Either<ActionRequestError?, T?>? either;
+  Future<Either<ActionRequestError, T>?> execute() async {
     log('${authRequired} -- ${await ApiRequestOptions.instance?.getTokenString()}');
-    if (authRequired == false ||
-        (await ApiRequestOptions.instance?.getTokenString()) != null) {
-      try {
-        response = await _execute();
-        try {
-          either = right(responseBuilder(response?.data));
-          this.onSuccess(responseBuilder(response?.data));
-        } catch (e) {
-          apiRequestError = ActionRequestError(e, res: response);
-          either = left(apiRequestError);
-        }
-      } catch (e) {
-        apiRequestError = ActionRequestError(e);
-        either = left(apiRequestError);
-      }
-      if (either.isLeft() && apiRequestError != null) {
-        this.onError(apiRequestError);
-        if (ApiRequestOptions.instance!.onError != null &&
-            !disableGlobalOnError) {
-          ApiRequestOptions.instance!.onError!(apiRequestError);
-        }
-      }
-      this.onDone();
-      return either;
-    } else {
+    
+    if (authRequired && (await ApiRequestOptions.instance?.getTokenString()) == null) {
       log('You Need To Login to Request This action: ${this.runtimeType}');
+      return null;
     }
-    return null;
+
+    try {
+      final response = await _execute();
+      final result = await _parseResponse(response);
+      
+      return result.fold(
+        (error) {
+          _handleError(error);
+          return left(error);
+        },
+        (success) {
+          onSuccess(success);
+          onDone();
+          return right(success);
+        },
+      );
+    } catch (e) {
+      final error = ActionRequestError(e);
+      _handleError(error);
+      return left(error);
+    }
+  }
+
+  Future<Either<ActionRequestError, T>> _parseResponse(Response? response) async {
+    try {
+      final parsedData = responseBuilder(response?.data);
+      return right(parsedData);
+    } catch (e) {
+      return left(ActionRequestError(e, res: response));
+    }
+  }
+
+  void _handleError(ActionRequestError error) {
+    onError(error);
+    if (ApiRequestOptions.instance!.onError != null && !disableGlobalOnError) {
+      ApiRequestOptions.instance!.onError!(error);
+    }
+    onDone();
   }
 
   Future<Response?> _execute() async {
