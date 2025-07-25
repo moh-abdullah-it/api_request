@@ -1,3 +1,12 @@
+## 1.1.0
+* Completely rewrote README.md with modern structure and comprehensive documentation
+* Added professional header with badges and clear feature highlights
+* Included step-by-step quick start guide with better code examples
+* Added advanced usage patterns for dynamic paths, multi-environment support, and error handling
+* Enhanced architecture overview and testing examples
+* Added links to example app and comprehensive documentation
+* Fixed flutter_lints dependency issue in example app
+
 ## 1.0.9
 * add `withHeader`, `withHeaders` to add action headers in runtime.
 
