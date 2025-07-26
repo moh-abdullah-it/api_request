@@ -1,3 +1,13 @@
+## 1.2.0
+* 🎉 **NEW**: Added comprehensive file download support with `FileDownloadAction`
+* ✨ **NEW**: Progress tracking with callbacks and reactive streams for file downloads
+* ✨ **NEW**: Cancellation support for download operations using `CancelToken`
+* ✨ **NEW**: `DownloadProgress` class with formatted progress reporting
+* ✨ **NEW**: Stream-based progress monitoring for real-time download updates
+* 🔧 **ENHANCED**: `SimpleApiRequest` download method already supported file downloads
+* 📚 **DOCS**: Updated README with comprehensive file download examples and usage patterns
+* 📚 **DOCS**: Added file download documentation to features and core components sections
+
 ## 1.1.1
 * Enhanced comprehensive dartdoc documentation across all library files
 * Added detailed class-level documentation for ApiResource with usage examples and comparison guidance

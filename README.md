@@ -11,6 +11,7 @@ A Flutter package that introduces a clean, testable approach to organizing API l
 ## ✨ Features
 
 - **Single Responsibility Principle**: Each action class handles one specific API request
+- **File Download Support**: Action-based and direct file download with progress tracking
 - **Functional Error Handling**: Uses `Either<Error, Success>` pattern with fpdart
 - **Dynamic Configuration**: Runtime base URL and token resolution
 - **Performance Monitoring**: Built-in request timing and reporting
@@ -164,6 +165,59 @@ action.subscribe(
 action.onQueue(); // Execute without waiting
 ```
 
+#### File Downloads
+
+Download files using either action-based or direct approaches:
+
+```dart
+// Action-based approach
+class DownloadFileAction extends FileDownloadAction {
+  DownloadFileAction(String savePath) : super(savePath);
+  
+  @override
+  String get path => '/files/{fileId}';
+}
+
+// Download with progress tracking
+final result = await DownloadFileAction('/downloads/document.pdf')
+  .where('fileId', 'abc123')
+  .onProgress((received, total) {
+    final percentage = (received / total * 100).round();
+    print('Downloaded: $percentage%');
+  })
+  .execute();
+
+result?.fold(
+  (error) => print('Download failed: ${error.message}'),
+  (response) => print('Download completed: ${response.statusCode}'),
+);
+
+// Direct approach using SimpleApiRequest
+final client = SimpleApiRequest.init();
+final response = await client.download(
+  '/files/{fileId}',
+  '/downloads/document.pdf',
+  data: {'fileId': 'abc123'},
+  onReceiveProgress: (received, total) {
+    print('Progress: ${(received / total * 100).round()}%');
+  },
+);
+
+// Stream-based progress monitoring
+final action = DownloadFileAction('/downloads/video.mp4');
+action.progressStream.listen((progress) {
+  print('${progress.formattedProgress}');
+});
+
+// Cancellation support
+final cancelToken = CancelToken();
+final action = DownloadFileAction('/downloads/large-file.zip')
+  .withCancelToken(cancelToken);
+
+// Cancel after 10 seconds
+Timer(Duration(seconds: 10), () => cancelToken.cancel());
+```
+
 ## 🔧 Advanced Features
 
 ### Dynamic Path Variables
@@ -270,6 +324,8 @@ The package follows these core principles:
 
 - `ApiRequestAction<T>`: Base class for simple requests
 - `RequestAction<T, R>`: Base class for requests with data
+- `FileDownloadAction`: Specialized action class for file downloads
+- `SimpleApiRequest`: Direct HTTP client with download support
 - `ApiRequestOptions`: Global configuration singleton
 - `RequestClient`: HTTP client wrapper around Dio
 - `ApiRequestPerformance`: Performance monitoring
@@ -300,6 +356,7 @@ void main() {
 Check out the [example directory](example/) for a complete Flutter app demonstrating:
 
 - CRUD operations
+- File download operations
 - Error handling
 - Performance monitoring
 - Mock vs live API switching

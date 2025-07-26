@@ -47,6 +47,7 @@ export 'package:dio/dio.dart';
 /// Action classes for creating API request handlers
 export 'src/actions/api_request_action.dart';
 export 'src/actions/request_action.dart';
+export 'src/actions/file_download_action.dart';
 
 /// Core API request functionality
 export 'src/api_request.dart';
