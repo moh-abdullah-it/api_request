@@ -52,7 +52,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   /// Download large file with progress tracking using action-based approach
   Future<void> _downloadLargeFileWithProgress() async {
     const fileName = 'large_sample.jpg';
-    
+
     setState(() {
       _downloadingStatus[fileName] = true;
       _downloadProgress[fileName] = 0.0;
@@ -62,7 +62,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
     try {
       final savePath = await DownloadService.getFilePath(fileName);
       final action = DownloadLargeFileAction(savePath);
-      
+
       // Listen to progress stream
       final subscription = action.progressStream.listen(
         (progress) {
@@ -81,7 +81,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
           }
         },
       );
-      
+
       _progressSubscriptions[fileName] = subscription;
 
       // Configure progress callback
@@ -94,7 +94,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
       });
 
       final result = await action.execute();
-      
+
       await subscription.cancel();
       _progressSubscriptions.remove(fileName);
 
@@ -108,7 +108,8 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
             setState(() {
               _downloadErrors[fileName] = error.message ?? 'Download failed';
             });
-            _showErrorSnackBar('Failed to download large file: ${error.message}');
+            _showErrorSnackBar(
+                'Failed to download large file: ${error.message}');
           },
           (response) {
             _downloadProgress[fileName] = 1.0;
@@ -130,7 +131,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   /// Download file using SimpleApiRequest (direct approach) with progress
   Future<void> _downloadWithSimpleApiRequest() async {
     const fileName = 'direct_download.jpg';
-    
+
     setState(() {
       _downloadingStatus[fileName] = true;
       _downloadProgress[fileName] = 0.0;
@@ -160,7 +161,8 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
           _showSuccessSnackBar('File downloaded using SimpleApiRequest!');
         } else {
           setState(() {
-            _downloadErrors[fileName] = 'Download failed with status: ${response?.statusCode}';
+            _downloadErrors[fileName] =
+                'Download failed with status: ${response?.statusCode}';
           });
           _showErrorSnackBar('Download failed');
         }
@@ -179,7 +181,8 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
   /// Generic download method using action-based approach
   Future<void> _downloadWithAction({
     required String fileName,
-    required Future<Either<ActionRequestError, String>?> Function() downloadFunction,
+    required Future<Either<ActionRequestError, String>?> Function()
+        downloadFunction,
     required String title,
   }) async {
     setState(() {
@@ -189,7 +192,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
 
     try {
       final result = await downloadFunction();
-      
+
       if (mounted) {
         setState(() {
           _downloadingStatus[fileName] = false;
@@ -260,9 +263,12 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                           const SizedBox(width: 8),
                           Text(
                             'File Download Examples',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                           ),
                         ],
                       ),
@@ -278,15 +284,14 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                         '• Progress tracking and cancellation\n'
                         '• Error handling and file management',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                              color: Colors.grey[600],
+                            ),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-            
             DownloadProgressCard(
               title: 'Sample PDF Document',
               fileName: 'sample_document.pdf',
@@ -294,7 +299,6 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               isDownloading: _downloadingStatus['sample_document.pdf'] ?? false,
               errorMessage: _downloadErrors['sample_document.pdf'],
             ),
-            
             DownloadProgressCard(
               title: 'Sample Image (Action-based)',
               fileName: 'sample_image.jpg',
@@ -302,7 +306,6 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               isDownloading: _downloadingStatus['sample_image.jpg'] ?? false,
               errorMessage: _downloadErrors['sample_image.jpg'],
             ),
-            
             DownloadProgressCard(
               title: 'Large File with Progress',
               fileName: 'large_sample.jpg',
@@ -311,7 +314,6 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               progress: _downloadProgress['large_sample.jpg'],
               errorMessage: _downloadErrors['large_sample.jpg'],
             ),
-            
             DownloadProgressCard(
               title: 'Direct Download (SimpleApiRequest)',
               fileName: 'direct_download.jpg',
@@ -320,9 +322,7 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
               progress: _downloadProgress['direct_download.jpg'],
               errorMessage: _downloadErrors['direct_download.jpg'],
             ),
-
             const SizedBox(height: 20),
-            
             Padding(
               padding: const EdgeInsets.all(16),
               child: Card(
@@ -333,9 +333,10 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                     children: [
                       Text(
                         'Code Examples',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -358,16 +359,15 @@ class _DownloadsScreenState extends State<DownloadsScreen> {
                         ');\n'
                         '```',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          color: Colors.grey[700],
-                        ),
+                              fontFamily: 'monospace',
+                              color: Colors.grey[700],
+                            ),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-            
             const SizedBox(height: 20),
           ],
         ),

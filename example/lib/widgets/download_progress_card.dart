@@ -56,7 +56,7 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
     try {
       final filePath = await DownloadService.getFilePath(widget.fileName);
       final file = File(filePath);
-      
+
       if (await file.exists()) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -136,8 +136,8 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
                   child: Text(
                     widget.title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ),
                 _buildStatusIcon(),
@@ -147,8 +147,8 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
             Text(
               'File: ${widget.fileName}',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
             const SizedBox(height: 12),
             _buildContent(),

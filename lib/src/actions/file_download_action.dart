@@ -67,7 +67,7 @@ import '../utils/api_request_utils.dart';
 ///
 /// ```dart
 /// final action = DownloadFileAction('/downloads/file.pdf');
-/// 
+///
 /// action.progressStream.listen((progress) {
 ///   print('Progress: ${progress.percentage}%');
 /// });
@@ -167,7 +167,7 @@ abstract class FileDownloadAction extends ApiRequestAction<Response> {
         total: total,
         percentage: total > 0 ? (received / total * 100) : 0,
       ));
-      
+
       // Call user callback
       onProgress(received, total);
     };
@@ -263,13 +263,14 @@ abstract class FileDownloadAction extends ApiRequestAction<Response> {
       onStart();
 
       final response = await _performDownload();
-      
+
       if (response != null) {
         onSuccess(response);
         onDone();
         return right(response);
       } else {
-        final error = ActionRequestError('Download failed: No response received');
+        final error =
+            ActionRequestError('Download failed: No response received');
         _handleError(error);
         return left(error);
       }
@@ -294,7 +295,7 @@ abstract class FileDownloadAction extends ApiRequestAction<Response> {
 
     // Build query parameters from data
     final queryParams = Map<String, dynamic>.from(_data);
-    
+
     return await requestClient.dio.download(
       _dynamicPath,
       savePath,
@@ -323,10 +324,10 @@ abstract class FileDownloadAction extends ApiRequestAction<Response> {
   void _handleRequest(ApiRequest? request) {
     Map<String, dynamic> mapData = Map.of(toMap.isNotEmpty ? toMap : {});
     mapData.addAll(_data);
-    
+
     final newData = ApiRequestUtils.handleDynamicPathWithData(path, mapData);
     _dynamicPath = newData['path'];
-    
+
     // For downloads, we'll use remaining data as query parameters
     _data = Map<String, dynamic>.from(newData['data']);
   }

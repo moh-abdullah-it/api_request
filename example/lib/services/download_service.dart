@@ -5,13 +5,12 @@ import 'package:path_provider/path_provider.dart';
 
 /// Service class to handle all file download operations
 class DownloadService {
-  
   /// Download a sample PDF file
   static Future<Either<ActionRequestError, String>?> downloadSamplePdf() async {
     final savePath = await _getSavePath('sample_document.pdf');
     final action = DownloadPdfAction(savePath);
     final result = await action.execute();
-    
+
     return result?.fold(
       (error) => left(error),
       (response) => right(savePath),
@@ -19,11 +18,12 @@ class DownloadService {
   }
 
   /// Download a sample image file
-  static Future<Either<ActionRequestError, String>?> downloadSampleImage() async {
+  static Future<Either<ActionRequestError, String>?>
+      downloadSampleImage() async {
     final savePath = await _getSavePath('sample_image.jpg');
     final action = DownloadImageAction(savePath);
     final result = await action.execute();
-    
+
     return result?.fold(
       (error) => left(error),
       (response) => right(savePath),
@@ -32,13 +32,13 @@ class DownloadService {
 
   /// Download file using SimpleApiRequest (direct approach)
   static Future<Response?> downloadWithProgress(
-    String url, 
+    String url,
     String fileName,
     Function(int received, int total)? onProgress,
   ) async {
     final savePath = await _getSavePath(fileName);
     final client = SimpleApiRequest.init();
-    
+
     return await client.download(
       url,
       savePath,
@@ -50,12 +50,12 @@ class DownloadService {
   static Future<String> _getSavePath(String fileName) async {
     final directory = await getApplicationDocumentsDirectory();
     final downloadDir = Directory('${directory.path}/downloads');
-    
+
     // Create downloads directory if it doesn't exist
     if (!await downloadDir.exists()) {
       await downloadDir.create(recursive: true);
     }
-    
+
     return '${downloadDir.path}/$fileName';
   }
 
@@ -90,11 +90,11 @@ class DownloadService {
     try {
       final directory = await getApplicationDocumentsDirectory();
       final downloadDir = Directory('${directory.path}/downloads');
-      
+
       if (!await downloadDir.exists()) {
         return [];
       }
-      
+
       final files = await downloadDir.list().toList();
       return files
           .whereType<File>()
@@ -111,7 +111,8 @@ class DownloadPdfAction extends FileDownloadAction {
   DownloadPdfAction(String savePath) : super(savePath);
 
   @override
-  String get path => 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+  String get path =>
+      'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
 
   @override
   bool get authRequired => false;
@@ -133,7 +134,8 @@ class DownloadLargeFileAction extends FileDownloadAction {
   DownloadLargeFileAction(String savePath) : super(savePath);
 
   @override
-  String get path => 'https://file-examples.com/storage/fe97b7ea52bbf93bac98076/2017/10/file_example_JPG_2500kB.jpg';
+  String get path =>
+      'https://file-examples.com/storage/fe97b7ea52bbf93bac98076/2017/10/file_example_JPG_2500kB.jpg';
 
   @override
   bool get authRequired => false;
