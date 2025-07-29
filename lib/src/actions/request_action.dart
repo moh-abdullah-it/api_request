@@ -1172,6 +1172,16 @@ abstract class RequestAction<T, R extends ApiRequest> {
   /// 2. Type-specific handler (upload or download based on progress type)
   void _handleProgress(ProgressData progress) {
     try {
+      // Record progress data in performance monitoring
+      final performance = ApiRequestPerformance.instance;
+      if (performance != null) {
+        if (progress.isUpload) {
+          performance.recordUploadProgress(progress.sentBytes, progress.totalBytes);
+        } else if (progress.isDownload) {
+          performance.recordDownloadProgress(progress.sentBytes, progress.totalBytes);
+        }
+      }
+
       // Invoke general progress handler if set
       _progressHandler?.call(progress);
 

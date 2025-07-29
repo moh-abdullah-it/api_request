@@ -125,6 +125,15 @@ class ApiRequestPerformance {
   /// The full URL path of the current request being tracked
   String? _fullPath;
 
+  /// Total bytes uploaded for the current request
+  int _uploadBytes = 0;
+
+  /// Total bytes downloaded for the current request
+  int _downloadBytes = 0;
+
+  /// Whether progress tracking is enabled for the current request
+  bool _hasProgressData = false;
+
   /// The singleton instance of the performance tracker
   static ApiRequestPerformance? _instance;
 
@@ -168,6 +177,48 @@ class ApiRequestPerformance {
   init(String? actionName, String fullPath) {
     this._actionName = actionName;
     this._fullPath = fullPath;
+    // Reset progress tracking data for new request
+    _uploadBytes = 0;
+    _downloadBytes = 0;
+    _hasProgressData = false;
+  }
+
+  /// Records upload progress data for the current request.
+  ///
+  /// This method is called by progress handlers to track the number of
+  /// bytes uploaded during the request. The data is included in the
+  /// final performance report.
+  ///
+  /// Parameters:
+  /// - [sentBytes]: Number of bytes sent so far
+  /// - [totalBytes]: Total bytes to be sent (if known)
+  ///
+  /// This method is typically called internally by progress tracking
+  /// and not used directly by application code.
+  void recordUploadProgress(int sentBytes, int totalBytes) {
+    _hasProgressData = true;
+    if (sentBytes > _uploadBytes) {
+      _uploadBytes = sentBytes;
+    }
+  }
+
+  /// Records download progress data for the current request.
+  ///
+  /// This method is called by progress handlers to track the number of
+  /// bytes downloaded during the request. The data is included in the
+  /// final performance report.
+  ///
+  /// Parameters:
+  /// - [receivedBytes]: Number of bytes received so far
+  /// - [totalBytes]: Total bytes to be received (if known)
+  ///
+  /// This method is typically called internally by progress tracking
+  /// and not used directly by application code.
+  void recordDownloadProgress(int receivedBytes, int totalBytes) {
+    _hasProgressData = true;
+    if (receivedBytes > _downloadBytes) {
+      _downloadBytes = receivedBytes;
+    }
   }
 
   /// Gets or creates a performance report for the current request.
@@ -192,7 +243,12 @@ class ApiRequestPerformance {
   PerformanceReport? getReport() {
     if (!actionsReport.containsKey(this._fullPath)) {
       actionsReport[this._fullPath] = PerformanceReport(
-          actionName: this._actionName, fullPath: this._fullPath);
+        actionName: this._actionName,
+        fullPath: this._fullPath,
+        uploadBytes: _uploadBytes,
+        downloadBytes: _downloadBytes,
+        hasProgressData: _hasProgressData,
+      );
     }
     return actionsReport[this._fullPath];
   }
@@ -245,9 +301,13 @@ class ApiRequestPerformance {
   endTrack() {
     Duration? duration = DateTime.now().difference(_startTime);
     actionsReport[this._fullPath] = PerformanceReport(
-        actionName: this._actionName,
-        duration: duration,
-        fullPath: this._fullPath);
+      actionName: this._actionName,
+      duration: duration,
+      fullPath: this._fullPath,
+      uploadBytes: _uploadBytes,
+      downloadBytes: _downloadBytes,
+      hasProgressData: _hasProgressData,
+    );
   }
 
   /// Returns a formatted string containing all performance reports.

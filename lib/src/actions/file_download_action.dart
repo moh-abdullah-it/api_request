@@ -86,6 +86,9 @@ abstract class FileDownloadAction extends ApiRequestAction<Response> {
   /// Optional progress callback for monitoring download progress
   ProgressCallback? _onReceiveProgress;
 
+  /// Unified progress handler using the new progress system
+  DownloadProgressHandler? _downloadProgressHandler;
+
   /// Optional cancellation token for aborting downloads
   CancelToken? _cancelToken;
 
@@ -161,16 +164,49 @@ abstract class FileDownloadAction extends ApiRequestAction<Response> {
   /// ```
   FileDownloadAction onProgress(ProgressCallback onProgress) {
     _onReceiveProgress = (received, total) {
-      // Emit to stream
+      // Create unified progress data
+      final progressData = ProgressData.fromBytes(
+        sentBytes: received,
+        totalBytes: total,
+        type: ProgressType.download,
+      );
+
+      // Emit to legacy stream for backward compatibility
       _progressController.add(DownloadProgress(
         received: received,
         total: total,
-        percentage: total > 0 ? (received / total * 100) : 0,
+        percentage: progressData.percentage,
       ));
 
-      // Call user callback
+      // Call new unified progress handler
+      _downloadProgressHandler?.call(progressData);
+
+      // Call legacy user callback
       onProgress(received, total);
     };
+    return this;
+  }
+
+  /// Sets a download progress handler using the unified progress system.
+  ///
+  /// This method integrates with the new progress tracking infrastructure,
+  /// providing consistent progress data across all request types.
+  ///
+  /// Parameters:
+  /// - [handler]: The download progress handler function to call
+  ///
+  /// Returns the action instance for method chaining.
+  ///
+  /// Example:
+  /// ```dart
+  /// final action = DownloadFileAction('/downloads/file.pdf')
+  ///   .withDownloadProgress((progress) {
+  ///     print('Download: ${progress.percentage}% complete');
+  ///     updateProgressBar(progress.percentage);
+  ///   });
+  /// ```
+  FileDownloadAction withDownloadProgress(DownloadProgressHandler handler) {
+    _downloadProgressHandler = handler;
     return this;
   }
 
@@ -296,12 +332,34 @@ abstract class FileDownloadAction extends ApiRequestAction<Response> {
     // Build query parameters from data
     final queryParams = Map<String, dynamic>.from(_data);
 
+    // Create unified progress callback if new handler is set but no legacy callback
+    ProgressCallback? progressCallback = _onReceiveProgress;
+    if (progressCallback == null && _downloadProgressHandler != null) {
+      progressCallback = (received, total) {
+        final progressData = ProgressData.fromBytes(
+          sentBytes: received,
+          totalBytes: total,
+          type: ProgressType.download,
+        );
+
+        // Emit to legacy stream for backward compatibility
+        _progressController.add(DownloadProgress(
+          received: received,
+          total: total,
+          percentage: progressData.percentage,
+        ));
+
+        // Call new unified progress handler
+        _downloadProgressHandler?.call(progressData);
+      };
+    }
+
     return await requestClient.dio.download(
       _dynamicPath,
       savePath,
       queryParameters: queryParams.isNotEmpty ? queryParams : null,
       cancelToken: _cancelToken,
-      onReceiveProgress: _onReceiveProgress,
+      onReceiveProgress: progressCallback,
       deleteOnError: _deleteOnError,
       lengthHeader: _lengthHeader,
       options: Options(headers: _headers),

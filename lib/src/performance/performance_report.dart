@@ -17,6 +17,7 @@
 ///   print('Request completed in: ${report.duration?.inMilliseconds}ms');
 ///   print('Action: ${report.actionName}');
 ///   print('URL: ${report.fullPath}');
+///   print('Data transferred: ${report.bytesTransferred} bytes');
 /// }
 /// ```
 ///
@@ -25,6 +26,7 @@
 /// - **Action Name**: The class name of the request action
 /// - **Full Path**: Complete URL that was requested
 /// - **Duration**: Time taken from request start to completion
+/// - **Progress Data**: Upload/download bytes and timing information
 ///
 /// ## Performance Analysis
 ///
@@ -98,30 +100,190 @@ class PerformanceReport {
   /// ```
   final Duration? duration;
 
+  /// The total number of bytes uploaded during the request.
+  ///
+  /// This field tracks the number of bytes sent to the server, including
+  /// request body data, form data, and file uploads. It's populated
+  /// automatically when progress tracking is enabled.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (report.uploadBytes > 0) {
+  ///   print('Uploaded: ${report.uploadBytes} bytes');
+  /// }
+  /// ```
+  final int uploadBytes;
+
+  /// The total number of bytes downloaded during the request.
+  ///
+  /// This field tracks the number of bytes received from the server,
+  /// including response headers and body. It's populated automatically
+  /// when progress tracking is enabled.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (report.downloadBytes > 0) {
+  ///   print('Downloaded: ${report.downloadBytes} bytes');
+  /// }
+  /// ```
+  final int downloadBytes;
+
+  /// Whether progress tracking was enabled for this request.
+  ///
+  /// This indicates if the request used progress handlers that provide
+  /// upload/download byte tracking information.
+  ///
+  /// Example:
+  /// ```dart
+  /// if (report.hasProgressData) {
+  ///   print('Total transferred: ${report.bytesTransferred} bytes');
+  /// }
+  /// ```
+  final bool hasProgressData;
+
   /// Creates a new [PerformanceReport] with the specified metrics.
   ///
   /// Parameters:
   /// - [actionName]: Required name/type of the action that made the request
   /// - [duration]: Optional duration of the request (null for incomplete requests)
   /// - [fullPath]: Optional full URL that was requested
+  /// - [uploadBytes]: Number of bytes uploaded (default: 0)
+  /// - [downloadBytes]: Number of bytes downloaded (default: 0)
+  /// - [hasProgressData]: Whether progress tracking was enabled (default: false)
   ///
   /// This constructor is typically called by [ApiRequestPerformance] and
   /// not used directly by application code.
-  PerformanceReport({required this.actionName, this.duration, this.fullPath});
+  PerformanceReport({
+    required this.actionName,
+    this.duration,
+    this.fullPath,
+    this.uploadBytes = 0,
+    this.downloadBytes = 0,
+    this.hasProgressData = false,
+  });
+
+  /// Gets the total number of bytes transferred (upload + download).
+  ///
+  /// This is a convenience property that sums the upload and download bytes
+  /// to provide the total data transfer amount for the request.
+  ///
+  /// Example:
+  /// ```dart
+  /// print('Total data transferred: ${report.bytesTransferred} bytes');
+  /// ```
+  int get bytesTransferred => uploadBytes + downloadBytes;
+
+  /// Calculates the average transfer rate in bytes per second.
+  ///
+  /// This property provides the overall data transfer rate by dividing
+  /// the total bytes transferred by the request duration. Returns 0
+  /// if duration is null or zero.
+  ///
+  /// Example:
+  /// ```dart
+  /// final rate = report.transferRate;
+  /// if (rate > 0) {
+  ///   print('Transfer rate: ${(rate / 1024 / 1024).toStringAsFixed(2)} MB/s');
+  /// }
+  /// ```
+  double get transferRate {
+    if (duration == null || duration!.inMicroseconds == 0 || bytesTransferred == 0) {
+      return 0.0;
+    }
+    return bytesTransferred / (duration!.inMicroseconds / 1000000.0);
+  }
+
+  /// Gets the upload transfer rate in bytes per second.
+  ///
+  /// This calculates the rate specifically for upload data. Useful for
+  /// analyzing upload performance separately from download performance.
+  ///
+  /// Example:
+  /// ```dart
+  /// print('Upload rate: ${(report.uploadRate / 1024).toStringAsFixed(2)} KB/s');
+  /// ```
+  double get uploadRate {
+    if (duration == null || duration!.inMicroseconds == 0 || uploadBytes == 0) {
+      return 0.0;
+    }
+    return uploadBytes / (duration!.inMicroseconds / 1000000.0);
+  }
+
+  /// Gets the download transfer rate in bytes per second.
+  ///
+  /// This calculates the rate specifically for download data. Useful for
+  /// analyzing download performance separately from upload performance.
+  ///
+  /// Example:
+  /// ```dart
+  /// print('Download rate: ${(report.downloadRate / 1024).toStringAsFixed(2)} KB/s');
+  /// ```
+  double get downloadRate {
+    if (duration == null || duration!.inMicroseconds == 0 || downloadBytes == 0) {
+      return 0.0;
+    }
+    return downloadBytes / (duration!.inMicroseconds / 1000000.0);
+  }
 
   /// Returns a human-readable string representation of the performance report.
   ///
-  /// The format includes the URL, duration, and action name for easy debugging
-  /// and logging.
+  /// The format includes the URL, duration, action name, and progress data
+  /// for comprehensive debugging and logging.
   ///
   /// Example output:
   /// ```
-  /// https://api.example.com/posts end in: 0:00:01.234567 in GetPostsAction
+  /// https://api.example.com/posts end in: 0:00:01.234567 in GetPostsAction [↑2.1KB ↓45.3KB @1.2MB/s]
   /// ```
   ///
   /// If duration is null (request not completed), it will show "null".
+  /// If no progress data is available, only basic timing information is shown.
   @override
   String toString() {
-    return "$fullPath end in: ${duration.toString()} in $actionName";
+    String baseString = "$fullPath end in: ${duration.toString()} in $actionName";
+    
+    if (hasProgressData && bytesTransferred > 0) {
+      String uploadStr = _formatBytes(uploadBytes);
+      String downloadStr = _formatBytes(downloadBytes);
+      String rateStr = _formatTransferRate(transferRate);
+      baseString += " [↑$uploadStr ↓$downloadStr @$rateStr]";
+    }
+    
+    return baseString;
+  }
+
+  /// Formats bytes into a human-readable string.
+  ///
+  /// Converts bytes to appropriate units (B, KB, MB, GB) with proper formatting.
+  String _formatBytes(int bytes) {
+    if (bytes == 0) return "0B";
+    
+    const units = ['B', 'KB', 'MB', 'GB'];
+    int unitIndex = 0;
+    double size = bytes.toDouble();
+    
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    
+    return "${size.toStringAsFixed(unitIndex > 0 ? 1 : 0)}${units[unitIndex]}";
+  }
+
+  /// Formats transfer rate into a human-readable string.
+  ///
+  /// Converts bytes per second to appropriate units with proper formatting.
+  String _formatTransferRate(double bytesPerSecond) {
+    if (bytesPerSecond == 0) return "0B/s";
+    
+    const units = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
+    int unitIndex = 0;
+    double rate = bytesPerSecond;
+    
+    while (rate >= 1024 && unitIndex < units.length - 1) {
+      rate /= 1024;
+      unitIndex++;
+    }
+    
+    return "${rate.toStringAsFixed(unitIndex > 0 ? 1 : 0)}${units[unitIndex]}";
   }
 }

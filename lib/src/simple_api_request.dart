@@ -16,6 +16,7 @@ import 'utils/api_request_utils.dart';
 /// - **Authentication Support**: Optional per-instance authentication
 /// - **Response Building**: Custom response parsing support
 /// - **Dynamic Paths**: Automatic path variable substitution
+/// - **Progress Tracking**: Built-in upload/download progress monitoring
 /// - **Full Dio Integration**: Access to all Dio features (options, cancellation, progress)
 /// - **Functional Error Handling**: Uses Either pattern for error handling
 ///
@@ -91,6 +92,29 @@ import 'utils/api_request_utils.dart';
 /// // Response is automatically parsed to Post object
 /// ```
 ///
+/// ## Progress Tracking
+///
+/// Track upload and download progress using fluent API methods:
+///
+/// ```dart
+/// final client = SimpleApiRequest.init()
+///   .withProgress((progress) {
+///     print('${progress.type.name}: ${progress.percentage}%');
+///   })
+///   .withUploadProgress((progress) {
+///     updateUploadProgressBar(progress.percentage);
+///   })
+///   .withDownloadProgress((progress) {
+///     updateDownloadProgressBar(progress.percentage);
+///   });
+///
+/// final result = await client.post<Post>(
+///   '/posts',
+///   data: largeFileData,
+/// );
+/// // Progress callbacks will be called automatically
+/// ```
+///
 /// ## File Downloads
 ///
 /// Supports file downloads with progress tracking:
@@ -161,6 +185,15 @@ class SimpleApiRequest {
 
   /// Whether this instance requires authentication
   final bool _withAuth;
+
+  /// General progress handler for all request types
+  ProgressHandler? _progressHandler;
+
+  /// Upload-specific progress handler
+  UploadProgressHandler? _uploadProgressHandler;
+
+  /// Download-specific progress handler
+  DownloadProgressHandler? _downloadProgressHandler;
 
   /// Private constructor for creating configured instances.
   ///
@@ -257,6 +290,73 @@ class SimpleApiRequest {
     );
   }
 
+  /// Sets a general progress handler for all request operations.
+  ///
+  /// This handler will receive progress updates for both upload and download
+  /// operations. If specific upload/download handlers are also set, they will
+  /// be called in addition to this general handler.
+  ///
+  /// Parameters:
+  /// - [handler]: The progress handler function to call
+  ///
+  /// Returns this instance for method chaining.
+  ///
+  /// Example:
+  /// ```dart
+  /// final client = SimpleApiRequest.init()
+  ///   .withProgress((progress) {
+  ///     print('${progress.type.name}: ${progress.percentage}%');
+  ///   });
+  /// ```
+  SimpleApiRequest withProgress(ProgressHandler handler) {
+    _progressHandler = handler;
+    return this;
+  }
+
+  /// Sets an upload-specific progress handler.
+  ///
+  /// This handler will only receive upload progress updates. It will be called
+  /// in addition to any general progress handler that may be set.
+  ///
+  /// Parameters:
+  /// - [handler]: The upload progress handler function to call
+  ///
+  /// Returns this instance for method chaining.
+  ///
+  /// Example:
+  /// ```dart
+  /// final client = SimpleApiRequest.init()
+  ///   .withUploadProgress((progress) {
+  ///     updateUploadProgressBar(progress.percentage);
+  ///   });
+  /// ```
+  SimpleApiRequest withUploadProgress(UploadProgressHandler handler) {
+    _uploadProgressHandler = handler;
+    return this;
+  }
+
+  /// Sets a download-specific progress handler.
+  ///
+  /// This handler will only receive download progress updates. It will be called
+  /// in addition to any general progress handler that may be set.
+  ///
+  /// Parameters:
+  /// - [handler]: The download progress handler function to call
+  ///
+  /// Returns this instance for method chaining.
+  ///
+  /// Example:
+  /// ```dart
+  /// final client = SimpleApiRequest.init()
+  ///   .withDownloadProgress((progress) {
+  ///     updateDownloadProgressBar(progress.percentage);
+  ///   });
+  /// ```
+  SimpleApiRequest withDownloadProgress(DownloadProgressHandler handler) {
+    _downloadProgressHandler = handler;
+    return this;
+  }
+
   /// Executes an HTTP GET request.
   ///
   /// GET requests are typically used for retrieving data. Query parameters
@@ -290,7 +390,7 @@ class SimpleApiRequest {
           queryParameters: handler['data'],
           options: options,
           cancelToken: cancelToken,
-          onReceiveProgress: onReceiveProgress);
+          onReceiveProgress: onReceiveProgress ?? _onReceiveProgress);
       return _handleResponse<T>(response: response);
     } catch (e) {
       return _handleError<T>(error: e);
@@ -334,8 +434,8 @@ class SimpleApiRequest {
           queryParameters: queryParameters,
           options: options,
           cancelToken: cancelToken,
-          onReceiveProgress: onReceiveProgress,
-          onSendProgress: onSendProgress);
+          onReceiveProgress: onReceiveProgress ?? _onReceiveProgress,
+          onSendProgress: onSendProgress ?? _onSendProgress);
       return _handleResponse<T>(response: response);
     } catch (e) {
       return _handleError<T>(error: e);
@@ -379,8 +479,8 @@ class SimpleApiRequest {
           queryParameters: queryParameters,
           options: options,
           cancelToken: cancelToken,
-          onReceiveProgress: onReceiveProgress,
-          onSendProgress: onSendProgress);
+          onReceiveProgress: onReceiveProgress ?? _onReceiveProgress,
+          onSendProgress: onSendProgress ?? _onSendProgress);
       return _handleResponse<T>(response: response);
     } catch (e) {
       return _handleError<T>(error: e);
@@ -473,7 +573,7 @@ class SimpleApiRequest {
         queryParameters: queryParameters,
         options: options,
         cancelToken: cancelToken,
-        onReceiveProgress: onReceiveProgress,
+        onReceiveProgress: onReceiveProgress ?? _onReceiveProgress,
         deleteOnError: deleteOnError,
         lengthHeader: lengthHeader);
   }
@@ -537,4 +637,50 @@ class SimpleApiRequest {
     Object? error,
   }) async =>
       left(ActionRequestError(error));
+
+  /// Whether any progress handlers are configured.
+  ///
+  /// Returns true if at least one progress handler is set.
+  bool get _hasProgressHandlers =>
+      _progressHandler != null ||
+      _uploadProgressHandler != null ||
+      _downloadProgressHandler != null;
+
+  /// Creates a Dio-compatible upload progress callback.
+  ///
+  /// Converts Dio's (sent, total) callback format to ProgressData
+  /// and calls the appropriate progress handlers.
+  ProgressCallback? get _onSendProgress {
+    if (!_hasProgressHandlers) return null;
+    
+    return (int sent, int total) {
+      final progress = ProgressData.fromBytes(
+        sentBytes: sent,
+        totalBytes: total,
+        type: ProgressType.upload,
+      );
+      
+      _progressHandler?.call(progress);
+      _uploadProgressHandler?.call(progress);
+    };
+  }
+
+  /// Creates a Dio-compatible download progress callback.
+  ///
+  /// Converts Dio's (received, total) callback format to ProgressData
+  /// and calls the appropriate progress handlers.
+  ProgressCallback? get _onReceiveProgress {
+    if (!_hasProgressHandlers) return null;
+    
+    return (int received, int total) {
+      final progress = ProgressData.fromBytes(
+        sentBytes: received,
+        totalBytes: total,
+        type: ProgressType.download,
+      );
+      
+      _progressHandler?.call(progress);
+      _downloadProgressHandler?.call(progress);
+    };
+  }
 }
