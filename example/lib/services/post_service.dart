@@ -33,6 +33,59 @@ class PostService {
     return await action.execute();
   }
 
+  /// Create a new post with progress tracking
+  static Future<Either<ActionRequestError, Post>?> createPostWithProgress({
+    required int userId,
+    required String title,
+    required String body,
+    ProgressHandler? onProgress,
+    UploadProgressHandler? onUploadProgress,
+  }) async {
+    final request = CreatePostRequest(
+      userId: userId,
+      title: title,
+      body: body,
+    );
+    
+    final action = CreatePostAction(request);
+    
+    // Add progress tracking if provided
+    if (onProgress != null) {
+      action.withProgress(onProgress);
+    }
+    
+    if (onUploadProgress != null) {
+      action.withUploadProgress(onUploadProgress);
+    }
+    
+    return await action.execute();
+  }
+
+  /// Create a new post using streaming with progress tracking
+  static Stream<Post?> createPostStream({
+    required int userId,
+    required String title,
+    required String body,
+    ProgressHandler? onProgress,
+  }) {
+    final request = CreatePostRequest(
+      userId: userId,
+      title: title,
+      body: body,
+    );
+    
+    final action = CreatePostAction(request);
+    
+    // Add progress tracking if provided
+    if (onProgress != null) {
+      action.withProgress(onProgress);
+    }
+    
+    // Start the request and return the stream
+    action.onQueue();
+    return action.stream;
+  }
+
   /// Update an existing post
   static Future<Either<ActionRequestError, Post>?> updatePost({
     required int id,

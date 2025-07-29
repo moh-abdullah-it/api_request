@@ -280,6 +280,68 @@ class _PostsListScreenState extends State<PostsListScreen> {
     );
   }
 
+  void _testProgressTracking() async {
+    if (AppConfig.useMockData) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Progress tracking works best with live API data'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final result = await PostService.createPostWithProgress(
+        userId: 1,
+        title: 'Test Progress Post',
+        body: 'Testing progress tracking functionality',
+        onProgress: (progress) {
+          print('Progress: ${progress.type.name} - ${progress.percentage.toStringAsFixed(1)}%');
+          
+          // Show progress in UI
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Progress: ${progress.type.name} - ${progress.percentage.toStringAsFixed(1)}%',
+              ),
+              duration: const Duration(milliseconds: 500),
+            ),
+          );
+        },
+        onUploadProgress: (progress) {
+          print('Upload: ${progress.sentBytes}/${progress.totalBytes} bytes');
+        },
+      );
+
+      result?.fold(
+        (error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Progress test failed: ${error.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        },
+        (post) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Progress test completed! Created post: ${post.title}'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Progress test error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -293,6 +355,11 @@ class _PostsListScreenState extends State<PostsListScreen> {
               onPressed: _showPerformanceReport,
               tooltip: 'Performance Report',
             ),
+          IconButton(
+            icon: const Icon(Icons.trending_up),
+            onPressed: _testProgressTracking,
+            tooltip: 'Test Progress Tracking',
+          ),
           IconButton(
             icon:
                 Icon(AppConfig.useMockData ? Icons.offline_bolt : Icons.cloud),
