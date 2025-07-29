@@ -685,52 +685,66 @@ abstract class RequestAction<T, R extends ApiRequest> {
   /// Executes an HTTP GET request.
   ///
   /// For GET requests, all data parameters are added to the query string.
-  /// The request body is empty.
+  /// The request body is empty. Progress tracking is supported for download operations.
   ///
   /// Returns the raw HTTP response from the server.
   Future<Response?> get() async {
     _query.addAll(Map.of(_dataMap));
-    return await _requestClient?.dio.get(_dynamicPath,
-        queryParameters: _query, options: Options(headers: _headers));
+    return await _requestClient?.dio.get(
+      _dynamicPath,
+      queryParameters: _query,
+      options: Options(headers: _headers),
+      onReceiveProgress: _hasProgressHandlers ? _onReceiveProgress : null,
+    );
   }
 
   /// Executes an HTTP POST request.
   ///
   /// The request data is sent in the request body, with query parameters
-  /// appended to the URL.
+  /// appended to the URL. Progress tracking is supported for both upload and download operations.
   ///
   /// Returns the raw HTTP response from the server.
   Future<Response?> post() async {
-    return await _requestClient?.dio.post(_dynamicPath,
-        data: _dataMap,
-        queryParameters: _query,
-        options: Options(headers: _headers));
+    return await _requestClient?.dio.post(
+      _dynamicPath,
+      data: _dataMap,
+      queryParameters: _query,
+      options: Options(headers: _headers),
+      onSendProgress: _hasProgressHandlers ? _onSendProgress : null,
+      onReceiveProgress: _hasProgressHandlers ? _onReceiveProgress : null,
+    );
   }
 
   /// Executes an HTTP PUT request.
   ///
   /// The request data is sent in the request body, with query parameters
-  /// appended to the URL.
+  /// appended to the URL. Progress tracking is supported for both upload and download operations.
   ///
   /// Returns the raw HTTP response from the server.
   Future<Response?> put() async {
-    return await _requestClient?.dio.put(_dynamicPath,
-        data: _dataMap,
-        queryParameters: _query,
-        options: Options(headers: _headers));
+    return await _requestClient?.dio.put(
+      _dynamicPath,
+      data: _dataMap,
+      queryParameters: _query,
+      options: Options(headers: _headers),
+      onSendProgress: _hasProgressHandlers ? _onSendProgress : null,
+      onReceiveProgress: _hasProgressHandlers ? _onReceiveProgress : null,
+    );
   }
 
   /// Executes an HTTP DELETE request.
   ///
   /// The request data is sent in the request body, with query parameters
-  /// appended to the URL.
+  /// appended to the URL. Note: DELETE requests do not support progress tracking in Dio.
   ///
   /// Returns the raw HTTP response from the server.
   Future<Response?> delete() async {
-    return await _requestClient?.dio.delete(_dynamicPath,
-        data: _dataMap,
-        queryParameters: _query,
-        options: Options(headers: _headers));
+    return await _requestClient?.dio.delete(
+      _dynamicPath,
+      data: _dataMap,
+      queryParameters: _query,
+      options: Options(headers: _headers),
+    );
   }
 
   _handleRequest(R? request) {
@@ -1097,6 +1111,51 @@ abstract class RequestAction<T, R extends ApiRequest> {
   RequestAction withDownloadProgress(DownloadProgressHandler handler) {
     _downloadProgressHandler = handler;
     return this;
+  }
+
+  /// Whether any progress handlers are configured.
+  ///
+  /// Returns `true` if at least one progress handler is set, indicating
+  /// that progress callbacks should be enabled for Dio requests.
+  bool get _hasProgressHandlers =>
+      _progressHandler != null ||
+      _uploadProgressHandler != null ||
+      _downloadProgressHandler != null;
+
+  /// Dio callback for upload progress updates.
+  ///
+  /// This method is called by Dio during request data transmission.
+  /// It converts the raw byte counts into a [ProgressData] object
+  /// and propagates it through the configured handlers.
+  ///
+  /// Parameters:
+  /// - [sent]: Number of bytes sent so far
+  /// - [total]: Total number of bytes to send
+  void _onSendProgress(int sent, int total) {
+    final progress = ProgressData.fromBytes(
+      sentBytes: sent,
+      totalBytes: total,
+      type: ProgressType.upload,
+    );
+    _handleProgress(progress);
+  }
+
+  /// Dio callback for download progress updates.
+  ///
+  /// This method is called by Dio during response data reception.
+  /// It converts the raw byte counts into a [ProgressData] object
+  /// and propagates it through the configured handlers.
+  ///
+  /// Parameters:
+  /// - [received]: Number of bytes received so far
+  /// - [total]: Total number of bytes to receive
+  void _onReceiveProgress(int received, int total) {
+    final progress = ProgressData.fromBytes(
+      sentBytes: received,
+      totalBytes: total,
+      type: ProgressType.download,
+    );
+    _handleProgress(progress);
   }
 
   /// Internal method to handle progress updates and invoke appropriate handlers.
