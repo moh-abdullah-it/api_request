@@ -76,20 +76,39 @@ import 'package:api_request/api_request.dart';
 /// ## Example Output
 ///
 /// ```
-/// *** Api Request ***
-/// uri: https://api.example.com/posts/123
-/// method: GET
-/// headers:
-///  Authorization: Bearer abc123
-///  Content-Type: application/json
-///
-/// *** Api Response ***
-/// uri: https://api.example.com/posts/123
-/// statusCode: 200
-/// headers:
-///  content-type: application/json
-/// Response Text:
-/// {"id":123,"title":"Sample Post"}
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// 🚀 API REQUEST
+/// 📍 GET https://api.example.com/posts/123
+/// 
+/// ▶ REQUEST INFO
+/// ──────────────
+/// Method              : GET
+/// Response Type       : JSON
+/// Connect Timeout     : 30s
+/// 
+/// ▶ REQUEST HEADERS
+/// ─────────────────
+/// Authorization       : Bearer abc123
+/// Content-Type        : application/json
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// 
+/// ═══════════════════════════════════════════════════════════════════════════════
+/// ✅ API RESPONSE
+/// 📍 200 https://api.example.com/posts/123
+/// 
+/// ▶ RESPONSE INFO
+/// ───────────────
+/// Status Code         : 200 OK
+/// Content Type        : application/json
+/// Content Length      : 42
+/// 
+/// ▶ RESPONSE BODY
+/// ───────────────
+///   {
+///     "id": 123,
+///     "title": "Sample Post"
+///   }
+/// ═══════════════════════════════════════════════════════════════════════════════
 /// ```
 ///
 /// See also:
@@ -234,33 +253,45 @@ class ApiLogInterceptor extends ApiInterceptor {
   @override
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
-    logPrint('*** Api Request ***');
-    _printKV('uri', options.uri);
-
+    _printSeparator();
+    _printHeader('🚀 API REQUEST', '${options.method} ${options.uri}');
+    
     if (request) {
-      _printKV('method', options.method);
-      _printKV('responseType', options.responseType.toString());
-      _printKV('connectTimeout', options.connectTimeout);
+      _printSection('REQUEST INFO');
+      _printKV('Method', options.method);
+      _printKV('Response Type', _formatResponseType(options.responseType));
+      _printKV('Connect Timeout', _formatDuration(options.connectTimeout));
+      _printKV('Send Timeout', _formatDuration(options.sendTimeout));
+      _printKV('Receive Timeout', _formatDuration(options.receiveTimeout));
     }
-    if (requestHeader) {
-      logPrint('headers:');
-      options.headers.forEach((key, v) => _printKV(' $key', v));
+    
+    if (requestHeader && options.headers.isNotEmpty) {
+      _printSection('REQUEST HEADERS');
+      options.headers.forEach((key, value) => _printKV(key, value));
     }
-    if (requestBody) {
+    
+    if (requestBody && options.data != null) {
+      _printSection('REQUEST BODY');
       if (options.data is FormData) {
-        _printKV(
-            'Data Fields: ',
-            options.data.fields
-                .map((MapEntry entry) => '${entry.key}: ${entry.value}')
-                .toString());
-        _printKV('Data Files: ', options.data.files);
+        final formData = options.data as FormData;
+        if (formData.fields.isNotEmpty) {
+          logPrint('📝 Form Fields:');
+          for (final field in formData.fields) {
+            _printKV('  ${field.key}', field.value, indent: 2);
+          }
+        }
+        if (formData.files.isNotEmpty) {
+          logPrint('📎 Form Files:');
+          for (final file in formData.files) {
+            _printKV('  ${file.key}', '${file.value.filename} (${file.value.length} bytes)', indent: 2);
+          }
+        }
       } else {
-        logPrint('data:');
-        _printAll(options.data);
+        _printData(options.data);
       }
     }
-    logPrint('');
-
+    
+    _printSeparator();
     handler.next(options);
   }
 
@@ -275,7 +306,9 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// - Response body (if [responseBody] is true)
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
-    logPrint('*** Api Response ***');
+    _printSeparator();
+    final statusEmoji = _getStatusEmoji(response.statusCode);
+    _printHeader('$statusEmoji API RESPONSE', '${response.statusCode} ${response.requestOptions.uri}');
     _printResponse(response);
     handler.next(response);
   }
@@ -293,13 +326,19 @@ class ApiLogInterceptor extends ApiInterceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (error) {
-      logPrint('*** ApiRequestError ***:');
-      logPrint('uri: ${err.requestOptions.uri}');
-      logPrint('$err');
+      _printSeparator();
+      _printHeader('❌ API ERROR', '${err.requestOptions.method} ${err.requestOptions.uri}');
+      
+      _printSection('ERROR DETAILS');
+      _printKV('Type', _formatErrorType(err.type));
+      _printKV('Message', err.message ?? 'No message');
+      
       if (err.response != null) {
+        _printSection('ERROR RESPONSE');
         _printResponse(err.response!);
       }
-      logPrint('');
+      
+      _printSeparator();
     }
 
     handler.next(err);
@@ -310,36 +349,201 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// This helper method formats and logs response data including
   /// status codes, headers, redirects, and response body.
   void _printResponse(Response response) {
-    _printKV('uri', response.requestOptions.uri);
     if (responseHeader) {
-      _printKV('statusCode', response.statusCode);
+      _printSection('RESPONSE INFO');
+      _printKV('Status Code', '${response.statusCode} ${_getStatusMessage(response.statusCode)}');
+      _printKV('Content Type', response.headers.value('content-type') ?? 'Unknown');
+      _printKV('Content Length', response.headers.value('content-length') ?? 'Unknown');
+      
       if (response.isRedirect == true) {
-        _printKV('redirect', response.realUri);
+        _printKV('Redirect', response.realUri.toString());
       }
 
-      logPrint('headers:');
-      response.headers.forEach((key, v) => _printKV(' $key', v.join('\r\n\t')));
+      if (response.headers.map.isNotEmpty) {
+        _printSection('RESPONSE HEADERS');
+        response.headers.forEach((key, values) => 
+          _printKV(key, values.length == 1 ? values.first : values.join(', ')));
+      }
     }
-    if (responseBody) {
-      logPrint('Response Text:');
-      _printAll(response.toString());
+    
+    if (responseBody && response.data != null) {
+      _printSection('RESPONSE BODY');
+      _printData(response.data);
     }
+    
+    _printSeparator();
+  }
+
+  /// Prints a separator line for visual clarity.
+  void _printSeparator() {
+    logPrint('═' * 80);
+  }
+
+  /// Prints a formatted header with icon and description.
+  void _printHeader(String title, String subtitle) {
+    logPrint('$title');
+    logPrint('📍 $subtitle');
     logPrint('');
+  }
+
+  /// Prints a section header with visual formatting.
+  void _printSection(String title) {
+    logPrint('');
+    logPrint('▶ $title');
+    logPrint('─' * (title.length + 2));
   }
 
   /// Prints a key-value pair in a consistent format.
   ///
   /// Helper method for formatting log output with consistent key-value styling.
-  void _printKV(String key, Object? v) {
-    logPrint('$key: $v');
+  void _printKV(String key, Object? value, {int indent = 0}) {
+    final spaces = '  ' * indent;
+    final formattedKey = key.padRight(20);
+    logPrint('$spaces$formattedKey: $value');
   }
 
-  /// Prints multi-line text by splitting on newlines.
-  ///
-  /// Helper method for properly formatting multi-line content like
-  /// JSON responses or error messages.
-  void _printAll(msg) {
-    msg.toString().split('\n').forEach(logPrint);
+  /// Prints data with proper formatting for different types.
+  void _printData(dynamic data) {
+    if (data == null) {
+      logPrint('null');
+      return;
+    }
+    
+    try {
+      // Try to format as JSON if it's a string that looks like JSON
+      if (data is String && (data.startsWith('{') || data.startsWith('['))) {
+        _printFormattedJson(data);
+      } else if (data is Map || data is List) {
+        _printFormattedJson(data.toString());
+      } else {
+        // Print as-is for other types
+        data.toString().split('\n').forEach((line) => logPrint('  $line'));
+      }
+    } catch (e) {
+      // Fallback to simple printing
+      data.toString().split('\n').forEach((line) => logPrint('  $line'));
+    }
+  }
+
+  /// Formats and prints JSON data with proper indentation.
+  void _printFormattedJson(String jsonString) {
+    try {
+      // Simple JSON formatting - add indentation for readability
+      var indent = 0;
+      final formatted = <String>[];
+      
+      for (int i = 0; i < jsonString.length; i++) {
+        final char = jsonString[i];
+        
+        if (char == '{' || char == '[') {
+          formatted.add('  ' * indent + char);
+          indent++;
+        } else if (char == '}' || char == ']') {
+          indent--;
+          formatted.add('  ' * indent + char);
+        } else if (char == ',') {
+          formatted.add(char);
+        } else if (char != ' ' && char != '\n' && char != '\r') {
+          if (formatted.isEmpty || formatted.last.endsWith('\n')) {
+            formatted.add('  ' * indent + char);
+          } else {
+            formatted[formatted.length - 1] += char;
+          }
+        }
+      }
+      
+      // Print each line
+      final lines = formatted.join('').split('\n');
+      for (final line in lines) {
+        if (line.trim().isNotEmpty) {
+          logPrint('  $line');
+        }
+      }
+    } catch (e) {
+      // Fallback to simple line-by-line printing
+      jsonString.split('\n').forEach((line) => logPrint('  $line'));
+    }
+  }
+
+  /// Gets appropriate emoji for HTTP status code.
+  String _getStatusEmoji(int? statusCode) {
+    if (statusCode == null) return '❓';
+    
+    if (statusCode >= 200 && statusCode < 300) return '✅';
+    if (statusCode >= 300 && statusCode < 400) return '🔄';
+    if (statusCode >= 400 && statusCode < 500) return '⚠️';
+    if (statusCode >= 500) return '❌';
+    
+    return '❓';
+  }
+
+  /// Gets human-readable status message for HTTP status code.
+  String _getStatusMessage(int? statusCode) {
+    if (statusCode == null) return 'Unknown';
+    
+    switch (statusCode) {
+      case 200: return 'OK';
+      case 201: return 'Created';
+      case 204: return 'No Content';
+      case 301: return 'Moved Permanently';
+      case 302: return 'Found';
+      case 304: return 'Not Modified';
+      case 400: return 'Bad Request';
+      case 401: return 'Unauthorized';
+      case 403: return 'Forbidden';
+      case 404: return 'Not Found';
+      case 405: return 'Method Not Allowed';
+      case 409: return 'Conflict';
+      case 422: return 'Unprocessable Entity';
+      case 429: return 'Too Many Requests';
+      case 500: return 'Internal Server Error';
+      case 502: return 'Bad Gateway';
+      case 503: return 'Service Unavailable';
+      case 504: return 'Gateway Timeout';
+      default: return '';
+    }
+  }
+
+  /// Formats response type for display.
+  String _formatResponseType(ResponseType type) {
+    return type.toString().split('.').last.toUpperCase();
+  }
+
+  /// Formats duration for display.
+  String _formatDuration(Duration? duration) {
+    if (duration == null) return 'Not set';
+    
+    if (duration.inMilliseconds < 1000) {
+      return '${duration.inMilliseconds}ms';
+    } else if (duration.inSeconds < 60) {
+      return '${duration.inSeconds}s';
+    } else {
+      final minutes = duration.inMinutes;
+      final seconds = duration.inSeconds % 60;
+      return '${minutes}m ${seconds}s';
+    }
+  }
+
+  /// Formats error type for display.
+  String _formatErrorType(DioExceptionType type) {
+    switch (type) {
+      case DioExceptionType.connectionTimeout:
+        return 'Connection Timeout';
+      case DioExceptionType.sendTimeout:
+        return 'Send Timeout';
+      case DioExceptionType.receiveTimeout:
+        return 'Receive Timeout';
+      case DioExceptionType.badCertificate:
+        return 'Bad Certificate';
+      case DioExceptionType.badResponse:
+        return 'Bad Response';
+      case DioExceptionType.cancel:
+        return 'Request Cancelled';
+      case DioExceptionType.connectionError:
+        return 'Connection Error';
+      case DioExceptionType.unknown:
+        return 'Unknown Error';
+    }
   }
 
   /// Compares two [ApiLogInterceptor] instances for equality.
