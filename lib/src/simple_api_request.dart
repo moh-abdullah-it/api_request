@@ -652,14 +652,14 @@ class SimpleApiRequest {
   /// and calls the appropriate progress handlers.
   ProgressCallback? get _onSendProgress {
     if (!_hasProgressHandlers) return null;
-    
+
     return (int sent, int total) {
       final progress = ProgressData.fromBytes(
         sentBytes: sent,
         totalBytes: total,
         type: ProgressType.upload,
       );
-      
+
       _progressHandler?.call(progress);
       _uploadProgressHandler?.call(progress);
     };
@@ -671,14 +671,14 @@ class SimpleApiRequest {
   /// and calls the appropriate progress handlers.
   ProgressCallback? get _onReceiveProgress {
     if (!_hasProgressHandlers) return null;
-    
+
     return (int received, int total) {
       final progress = ProgressData.fromBytes(
         sentBytes: received,
         totalBytes: total,
         type: ProgressType.download,
       );
-      
+
       _progressHandler?.call(progress);
       _downloadProgressHandler?.call(progress);
     };

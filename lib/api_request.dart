@@ -48,7 +48,8 @@ export 'package:dio/dio.dart';
 export 'src/actions/api_request_action.dart';
 export 'src/actions/request_action.dart';
 export 'src/actions/file_download_action.dart';
-export 'src/actions/file_upload_action.dart' show FileUploadAction, FileUploadRequest;
+export 'src/actions/file_upload_action.dart'
+    show FileUploadAction, FileUploadRequest;
 
 /// Core API request functionality
 export 'src/api_request.dart';

@@ -2,776 +2,814 @@
 
 This document provides comprehensive examples of using the progress tracking system across different scenarios and use cases.
 
-## 📱 Flutter UI Examples
+## 📱 Flutter UI Integration Examples
 
-### Basic Progress Bar Integration
+### 1. Linear Progress Bar with RequestAction
 
 ```dart
-class UploadScreen extends StatefulWidget {
+class UploadProgressScreen extends StatefulWidget {
+  final File file;
+  
+  const UploadProgressScreen({Key? key, required this.file}) : super(key: key);
+  
   @override
-  _UploadScreenState createState() => _UploadScreenState();
+  _UploadProgressScreenState createState() => _UploadProgressScreenState();
 }
 
-class _UploadScreenState extends State<UploadScreen> {
+class _UploadProgressScreenState extends State<UploadProgressScreen> {
   double _uploadProgress = 0.0;
+  double _downloadProgress = 0.0;
   bool _isUploading = false;
-  String _statusMessage = '';
+  String _statusMessage = 'Ready to upload';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('File Upload')),
+      appBar: AppBar(title: Text('File Upload with Progress')),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            LinearProgressIndicator(
-              value: _uploadProgress / 100,
-              backgroundColor: Colors.grey[300],
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-            SizedBox(height: 16),
-            Text('${_uploadProgress.toStringAsFixed(1)}%'),
-            SizedBox(height: 16),
-            Text(_statusMessage),
-            SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _isUploading ? null : _uploadFile,
-              child: Text(_isUploading ? 'Uploading...' : 'Upload File'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _uploadFile() async {
-    final file = await _pickFile(); // Your file picker logic
-    if (file == null) return;
-
-    setState(() {
-      _isUploading = true;
-      _uploadProgress = 0.0;
-      _statusMessage = 'Starting upload...';
-    });
-
-    try {
-      final result = await UploadFileAction(file)
-        .withUploadProgress((progress) {
-          setState(() {
-            _uploadProgress = progress.percentage;
-            _statusMessage = 'Uploading: ${(progress.sentBytes / 1024).round()} KB / ${(progress.totalBytes / 1024).round()} KB';
-          });
-        })
-        .withFormData({
-          'description': 'User uploaded file',
-          'category': 'documents',
-        })
-        .execute();
-
-      result?.fold(
-        (error) {
-          setState(() {
-            _statusMessage = 'Upload failed: ${error.message}';
-          });
-        },
-        (response) {
-          setState(() {
-            _statusMessage = 'Upload completed successfully!';
-          });
-        },
-      );
-    } finally {
-      setState(() {
-        _isUploading = false;
-      });
-    }
-  }
-}
-```
-
-### Circular Progress with Speed Display
-
-```dart
-class DownloadProgressWidget extends StatefulWidget {
-  final String fileUrl;
-  final String fileName;
-
-  DownloadProgressWidget({required this.fileUrl, required this.fileName});
-
-  @override
-  _DownloadProgressWidgetState createState() => _DownloadProgressWidgetState();
-}
-
-class _DownloadProgressWidgetState extends State<DownloadProgressWidget> {
-  double _progress = 0.0;
-  String _speed = '0 KB/s';
-  String _eta = '';
-  int _startTime = 0;
-  
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                SizedBox(
-                  width: 100,
-                  height: 100,
-                  child: CircularProgressIndicator(
-                    value: _progress / 100,
-                    strokeWidth: 8,
-                    backgroundColor: Colors.grey[300],
-                  ),
-                ),
-                Text(
-                  '${_progress.toStringAsFixed(0)}%',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Text(widget.fileName, style: TextStyle(fontSize: 16)),
-            SizedBox(height: 8),
-            Text('Speed: $_speed'),
-            if (_eta.isNotEmpty) Text('ETA: $_eta'),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _startDownload,
-              child: Text('Download'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _startDownload() async {
-    _startTime = DateTime.now().millisecondsSinceEpoch;
-    
-    final result = await DownloadFileAction('/downloads/${widget.fileName}')
-      .withDownloadProgress((progress) {
-        setState(() {
-          _progress = progress.percentage;
-          
-          // Calculate speed
-          final elapsed = (DateTime.now().millisecondsSinceEpoch - _startTime) / 1000;
-          if (elapsed > 0) {
-            final speed = progress.sentBytes / elapsed; // bytes per second
-            _speed = '${(speed / 1024).toStringAsFixed(1)} KB/s';
-            
-            // Calculate ETA
-            if (progress.percentage > 0 && progress.percentage < 100) {
-              final remaining = progress.totalBytes - progress.sentBytes;
-              final etaSeconds = remaining / speed;
-              _eta = '${etaSeconds.round()}s';
-            }
-          }
-        });
-      })
-      .execute();
-  }
-}
-```
-
-### Multi-File Upload with Individual Progress
-
-```dart
-class MultiFileUploadWidget extends StatefulWidget {
-  @override
-  _MultiFileUploadWidgetState createState() => _MultiFileUploadWidgetState();
-}
-
-class _MultiFileUploadWidgetState extends State<MultiFileUploadWidget> {
-  List<FileUploadItem> _uploadItems = [];
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        ElevatedButton(
-          onPressed: _selectFiles,
-          child: Text('Select Files'),
-        ),
-        SizedBox(height: 16),
-        Expanded(
-          child: ListView.builder(
-            itemCount: _uploadItems.length,
-            itemBuilder: (context, index) {
-              final item = _uploadItems[index];
-              return Card(
-                child: ListTile(
-                  leading: _getStatusIcon(item.status),
-                  title: Text(item.fileName),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      LinearProgressIndicator(
-                        value: item.progress / 100,
-                        backgroundColor: Colors.grey[300],
-                      ),
-                      SizedBox(height: 4),
-                      Text('${item.progress.toStringAsFixed(1)}% - ${item.statusText}'),
-                    ],
-                  ),
-                  trailing: item.status == UploadStatus.uploading
-                      ? IconButton(
-                          icon: Icon(Icons.cancel),
-                          onPressed: () => _cancelUpload(index),
-                        )
-                      : null,
-                ),
-              );
-            },
-          ),
-        ),
-        if (_uploadItems.isNotEmpty)
-          ElevatedButton(
-            onPressed: _startUploads,
-            child: Text('Upload All'),
-          ),
-      ],
-    );
-  }
-
-  Future<void> _selectFiles() async {
-    // Your file selection logic
-    final files = await _pickMultipleFiles();
-    setState(() {
-      _uploadItems = files.map((file) => FileUploadItem(
-        file: file,
-        fileName: file.path.split('/').last,
-        status: UploadStatus.pending,
-        progress: 0.0,
-        statusText: 'Ready to upload',
-      )).toList();
-    });
-  }
-
-  Future<void> _startUploads() async {
-    for (int i = 0; i < _uploadItems.length; i++) {
-      if (_uploadItems[i].status == UploadStatus.pending) {
-        await _uploadFile(i);
-      }
-    }
-  }
-
-  Future<void> _uploadFile(int index) async {
-    final item = _uploadItems[index];
-    
-    setState(() {
-      item.status = UploadStatus.uploading;
-      item.statusText = 'Uploading...';
-    });
-
-    try {
-      final result = await UploadSingleFileAction(item.file)
-        .withUploadProgress((progress) {
-          setState(() {
-            item.progress = progress.percentage;
-            item.statusText = '${(progress.sentBytes / 1024).round()} KB uploaded';
-          });
-        })
-        .execute();
-
-      result?.fold(
-        (error) {
-          setState(() {
-            item.status = UploadStatus.failed;
-            item.statusText = 'Failed: ${error.message}';
-          });
-        },
-        (response) {
-          setState(() {
-            item.status = UploadStatus.completed;
-            item.statusText = 'Upload completed';
-            item.progress = 100.0;
-          });
-        },
-      );
-    } catch (e) {
-      setState(() {
-        item.status = UploadStatus.failed;
-        item.statusText = 'Error: $e';
-      });
-    }
-  }
-
-  Widget _getStatusIcon(UploadStatus status) {
-    switch (status) {
-      case UploadStatus.pending:
-        return Icon(Icons.schedule, color: Colors.grey);
-      case UploadStatus.uploading:
-        return CircularProgressIndicator(strokeWidth: 2);
-      case UploadStatus.completed:
-        return Icon(Icons.check_circle, color: Colors.green);
-      case UploadStatus.failed:
-        return Icon(Icons.error, color: Colors.red);
-    }
-  }
-}
-
-class FileUploadItem {
-  final File file;
-  final String fileName;
-  UploadStatus status;
-  double progress;
-  String statusText;
-
-  FileUploadItem({
-    required this.file,
-    required this.fileName,
-    required this.status,
-    required this.progress,
-    required this.statusText,
-  });
-}
-
-enum UploadStatus { pending, uploading, completed, failed }
-```
-
-## 🔄 Stream-Based Progress Examples
-
-### Real-time Progress Dashboard
-
-```dart
-class ProgressDashboard extends StatefulWidget {
-  @override
-  _ProgressDashboardState createState() => _ProgressDashboardState();
-}
-
-class _ProgressDashboardState extends State<ProgressDashboard> {
-  final StreamController<ProgressData> _progressController = 
-      StreamController<ProgressData>.broadcast();
-  
-  final List<ProgressData> _progressHistory = [];
-  
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Real-time progress display
-        StreamBuilder<ProgressData>(
-          stream: _progressController.stream,
-          builder: (context, snapshot) {
-            final progress = snapshot.data;
-            return Card(
+            Card(
               child: Padding(
                 padding: EdgeInsets.all(16.0),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Current Transfer', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text('Upload Progress', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     SizedBox(height: 8),
-                    if (progress != null) ...[
-                      LinearProgressIndicator(
-                        value: progress.percentage / 100,
-                        backgroundColor: Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          progress.isUpload ? Colors.blue : Colors.green,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text('${progress.type.name.toUpperCase()}: ${progress.percentage.toStringAsFixed(1)}%'),
-                      Text('${(progress.sentBytes / 1024).round()} KB / ${(progress.totalBytes / 1024).round()} KB'),
-                    ] else
-                      Text('No active transfer'),
+                    LinearProgressIndicator(
+                      value: _uploadProgress / 100,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    ),
+                    SizedBox(height: 4),
+                    Text('${_uploadProgress.toStringAsFixed(1)}%'),
                   ],
                 ),
               ),
-            );
-          },
-        ),
-        
-        // Progress history
-        Expanded(
-          child: Card(
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text('Transfer History', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _progressHistory.length,
-                    itemBuilder: (context, index) {
-                      final progress = _progressHistory[index];
-                      return ListTile(
-                        leading: Icon(
-                          progress.isUpload ? Icons.upload : Icons.download,
-                          color: progress.isUpload ? Colors.blue : Colors.green,
-                        ),
-                        title: Text('${progress.type.name.toUpperCase()}: ${progress.percentage.toStringAsFixed(1)}%'),
-                        subtitle: Text('${(progress.sentBytes / 1024).round()} KB transferred'),
-                        trailing: Text(DateTime.now().toString().substring(11, 19)),
-                      );
-                    },
-                  ),
-                ),
-              ],
             ),
-          ),
-        ),
-        
-        // Action buttons
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton(
-              onPressed: _startUpload,
-              child: Text('Start Upload'),
+            SizedBox(height: 16),
+            Card(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Response Processing', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: _downloadProgress / 100,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                    ),
+                    SizedBox(height: 4),
+                    Text('${_downloadProgress.toStringAsFixed(1)}%'),
+                  ],
+                ),
+              ),
             ),
+            SizedBox(height: 16),
+            Text(_statusMessage, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
+            SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _startDownload,
-              child: Text('Start Download'),
+              onPressed: _isUploading ? null : _startUpload,
+              child: Text(_isUploading ? 'Uploading...' : 'Start Upload'),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
   Future<void> _startUpload() async {
-    final file = await _pickFile();
-    if (file == null) return;
+    setState(() {
+      _isUploading = true;
+      _statusMessage = 'Starting upload...';
+    });
 
-    final result = await UploadFileAction(file)
+    final result = await UploadFileAction(widget.file)
       .withUploadProgress((progress) {
-        _progressController.add(progress);
-        _progressHistory.insert(0, progress);
-        if (_progressHistory.length > 100) {
-          _progressHistory.removeLast();
-        }
+        setState(() {
+          _uploadProgress = progress.percentage;
+          _statusMessage = 'Uploading: ${(progress.sentBytes / 1024).round()} KB / ${(progress.totalBytes / 1024).round()} KB';
+        });
+      })
+      .withDownloadProgress((progress) {
+        setState(() {
+          _downloadProgress = progress.percentage;
+          _statusMessage = 'Processing response...';
+        });
+      })
+      .withFormData({
+        'description': 'User uploaded file',
+        'category': 'documents',
+      })
+      .execute();
+
+    setState(() {
+      _isUploading = false;
+    });
+
+    result?.fold(
+      (error) {
+        setState(() {
+          _statusMessage = 'Upload failed: ${error.message}';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed'), backgroundColor: Colors.red),
+        );
+      },
+      (response) {
+        setState(() {
+          _statusMessage = 'Upload completed successfully!';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload completed!'), backgroundColor: Colors.green),
+        );
+      },
+    );
+  }
+}
+```
+
+### 2. Circular Progress with Animation
+
+```dart
+class AnimatedProgressWidget extends StatefulWidget {
+  @override
+  _AnimatedProgressWidgetState createState() => _AnimatedProgressWidgetState();
+}
+
+class _AnimatedProgressWidgetState extends State<AnimatedProgressWidget>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+  double _currentProgress = 0.0;
+  String _progressText = '0%';
+  Color _progressColor = Colors.blue;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _animation = Tween<double>(begin: 0, end: 0).animate(_animationController);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) {
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: CircularProgressIndicator(
+                      value: _animation.value / 100,
+                      strokeWidth: 8,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(_progressColor),
+                    ),
+                  ),
+                  Text(
+                    _progressText,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              );
+            },
+          ),
+          SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: _startProgressDemo,
+            child: Text('Start Demo Request'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _startProgressDemo() async {
+    final result = await DemoRequestAction()
+      .withProgress((progress) {
+        _updateProgress(progress);
       })
       .execute();
   }
 
-  Future<void> _startDownload() async {
-    final result = await DownloadFileAction('/downloads/sample.zip')
-      .withDownloadProgress((progress) {
-        _progressController.add(progress);
-        _progressHistory.insert(0, progress);
-        if (_progressHistory.length > 100) {
-          _progressHistory.removeLast();
-        }
-      })
-      .execute();
+  void _updateProgress(ProgressData progress) {
+    setState(() {
+      _currentProgress = progress.percentage;
+      _progressText = '${progress.percentage.toStringAsFixed(1)}%';
+      _progressColor = progress.isUpload ? Colors.blue : Colors.green;
+    });
+
+    _animation = Tween<double>(
+      begin: _animation.value,
+      end: progress.percentage,
+    ).animate(_animationController);
+
+    _animationController.forward(from: 0);
   }
 
   @override
   void dispose() {
-    _progressController.close();
+    _animationController.dispose();
     super.dispose();
   }
 }
 ```
 
-## 🎯 Advanced Use Cases
+## 🔄 Stream-Based Progress Examples
 
-### Background Upload with Notifications
+### 3. Progress Stream with Multiple Subscriptions
 
 ```dart
-class BackgroundUploadService {
-  static final BackgroundUploadService _instance = BackgroundUploadService._internal();
-  factory BackgroundUploadService() => _instance;
-  BackgroundUploadService._internal();
+class ProgressStreamManager {
+  final StreamController<ProgressData> _progressController = 
+      StreamController<ProgressData>.broadcast();
+  
+  final StreamController<String> _statusController = 
+      StreamController<String>.broadcast();
 
-  final List<UploadTask> _activeTasks = [];
+  // Public streams
+  Stream<ProgressData> get progressStream => _progressController.stream;
+  Stream<String> get statusStream => _statusController.stream;
 
-  Future<void> uploadInBackground(File file, String description) async {
-    final taskId = DateTime.now().millisecondsSinceEpoch.toString();
-    final task = UploadTask(
-      id: taskId,
-      fileName: file.path.split('/').last,
-      totalBytes: file.lengthSync(),
-    );
-    
-    _activeTasks.add(task);
-    _showUploadStartNotification(task);
+  Future<void> executeRequestWithStreams() async {
+    _statusController.add('Initializing request...');
 
-    try {
-      final result = await UploadFileAction(file)
-        .withUploadProgress((progress) {
-          task.progress = progress.percentage;
-          task.uploadedBytes = progress.sentBytes;
-          
-          // Update notification every 10%
-          if (progress.percentage % 10 == 0) {
-            _updateProgressNotification(task);
-          }
-        })
-        .withFormData({'description': description})
-        .execute();
+    final result = await LargeDataRequestAction()
+      .withProgress((progress) {
+        // Send to progress stream
+        _progressController.add(progress);
+        
+        // Send status updates
+        if (progress.isUpload) {
+          _statusController.add('Uploading: ${progress.percentage.toStringAsFixed(1)}%');
+        } else if (progress.isDownload) {
+          _statusController.add('Downloading: ${progress.percentage.toStringAsFixed(1)}%');
+        }
+        
+        if (progress.isCompleted) {
+          _statusController.add('${progress.type.name} completed!');
+        }
+      })
+      .execute();
 
-      result?.fold(
-        (error) {
-          _showUploadFailedNotification(task, error.message);
-        },
-        (response) {
-          _showUploadCompletedNotification(task);
-        },
-      );
-    } catch (e) {
-      _showUploadFailedNotification(task, e.toString());
-    } finally {
-      _activeTasks.remove(task);
-    }
-  }
-
-  void _showUploadStartNotification(UploadTask task) {
-    // Your notification service integration
-    NotificationService.show(
-      id: task.id.hashCode,
-      title: 'Upload Started',
-      body: 'Uploading ${task.fileName}...',
-      progress: 0,
-      ongoing: true,
+    result?.fold(
+      (error) => _statusController.add('Error: ${error.message}'),
+      (data) => _statusController.add('Request completed successfully'),
     );
   }
 
-  void _updateProgressNotification(UploadTask task) {
-    NotificationService.update(
-      id: task.id.hashCode,
-      title: 'Uploading ${task.fileName}',
-      body: '${task.progress.round()}% completed',
-      progress: task.progress.round(),
-      ongoing: true,
-    );
-  }
-
-  void _showUploadCompletedNotification(UploadTask task) {
-    NotificationService.show(
-      id: task.id.hashCode,
-      title: 'Upload Completed',
-      body: '${task.fileName} uploaded successfully',
-      ongoing: false,
-      autoCancel: true,
-    );
-  }
-
-  void _showUploadFailedNotification(UploadTask task, String error) {
-    NotificationService.show(
-      id: task.id.hashCode,
-      title: 'Upload Failed',
-      body: '${task.fileName}: $error',
-      ongoing: false,
-      autoCancel: true,
-    );
+  void dispose() {
+    _progressController.close();
+    _statusController.close();
   }
 }
 
-class UploadTask {
-  final String id;
-  final String fileName;
-  final int totalBytes;
-  double progress = 0.0;
-  int uploadedBytes = 0;
+// Usage in widget
+class StreamProgressWidget extends StatefulWidget {
+  @override
+  _StreamProgressWidgetState createState() => _StreamProgressWidgetState();
+}
 
-  UploadTask({
-    required this.id,
-    required this.fileName,
-    required this.totalBytes,
-  });
+class _StreamProgressWidgetState extends State<StreamProgressWidget> {
+  late ProgressStreamManager _streamManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _streamManager = ProgressStreamManager();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Progress indicator
+        StreamBuilder<ProgressData>(
+          stream: _streamManager.progressStream,
+          builder: (context, snapshot) {
+            final progress = snapshot.data;
+            return LinearProgressIndicator(
+              value: progress != null ? progress.percentage / 100 : 0,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(
+                progress?.isUpload == true ? Colors.blue : Colors.green,
+              ),
+            );
+          },
+        ),
+        
+        // Status text
+        StreamBuilder<String>(
+          stream: _streamManager.statusStream,
+          builder: (context, snapshot) {
+            return Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                snapshot.data ?? 'Ready',
+                style: TextStyle(fontSize: 14),
+              ),
+            );
+          },
+        ),
+        
+        ElevatedButton(
+          onPressed: () => _streamManager.executeRequestWithStreams(),
+          child: Text('Start Streaming Request'),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _streamManager.dispose();
+    super.dispose();
+  }
 }
 ```
 
-### Batch Operations with Progress Aggregation
+## 📊 Performance Monitoring Examples
+
+### 4. Advanced Performance Dashboard
 
 ```dart
-class BatchUploadManager {
-  Future<void> uploadBatch(List<File> files) async {
-    final totalFiles = files.length;
-    int completedFiles = 0;
-    int totalBytes = files.fold(0, (sum, file) => sum + file.lengthSync());
-    int uploadedBytes = 0;
+class PerformanceDashboard extends StatefulWidget {
+  @override
+  _PerformanceDashboardState createState() => _PerformanceDashboardState();
+}
 
-    print('Starting batch upload of $totalFiles files (${(totalBytes / 1024 / 1024).toStringAsFixed(2)} MB)');
+class _PerformanceDashboardState extends State<PerformanceDashboard> {
+  List<PerformanceReport> _reports = [];
+  bool _isLoading = false;
 
-    for (int i = 0; i < files.length; i++) {
-      final file = files[i];
-      final fileName = file.path.split('/').last;
-      
-      print('Uploading file ${i + 1}/$totalFiles: $fileName');
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Performance Dashboard')),
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _runPerformanceTest,
+                    child: Text(_isLoading ? 'Running Tests...' : 'Run Performance Test'),
+                  ),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _clearReports,
+                  child: Text('Clear'),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _reports.length,
+              itemBuilder: (context, index) {
+                final report = _reports[index];
+                return Card(
+                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: ListTile(
+                    title: Text(report.actionName ?? 'Unknown Action'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Duration: ${report.duration?.inMilliseconds}ms'),
+                        if (report.hasProgressData) ...[
+                          Text('Uploaded: ${_formatBytes(report.uploadBytes)}'),
+                          Text('Downloaded: ${_formatBytes(report.downloadBytes)}'),
+                          Text('Transfer Rate: ${_formatTransferRate(report.transferRate)}'),
+                        ],
+                      ],
+                    ),
+                    trailing: report.hasProgressData
+                        ? Icon(Icons.analytics, color: Colors.green)
+                        : Icon(Icons.timer, color: Colors.grey),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Future<void> _runPerformanceTest() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    // Run multiple requests with different characteristics
+    final testActions = [
+      () => SmallDataRequestAction().withProgress(_trackProgress).execute(),
+      () => LargeDataRequestAction().withProgress(_trackProgress).execute(),
+      () => FileUploadAction(await _createTestFile())
+          .withProgress(_trackProgress)
+          .execute(),
+    ];
+
+    for (final action in testActions) {
+      await action();
+      await Future.delayed(Duration(milliseconds: 500)); // Small delay between requests
+    }
+
+    _updateReports();
+    
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  void _trackProgress(ProgressData progress) {
+    // Progress tracking is handled automatically by performance monitoring
+    print('${progress.type.name}: ${progress.percentage}%');
+  }
+
+  void _updateReports() {
+    final performance = ApiRequestPerformance.instance;
+    if (performance != null) {
+      setState(() {
+        _reports = performance.actionsReport.values
+            .where((report) => report != null)
+            .cast<PerformanceReport>()
+            .toList()
+          ..sort((a, b) => (b.duration?.inMicroseconds ?? 0)
+              .compareTo(a.duration?.inMicroseconds ?? 0));
+      });
+    }
+  }
+
+  void _clearReports() {
+    setState(() {
+      _reports.clear();
+    });
+    // Note: This doesn't actually clear the global performance data
+    // In a real app, you might want to add a clear method to ApiRequestPerformance
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes == 0) return '0 B';
+    
+    const units = ['B', 'KB', 'MB', 'GB'];
+    int unitIndex = 0;
+    double size = bytes.toDouble();
+    
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    
+    return '${size.toStringAsFixed(unitIndex > 0 ? 1 : 0)} ${units[unitIndex]}';
+  }
+
+  String _formatTransferRate(double bytesPerSecond) {
+    return '${_formatBytes(bytesPerSecond.round())}/s';
+  }
+
+  Future<File> _createTestFile() async {
+    // Create a temporary test file for upload testing
+    final directory = await getTemporaryDirectory();
+    final file = File('${directory.path}/test_file.txt');
+    await file.writeAsString('Test file content for upload testing' * 100);
+    return file;
+  }
+}
+```
+
+## 🔗 Advanced Integration Examples
+
+### 5. Progress with Dio Interceptors
+
+```dart
+class ProgressInterceptor extends Interceptor {
+  final ProgressHandler? progressHandler;
+  
+  ProgressInterceptor(this.progressHandler);
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    // Add custom progress tracking logic here if needed
+    print('Request started: ${options.path}');
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    // Log successful requests with response size
+    final responseSize = response.data?.toString().length ?? 0;
+    print('Response received: ${responseSize} bytes');
+    handler.next(response);
+  }
+}
+
+// Usage with custom interceptor
+class CustomProgressAction extends RequestAction<Data, Request> {
+  CustomProgressAction(Request request) : super(request);
+
+  @override
+  void onInit() {
+    super.onInit();
+    
+    // Add custom interceptor for this action
+    final customInterceptor = ProgressInterceptor(
+      (progress) => print('Custom progress: ${progress.percentage}%'),
+    );
+    
+    // Note: This is conceptual - actual interceptor integration would depend on your needs
+  }
+
+  // ... rest of implementation
+}
+```
+
+### 6. Progress with State Management (Provider/Bloc)
+
+```dart
+// Provider example
+class ProgressProvider extends ChangeNotifier {
+  double _uploadProgress = 0.0;
+  double _downloadProgress = 0.0;
+  bool _isLoading = false;
+  String _statusMessage = 'Ready';
+
+  double get uploadProgress => _uploadProgress;
+  double get downloadProgress => _downloadProgress;
+  bool get isLoading => _isLoading;
+  String get statusMessage => _statusMessage;
+
+  Future<void> executeRequest(RequestAction action) async {
+    _isLoading = true;
+    _statusMessage = 'Starting request...';
+    notifyListeners();
+
+    final result = await action
+      .withUploadProgress((progress) {
+        _uploadProgress = progress.percentage;
+        _statusMessage = 'Uploading: ${progress.percentage.toStringAsFixed(1)}%';
+        notifyListeners();
+      })
+      .withDownloadProgress((progress) {
+        _downloadProgress = progress.percentage;
+        _statusMessage = 'Processing: ${progress.percentage.toStringAsFixed(1)}%';
+        notifyListeners();
+      })
+      .execute();
+
+    _isLoading = false;
+    result?.fold(
+      (error) {
+        _statusMessage = 'Error: ${error.message}';
+      },
+      (data) {
+        _statusMessage = 'Completed successfully';
+      },
+    );
+    notifyListeners();
+  }
+
+  void reset() {
+    _uploadProgress = 0.0;
+    _downloadProgress = 0.0;
+    _isLoading = false;
+    _statusMessage = 'Ready';
+    notifyListeners();
+  }
+}
+
+// Widget using Provider
+class ProgressProviderWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ProgressProvider>(
+      builder: (context, progressProvider, child) {
+        return Column(
+          children: [
+            LinearProgressIndicator(
+              value: progressProvider.uploadProgress / 100,
+              backgroundColor: Colors.blue[100],
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+            ),
+            SizedBox(height: 8),
+            LinearProgressIndicator(
+              value: progressProvider.downloadProgress / 100,
+              backgroundColor: Colors.green[100],
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+            ),
+            SizedBox(height: 16),
+            Text(progressProvider.statusMessage),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: progressProvider.isLoading
+                  ? null
+                  : () => progressProvider.executeRequest(SomeAction()),
+              child: Text(progressProvider.isLoading ? 'Loading...' : 'Start Request'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+```
+
+## 🎛️ Custom Progress Implementations
+
+### 7. Throttled Progress Updates
+
+```dart
+class ThrottledProgressHandler {
+  final ProgressHandler originalHandler;
+  final Duration throttleDuration;
+  DateTime? _lastUpdate;
+
+  ThrottledProgressHandler(this.originalHandler, this.throttleDuration);
+
+  void call(ProgressData progress) {
+    final now = DateTime.now();
+    
+    if (_lastUpdate == null || 
+        now.difference(_lastUpdate!) >= throttleDuration ||
+        progress.isCompleted) {
+      originalHandler(progress);
+      _lastUpdate = now;
+    }
+  }
+}
+
+// Usage
+final throttledHandler = ThrottledProgressHandler(
+  (progress) => updateExpensiveUI(progress),
+  Duration(milliseconds: 100), // Update UI at most 10 times per second
+);
+
+final result = await SomeAction()
+  .withProgress(throttledHandler.call)
+  .execute();
+```
+
+### 8. Progress with Persistence
+
+```dart
+class PersistentProgressTracker {
+  static const String _keyPrefix = 'progress_';
+  final SharedPreferences _prefs;
+  
+  PersistentProgressTracker(this._prefs);
+
+  Future<void> saveProgress(String requestId, ProgressData progress) async {
+    final key = '$_keyPrefix$requestId';
+    final data = {
+      'sentBytes': progress.sentBytes,
+      'totalBytes': progress.totalBytes,
+      'percentage': progress.percentage,
+      'type': progress.type.name,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    };
+    await _prefs.setString(key, jsonEncode(data));
+  }
+
+  ProgressData? loadProgress(String requestId) {
+    final key = '$_keyPrefix$requestId';
+    final dataString = _prefs.getString(key);
+    
+    if (dataString != null) {
       try {
-        final result = await UploadSingleFileAction(file)
-          .withUploadProgress((progress) {
-            // Calculate overall batch progress
-            final currentFileBytes = progress.sentBytes;
-            final overallProgress = ((uploadedBytes + currentFileBytes) / totalBytes) * 100;
-            
-            print('File ${i + 1}: ${progress.percentage.toStringAsFixed(1)}% | Batch: ${overallProgress.toStringAsFixed(1)}%');
-          })
-          .execute();
-
-        result?.fold(
-          (error) {
-            print('Failed to upload $fileName: ${error.message}');
-          },
-          (response) {
-            completedFiles++;
-            uploadedBytes += file.lengthSync();
-            print('Successfully uploaded $fileName ($completedFiles/$totalFiles completed)');
-          },
+        final data = jsonDecode(dataString) as Map<String, dynamic>;
+        return ProgressData(
+          sentBytes: data['sentBytes'] as int,
+          totalBytes: data['totalBytes'] as int,
+          percentage: data['percentage'] as double,
+          type: data['type'] == 'upload' ? ProgressType.upload : ProgressType.download,
         );
       } catch (e) {
-        print('Error uploading $fileName: $e');
+        print('Failed to load progress: $e');
       }
     }
+    return null;
+  }
 
-    print('Batch upload completed: $completedFiles/$totalFiles files uploaded');
+  Future<void> clearProgress(String requestId) async {
+    final key = '$_keyPrefix$requestId';
+    await _prefs.remove(key);
+  }
+}
+
+// Usage with persistent progress
+class PersistentProgressExample {
+  final PersistentProgressTracker _tracker;
+  
+  PersistentProgressExample(this._tracker);
+
+  Future<void> executeWithPersistentProgress(String requestId) async {
+    // Load previous progress if available
+    final savedProgress = _tracker.loadProgress(requestId);
+    if (savedProgress != null) {
+      print('Resuming from ${savedProgress.percentage}%');
+    }
+
+    final result = await SomeAction()
+      .withProgress((progress) async {
+        // Save progress
+        await _tracker.saveProgress(requestId, progress);
+        
+        // Update UI
+        updateProgressUI(progress);
+        
+        if (progress.isCompleted) {
+          // Clean up saved progress
+          await _tracker.clearProgress(requestId);
+        }
+      })
+      .execute();
   }
 }
 ```
 
-### Performance Analytics with Progress Data
+## 🧪 Testing Progress Implementations
+
+### 9. Progress Testing Utilities
 
 ```dart
-class ProgressAnalytics {
-  static void analyzeTransferPerformance() {
-    final performance = ApiRequestPerformance.instance;
-    final reports = performance?.actionsReport.values
-        .where((report) => report?.hasProgressData == true)
-        .toList() ?? [];
+class ProgressTestHelper {
+  final List<ProgressData> capturedProgress = [];
+  late ProgressHandler handler;
 
-    if (reports.isEmpty) {
-      print('No transfer data available for analysis');
-      return;
+  ProgressTestHelper() {
+    handler = (progress) {
+      capturedProgress.add(progress);
+    };
+  }
+
+  void verifyProgressSequence() {
+    expect(capturedProgress.isNotEmpty, true, reason: 'Should capture progress updates');
+    
+    // Verify progress is non-decreasing
+    for (int i = 1; i < capturedProgress.length; i++) {
+      expect(
+        capturedProgress[i].percentage >= capturedProgress[i - 1].percentage,
+        true,
+        reason: 'Progress should not decrease',
+      );
     }
-
-    print('\n=== Transfer Performance Analysis ===');
     
-    // Overall statistics
-    final totalRequests = reports.length;
-    final totalBytes = reports.fold(0, (sum, report) => sum + (report?.bytesTransferred ?? 0));
-    final avgTransferRate = reports
-        .map((report) => report?.transferRate ?? 0.0)
-        .reduce((a, b) => a + b) / reports.length;
-
-    print('Total requests with transfer data: $totalRequests');
-    print('Total bytes transferred: ${_formatBytes(totalBytes)}');
-    print('Average transfer rate: ${_formatTransferRate(avgTransferRate)}');
-
-    // Upload vs Download analysis
-    final uploadBytes = reports.fold(0, (sum, report) => sum + (report?.uploadBytes ?? 0));
-    final downloadBytes = reports.fold(0, (sum, report) => sum + (report?.downloadBytes ?? 0));
-    
-    print('\nUpload vs Download:');
-    print('Upload: ${_formatBytes(uploadBytes)} (${(uploadBytes / totalBytes * 100).toStringAsFixed(1)}%)');
-    print('Download: ${_formatBytes(downloadBytes)} (${(downloadBytes / totalBytes * 100).toStringAsFixed(1)}%)');
-
-    // Performance insights
-    print('\n=== Performance Insights ===');
-    
-    // Find slowest transfers
-    final sortedByRate = List.from(reports)
-      ..sort((a, b) => (a?.transferRate ?? 0.0).compareTo(b?.transferRate ?? 0.0));
-    
-    print('Slowest transfers:');
-    sortedByRate.take(3).forEach((report) {
-      print('  ${report?.actionName}: ${_formatTransferRate(report?.transferRate ?? 0.0)} - ${_formatBytes(report?.bytesTransferred ?? 0)}');
-    });
-
-    print('Fastest transfers:');
-    sortedByRate.reversed.take(3).forEach((report) {
-      print('  ${report?.actionName}: ${_formatTransferRate(report?.transferRate ?? 0.0)} - ${_formatBytes(report?.bytesTransferred ?? 0)}');
-    });
-
-    // Duration vs Transfer size correlation
-    print('\nDuration vs Transfer Size:');
-    reports.forEach((report) {
-      final duration = report?.duration?.inMilliseconds ?? 0;
-      final bytes = report?.bytesTransferred ?? 0;
-      if (duration > 0 && bytes > 0) {
-        print('  ${report?.actionName}: ${duration}ms for ${_formatBytes(bytes)}');
-      }
-    });
+    // Verify final progress reaches 100%
+    if (capturedProgress.isNotEmpty) {
+      final finalProgress = capturedProgress.last;
+      expect(finalProgress.isCompleted, true, reason: 'Final progress should be completed');
+    }
   }
 
-  static String _formatBytes(int bytes) {
-    if (bytes < 1024) return '${bytes}B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / 1024 / 1024).toStringAsFixed(1)}MB';
-    return '${(bytes / 1024 / 1024 / 1024).toStringAsFixed(1)}GB';
+  void verifyProgressTypes(List<ProgressType> expectedTypes) {
+    final actualTypes = capturedProgress.map((p) => p.type).toSet().toList();
+    expect(actualTypes, containsAll(expectedTypes));
   }
 
-  static String _formatTransferRate(double bytesPerSecond) {
-    if (bytesPerSecond < 1024) return '${bytesPerSecond.toStringAsFixed(1)}B/s';
-    if (bytesPerSecond < 1024 * 1024) return '${(bytesPerSecond / 1024).toStringAsFixed(1)}KB/s';
-    return '${(bytesPerSecond / 1024 / 1024).toStringAsFixed(1)}MB/s';
+  void clear() {
+    capturedProgress.clear();
   }
 }
-```
 
-## 🧪 Testing Examples
-
-### Testing Progress Callbacks
-
-```dart
+// Test example
 void main() {
   group('Progress Tracking Tests', () {
-    test('should call progress handler during upload', () async {
-      bool progressCalled = false;
-      double lastProgress = -1;
+    test('should track upload progress correctly', () async {
+      final helper = ProgressTestHelper();
       
-      final result = await MockUploadAction(testFile)
-        .withUploadProgress((progress) {
-          progressCalled = true;
-          expect(progress.percentage, greaterThanOrEqualTo(lastProgress));
-          expect(progress.sentBytes, greaterThanOrEqualTo(0));
-          expect(progress.totalBytes, greaterThan(0));
-          expect(progress.isUpload, isTrue);
-          lastProgress = progress.percentage;
-        })
+      final result = await UploadTestAction()
+        .withUploadProgress(helper.handler)
         .execute();
-        
-      expect(progressCalled, isTrue);
-      expect(lastProgress, equals(100.0));
-    });
-
-    test('should track both upload and download progress', () async {
-      bool uploadProgressCalled = false;
-      bool downloadProgressCalled = false;
       
-      final result = await MockUploadAction(testFile)
-        .withUploadProgress((progress) {
-          uploadProgressCalled = true;
-          expect(progress.isUpload, isTrue);
-        })
-        .withDownloadProgress((progress) {
-          downloadProgressCalled = true;
-          expect(progress.isDownload, isTrue);
-        })
-        .execute();
-        
-      expect(uploadProgressCalled, isTrue);
-      expect(downloadProgressCalled, isTrue);
-    });
-
-    test('should handle progress errors gracefully', () async {
-      bool requestCompleted = false;
+      helper.verifyProgressSequence();
+      helper.verifyProgressTypes([ProgressType.upload]);
       
-      final result = await MockUploadAction(testFile)
-        .withProgress((progress) {
-          // Simulate error in progress handler
-          throw Exception('Progress handler error');
-        })
-        .execute();
-        
-      // Request should still complete despite progress handler error
+      expect(result, isNotNull);
       result?.fold(
-        (error) => fail('Request should not fail due to progress handler error'),
-        (response) => requestCompleted = true,
+        (error) => fail('Expected success but got error: ${error.message}'),
+        (data) => expect(data, isNotNull),
       );
-      
-      expect(requestCompleted, isTrue);
     });
   });
 }
 ```
 
-This comprehensive examples file demonstrates real-world usage patterns for the progress tracking system across different scenarios, from simple UI integration to complex batch operations and performance analytics.
+These examples demonstrate comprehensive usage patterns for the progress tracking system across different scenarios, UI frameworks, and architectural approaches. Each example is designed to be practical and ready to adapt to specific application needs.

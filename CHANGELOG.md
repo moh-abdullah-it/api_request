@@ -1,3 +1,12 @@
+## 1.3.0
+* 🎉 **NEW**: Unified progress tracking system with `ProgressData` and `ProgressHandler`
+* ✨ **NEW**: `FileUploadAction<T>` for file uploads with progress tracking
+* ✨ **NEW**: Enhanced `SimpleApiRequest` with `.withProgress()`, `.withUploadProgress()`, `.withDownloadProgress()`
+* 🔧 **ENHANCED**: Performance monitoring now includes transfer data and rates
+* 🔧 **ENHANCED**: All request types support progress tracking
+* 📚 **DOCS**: Added comprehensive progress examples and migration guide
+* 🔄 **COMPATIBILITY**: 100% backward compatible
+
 ## 1.2.0
 * 🎉 **NEW**: Added comprehensive file download support with `FileDownloadAction`
 * ✨ **NEW**: Progress tracking with callbacks and reactive streams for file downloads

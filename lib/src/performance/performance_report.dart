@@ -187,7 +187,9 @@ class PerformanceReport {
   /// }
   /// ```
   double get transferRate {
-    if (duration == null || duration!.inMicroseconds == 0 || bytesTransferred == 0) {
+    if (duration == null ||
+        duration!.inMicroseconds == 0 ||
+        bytesTransferred == 0) {
       return 0.0;
     }
     return bytesTransferred / (duration!.inMicroseconds / 1000000.0);
@@ -219,7 +221,9 @@ class PerformanceReport {
   /// print('Download rate: ${(report.downloadRate / 1024).toStringAsFixed(2)} KB/s');
   /// ```
   double get downloadRate {
-    if (duration == null || duration!.inMicroseconds == 0 || downloadBytes == 0) {
+    if (duration == null ||
+        duration!.inMicroseconds == 0 ||
+        downloadBytes == 0) {
       return 0.0;
     }
     return downloadBytes / (duration!.inMicroseconds / 1000000.0);
@@ -239,15 +243,16 @@ class PerformanceReport {
   /// If no progress data is available, only basic timing information is shown.
   @override
   String toString() {
-    String baseString = "$fullPath end in: ${duration.toString()} in $actionName";
-    
+    String baseString =
+        "$fullPath end in: ${duration.toString()} in $actionName";
+
     if (hasProgressData && bytesTransferred > 0) {
       String uploadStr = _formatBytes(uploadBytes);
       String downloadStr = _formatBytes(downloadBytes);
       String rateStr = _formatTransferRate(transferRate);
       baseString += " [↑$uploadStr ↓$downloadStr @$rateStr]";
     }
-    
+
     return baseString;
   }
 
@@ -256,16 +261,16 @@ class PerformanceReport {
   /// Converts bytes to appropriate units (B, KB, MB, GB) with proper formatting.
   String _formatBytes(int bytes) {
     if (bytes == 0) return "0B";
-    
+
     const units = ['B', 'KB', 'MB', 'GB'];
     int unitIndex = 0;
     double size = bytes.toDouble();
-    
+
     while (size >= 1024 && unitIndex < units.length - 1) {
       size /= 1024;
       unitIndex++;
     }
-    
+
     return "${size.toStringAsFixed(unitIndex > 0 ? 1 : 0)}${units[unitIndex]}";
   }
 
@@ -274,16 +279,16 @@ class PerformanceReport {
   /// Converts bytes per second to appropriate units with proper formatting.
   String _formatTransferRate(double bytesPerSecond) {
     if (bytesPerSecond == 0) return "0B/s";
-    
+
     const units = ['B/s', 'KB/s', 'MB/s', 'GB/s'];
     int unitIndex = 0;
     double rate = bytesPerSecond;
-    
+
     while (rate >= 1024 && unitIndex < units.length - 1) {
       rate /= 1024;
       unitIndex++;
     }
-    
+
     return "${rate.toStringAsFixed(unitIndex > 0 ? 1 : 0)}${units[unitIndex]}";
   }
 }

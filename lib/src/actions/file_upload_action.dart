@@ -29,9 +29,9 @@ class FileUploadRequest with ApiRequest {
 
   @override
   Map<String, dynamic> toMap() => {
-    ...formData,
-    // Files will be handled separately in buildRequestData
-  };
+        ...formData,
+        // Files will be handled separately in buildRequestData
+      };
 }
 
 /// A specialized action for uploading files to remote servers.
@@ -76,7 +76,7 @@ class FileUploadRequest with ApiRequest {
 /// class UploadDocumentsAction extends FileUploadAction<List<Document>> {
 ///   UploadDocumentsAction(List<File> files)
 ///       : super(Map.fromEntries(
-///           files.asMap().entries.map((entry) => 
+///           files.asMap().entries.map((entry) =>
 ///             MapEntry('document_${entry.key}', entry.value)
 ///           )
 ///         ));
@@ -85,7 +85,7 @@ class FileUploadRequest with ApiRequest {
 ///   String get path => '/documents/upload';
 ///
 ///   @override
-///   ResponseBuilder<List<Document>> get responseBuilder => 
+///   ResponseBuilder<List<Document>> get responseBuilder =>
 ///       (data) => (data as List).map((doc) => Document.fromJson(doc)).toList();
 /// }
 /// ```
@@ -137,11 +137,12 @@ abstract class FileUploadAction<T> extends RequestAction<T, FileUploadRequest> {
   ///   String get path => '/photos/upload';
   ///
   ///   @override
-  ///   ResponseBuilder<Photo> get responseBuilder => 
+  ///   ResponseBuilder<Photo> get responseBuilder =>
   ///       (data) => Photo.fromJson(data);
   /// }
   /// ```
-  FileUploadAction(this._files) : super(FileUploadRequest(files: {}, formData: {})) {
+  FileUploadAction(this._files)
+      : super(FileUploadRequest(files: {}, formData: {})) {
     _validateFiles();
   }
 
@@ -156,15 +157,16 @@ abstract class FileUploadAction<T> extends RequestAction<T, FileUploadRequest> {
   /// Example:
   /// ```dart
   /// class UploadDocumentAction extends FileUploadAction<Document> {
-  ///   UploadDocumentAction.single(File file) 
+  ///   UploadDocumentAction.single(File file)
   ///       : super.single('document', file);
   ///
   ///   @override
   ///   String get path => '/documents';
   /// }
   /// ```
-  FileUploadAction.single(String fieldName, File file) 
-      : _files = {fieldName: file}, super(FileUploadRequest(files: {}, formData: {})) {
+  FileUploadAction.single(String fieldName, File file)
+      : _files = {fieldName: file},
+        super(FileUploadRequest(files: {}, formData: {})) {
     _validateFiles();
   }
 
@@ -299,7 +301,7 @@ abstract class FileUploadAction<T> extends RequestAction<T, FileUploadRequest> {
   /// all files and additional form fields.
   Map<String, dynamic> buildRequestData(FileUploadRequest? request) {
     final formDataMap = <String, dynamic>{};
-    
+
     // Add files to form data
     for (final entry in _files.entries) {
       formDataMap[entry.key] = MultipartFile.fromFileSync(
@@ -307,15 +309,15 @@ abstract class FileUploadAction<T> extends RequestAction<T, FileUploadRequest> {
         filename: entry.value.path.split('/').last,
       );
     }
-    
+
     // Add additional form data
     formDataMap.addAll(_formData);
-    
+
     // Add any data from the request
     if (request != null) {
       formDataMap.addAll(request.toMap());
     }
-    
+
     return formDataMap;
   }
 
@@ -365,7 +367,7 @@ abstract class FileUploadAction<T> extends RequestAction<T, FileUploadRequest> {
 
     // Build form data from files and additional fields
     final formDataMap = <String, dynamic>{};
-    
+
     // Add files to form data
     for (final entry in _files.entries) {
       formDataMap[entry.key] = MultipartFile.fromFileSync(
@@ -373,10 +375,10 @@ abstract class FileUploadAction<T> extends RequestAction<T, FileUploadRequest> {
         filename: entry.value.path.split('/').last,
       );
     }
-    
+
     // Add additional form data
     formDataMap.addAll(_formData);
-    
+
     // Add any data from the request (if any additional data was set)
     // This is handled through _formData, so no additional processing needed
 
@@ -446,15 +448,17 @@ abstract class FileUploadAction<T> extends RequestAction<T, FileUploadRequest> {
     for (final entry in _files.entries) {
       final file = entry.value;
       final fieldName = entry.key;
-      
+
       if (!file.existsSync()) {
-        throw ArgumentError('File for field "$fieldName" does not exist: ${file.path}');
+        throw ArgumentError(
+            'File for field "$fieldName" does not exist: ${file.path}');
       }
-      
+
       try {
         file.lengthSync(); // Check if file is readable
       } catch (e) {
-        throw ArgumentError('File for field "$fieldName" is not readable: ${file.path}');
+        throw ArgumentError(
+            'File for field "$fieldName" is not readable: ${file.path}');
       }
     }
   }

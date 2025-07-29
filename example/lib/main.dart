@@ -297,8 +297,9 @@ class _PostsListScreenState extends State<PostsListScreen> {
         title: 'Test Progress Post',
         body: 'Testing progress tracking functionality',
         onProgress: (progress) {
-          print('Progress: ${progress.type.name} - ${progress.percentage.toStringAsFixed(1)}%');
-          
+          print(
+              'Progress: ${progress.type.name} - ${progress.percentage.toStringAsFixed(1)}%');
+
           // Show progress in UI
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -326,7 +327,8 @@ class _PostsListScreenState extends State<PostsListScreen> {
         (post) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Progress test completed! Created post: ${post.title}'),
+              content:
+                  Text('Progress test completed! Created post: ${post.title}'),
               backgroundColor: Colors.green,
             ),
           );

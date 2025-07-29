@@ -46,18 +46,18 @@ class PostService {
       title: title,
       body: body,
     );
-    
+
     final action = CreatePostAction(request);
-    
+
     // Add progress tracking if provided
     if (onProgress != null) {
       action.withProgress(onProgress);
     }
-    
+
     if (onUploadProgress != null) {
       action.withUploadProgress(onUploadProgress);
     }
-    
+
     return await action.execute();
   }
 
@@ -73,14 +73,14 @@ class PostService {
       title: title,
       body: body,
     );
-    
+
     final action = CreatePostAction(request);
-    
+
     // Add progress tracking if provided
     if (onProgress != null) {
       action.withProgress(onProgress);
     }
-    
+
     // Start the request and return the stream
     action.onQueue();
     return action.stream;

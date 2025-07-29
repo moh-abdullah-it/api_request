@@ -980,7 +980,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   /// final result = await action
   ///   .withProgress((progress) {
   ///     print('${progress.type.name}: ${progress.percentage.toStringAsFixed(1)}%');
-  ///     
+  ///
   ///     if (progress.isUpload) {
   ///       updateUploadProgressBar(progress.percentage);
   ///     } else if (progress.isDownload) {
@@ -1027,7 +1027,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   ///   .withUploadProgress((progress) {
   ///     print('Uploading: ${progress.percentage.toStringAsFixed(1)}%');
   ///     updateUploadProgressBar(progress.percentage);
-  ///     
+  ///
   ///     if (progress.isCompleted) {
   ///       showSnackBar('Upload completed!');
   ///     }
@@ -1078,7 +1078,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   ///   .withDownloadProgress((progress) {
   ///     print('Downloading: ${progress.percentage.toStringAsFixed(1)}%');
   ///     updateDownloadProgressBar(progress.percentage);
-  ///     
+  ///
   ///     if (progress.isCompleted) {
   ///       showSnackBar('Download completed!');
   ///     }
@@ -1176,9 +1176,11 @@ abstract class RequestAction<T, R extends ApiRequest> {
       final performance = ApiRequestPerformance.instance;
       if (performance != null) {
         if (progress.isUpload) {
-          performance.recordUploadProgress(progress.sentBytes, progress.totalBytes);
+          performance.recordUploadProgress(
+              progress.sentBytes, progress.totalBytes);
         } else if (progress.isDownload) {
-          performance.recordDownloadProgress(progress.sentBytes, progress.totalBytes);
+          performance.recordDownloadProgress(
+              progress.sentBytes, progress.totalBytes);
         }
       }
 

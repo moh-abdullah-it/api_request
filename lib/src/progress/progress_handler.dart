@@ -15,13 +15,13 @@ import 'progress_data.dart';
 /// ```dart
 /// ProgressHandler onProgress = (ProgressData progress) {
 ///   print('${progress.type.name}: ${progress.percentage.toStringAsFixed(1)}%');
-///   
+///
 ///   if (progress.isUpload) {
 ///     updateUploadProgressBar(progress.percentage);
 ///   } else if (progress.isDownload) {
 ///     updateDownloadProgressBar(progress.percentage);
 ///   }
-///   
+///
 ///   if (progress.isCompleted) {
 ///     print('Transfer completed!');
 ///   }
@@ -48,7 +48,7 @@ import 'progress_data.dart';
 ///   .withProgress((progress) {
 ///     if (progress.isDownload) {
 ///       progressController.add(progress);
-///       
+///
 ///       if (progress.isCompleted) {
 ///         showSnackBar('Download completed!');
 ///       }
@@ -76,7 +76,7 @@ import 'progress_data.dart';
 /// Progress handlers are typically set using fluent API methods:
 ///
 /// - [RequestAction.withProgress] - General progress tracking
-/// - [RequestAction.withUploadProgress] - Upload-specific tracking  
+/// - [RequestAction.withUploadProgress] - Upload-specific tracking
 /// - [RequestAction.withDownloadProgress] - Download-specific tracking
 ///
 /// ## Performance Considerations
