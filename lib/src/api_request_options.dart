@@ -1,4 +1,5 @@
 import '../api_request.dart';
+import 'api_log_data.dart';
 
 /// Function type for synchronous option retrieval.
 ///
@@ -135,6 +136,50 @@ class ApiRequestOptions {
 
   Function(ActionRequestError error)? onError;
 
+  /// Global callback for log events from API requests.
+  ///
+  /// This callback is invoked whenever the [ApiLogInterceptor] generates
+  /// log output. It provides structured log data containing comprehensive
+  /// information about requests, responses, and errors.
+  ///
+  /// The callback receives an [ApiLogData] instance containing:
+  /// - Log type (request, response, error)
+  /// - HTTP method and URL
+  /// - Headers and body data
+  /// - Status codes and timing information
+  /// - Error details when applicable
+  /// - Formatted message for display
+  ///
+  /// Example:
+  /// ```dart
+  /// ApiRequestOptions.instance!.config(
+  ///   onLog: (ApiLogData logData) {
+  ///     // Send structured data to analytics
+  ///     Analytics.trackApiEvent({
+  ///       'type': logData.type.name,
+  ///       'method': logData.method,
+  ///       'url': logData.url,
+  ///       'statusCode': logData.statusCode,
+  ///       'duration': logData.durationMs,
+  ///     });
+  ///     
+  ///     // Log to custom logger with context
+  ///     Logger.instance.log(
+  ///       logData.formattedMessage,
+  ///       level: logData.type == ApiLogType.error ? LogLevel.error : LogLevel.info,
+  ///       context: logData.toJson(),
+  ///     );
+  ///     
+  ///     // Write detailed logs to file
+  ///     logFile.writeAsStringSync(
+  ///       '${logData.timestamp}: ${logData.formattedMessage}\n',
+  ///       mode: FileMode.append,
+  ///     );
+  ///   },
+  /// );
+  /// ```
+  Function(ApiLogData logData)? onLog;
+
   Function(Map<String, dynamic> data)? errorBuilder;
 
   ListFormat listFormat = ListFormat.multiCompatible;
@@ -172,6 +217,7 @@ class ApiRequestOptions {
   /// **Error Handling:**
   /// - [onError]: Global error handler for all requests
   /// - [errorBuilder]: Custom error object builder
+  /// - [onLog]: Global log message handler for capturing API logs
   ///
   /// ## Examples
   ///
@@ -192,6 +238,7 @@ class ApiRequestOptions {
   ///   unauthenticated: () => NavigationService.goToLogin(),
   ///   defaultHeaders: {'User-Agent': 'MyApp/1.0'},
   ///   onError: (error) => ErrorService.handleApiError(error),
+  ///   onLog: (logData) => Logger.instance.debug(logData.formattedMessage),
   /// );
   /// ```
   void config(
@@ -209,6 +256,7 @@ class ApiRequestOptions {
       bool? enableLog,
       List<ApiInterceptor>? interceptors,
       Function(ActionRequestError error)? onError,
+      Function(ApiLogData logData)? onLog,
       Function(Map<String, dynamic> data)? errorBuilder,
       ListFormat? listFormat}) async {
     this.baseUrl = baseUrl ?? this.baseUrl;
@@ -241,6 +289,7 @@ class ApiRequestOptions {
     this.connectTimeout = connectTimeout ?? this.connectTimeout;
     this.enableLog = enableLog ?? this.enableLog;
     this.onError = onError ?? this.onError;
+    this.onLog = onLog ?? this.onLog;
     this.errorBuilder = errorBuilder ?? this.errorBuilder;
     this.listFormat = listFormat ?? this.listFormat;
   }

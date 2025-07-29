@@ -1,4 +1,5 @@
 import 'package:api_request/api_request.dart';
+import '../api_log_data.dart';
 
 /// A logging interceptor for API requests and responses.
 ///
@@ -43,7 +44,27 @@ import 'package:api_request/api_request.dart';
 ///
 /// ## Custom Log Output
 ///
-/// By default, logs are printed to console. You can customize the output:
+/// By default, logs are printed to console. You can customize the output in two ways:
+///
+/// ### Global Configuration (Recommended)
+///
+/// Configure logging globally via [ApiRequestOptions]:
+///
+/// ```dart
+/// ApiRequestOptions.instance!.config(
+///   onLog: (logMessage) {
+///     // Send to custom logger
+///     Logger.instance.debug(logMessage);
+///     
+///     // Write to file
+///     logFile.writeAsStringSync('$logMessage\n', mode: FileMode.append);
+///   },
+/// );
+/// ```
+///
+/// ### Per-Interceptor Configuration
+///
+/// Configure logging for specific interceptor instances:
 ///
 /// ```dart
 /// // Log to file
@@ -113,6 +134,7 @@ import 'package:api_request/api_request.dart';
 ///
 /// See also:
 /// - [ApiRequestOptions.enableLog] for enabling/disabling logs
+/// - [ApiRequestOptions.onLog] for global log message handling
 /// - [RequestClient] for automatic interceptor management
 /// - [ApiInterceptor] for the base interceptor class
 class ApiLogInterceptor extends ApiInterceptor {
@@ -139,8 +161,8 @@ class ApiLogInterceptor extends ApiInterceptor {
     this.responseHeader = true,
     this.responseBody = true,
     this.error = true,
-    this.logPrint = print,
-  });
+    void Function(Object object)? logPrint,
+  }) : logPrint = logPrint ?? _defaultLogPrint;
 
   /// Whether to log basic request information.
   ///
@@ -223,9 +245,9 @@ class ApiLogInterceptor extends ApiInterceptor {
 
   /// Function used to output log messages.
   ///
-  /// Defaults to [print] which outputs to console. You can customize
-  /// this to redirect logs to files, use [debugPrint] in Flutter,
-  /// or integrate with logging frameworks.
+  /// Defaults to [_defaultLogPrint] which checks for global [onLog] callback
+  /// first, then falls back to [print]. You can customize this to redirect 
+  /// logs to files, use [debugPrint] in Flutter, or integrate with logging frameworks.
   ///
   /// Examples:
   /// ```dart
@@ -240,6 +262,39 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// ```
   void Function(Object object) logPrint;
 
+  /// Default log print function that checks for global onLog callback.
+  ///
+  /// This function first attempts to use the global [ApiRequestOptions.onLog]
+  /// callback if configured, otherwise falls back to the standard [print] function.
+  static void _defaultLogPrint(Object object) {
+    final logMessage = object.toString();
+    
+    // Use global onLog callback if configured
+    final globalOnLog = ApiRequestOptions.instance?.onLog;
+    if (globalOnLog != null) {
+      // For backward compatibility, create a simple log data when only string is provided
+      final logData = ApiLogData(
+        type: ApiLogType.request, // Default type, will be overridden by structured calls
+        formattedMessage: logMessage,
+      );
+      globalOnLog(logData);
+      return;
+    }
+    
+    // Fallback to standard print
+    print(object);
+  }
+
+  /// Sends structured log data to global callback or prints formatted message.
+  void _sendLogData(ApiLogData logData) {
+    final globalOnLog = ApiRequestOptions.instance?.onLog;
+    if (globalOnLog != null) {
+      globalOnLog(logData);
+    } else {
+      logPrint(logData.formattedMessage);
+    }
+  }
+
   /// Intercepts and logs outgoing requests.
   ///
   /// This method is called before each HTTP request is sent. It logs
@@ -253,45 +308,28 @@ class ApiLogInterceptor extends ApiInterceptor {
   @override
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
-    _printSeparator();
-    _printHeader('🚀 API REQUEST', '${options.method} ${options.uri}');
     
-    if (request) {
-      _printSection('REQUEST INFO');
-      _printKV('Method', options.method);
-      _printKV('Response Type', _formatResponseType(options.responseType));
-      _printKV('Connect Timeout', _formatDuration(options.connectTimeout));
-      _printKV('Send Timeout', _formatDuration(options.sendTimeout));
-      _printKV('Receive Timeout', _formatDuration(options.receiveTimeout));
-    }
+    // Build formatted message for display
+    final formattedMessage = _buildRequestMessage(options);
     
-    if (requestHeader && options.headers.isNotEmpty) {
-      _printSection('REQUEST HEADERS');
-      options.headers.forEach((key, value) => _printKV(key, value));
-    }
+    // Create structured log data
+    final logData = ApiLogData.request(
+      formattedMessage: formattedMessage,
+      method: options.method,
+      url: options.uri.toString(),
+      headers: Map<String, dynamic>.from(options.headers),
+      data: options.data,
+      metadata: {
+        'connectTimeout': options.connectTimeout?.inMilliseconds,
+        'sendTimeout': options.sendTimeout?.inMilliseconds,
+        'receiveTimeout': options.receiveTimeout?.inMilliseconds,
+        'responseType': options.responseType.toString(),
+      },
+    );
     
-    if (requestBody && options.data != null) {
-      _printSection('REQUEST BODY');
-      if (options.data is FormData) {
-        final formData = options.data as FormData;
-        if (formData.fields.isNotEmpty) {
-          logPrint('📝 Form Fields:');
-          for (final field in formData.fields) {
-            _printKV('  ${field.key}', field.value, indent: 2);
-          }
-        }
-        if (formData.files.isNotEmpty) {
-          logPrint('📎 Form Files:');
-          for (final file in formData.files) {
-            _printKV('  ${file.key}', '${file.value.filename} (${file.value.length} bytes)', indent: 2);
-          }
-        }
-      } else {
-        _printData(options.data);
-      }
-    }
+    // Send structured data or print formatted message
+    _sendLogData(logData);
     
-    _printSeparator();
     handler.next(options);
   }
 
@@ -306,10 +344,30 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// - Response body (if [responseBody] is true)
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
-    _printSeparator();
-    final statusEmoji = _getStatusEmoji(response.statusCode);
-    _printHeader('$statusEmoji API RESPONSE', '${response.statusCode} ${response.requestOptions.uri}');
-    _printResponse(response);
+    // Build formatted message for display
+    final formattedMessage = _buildResponseMessage(response);
+    
+    // Create structured log data
+    final logData = ApiLogData.response(
+      formattedMessage: formattedMessage,
+      method: response.requestOptions.method,
+      url: response.requestOptions.uri.toString(),
+      statusCode: response.statusCode,
+      requestHeaders: Map<String, dynamic>.from(response.requestOptions.headers),
+      responseHeaders: response.headers.map.map((key, value) => MapEntry(key, value.join(', '))),
+      requestData: response.requestOptions.data,
+      responseData: response.data,
+      metadata: {
+        'isRedirect': response.isRedirect,
+        'realUri': response.realUri?.toString(),
+        'contentType': response.headers.value('content-type'),
+        'contentLength': response.headers.value('content-length'),
+      },
+    );
+    
+    // Send structured data or print formatted message
+    _sendLogData(logData);
+    
     handler.next(response);
   }
 
@@ -326,19 +384,29 @@ class ApiLogInterceptor extends ApiInterceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     if (error) {
-      _printSeparator();
-      _printHeader('❌ API ERROR', '${err.requestOptions.method} ${err.requestOptions.uri}');
+      // Build formatted message for display
+      final formattedMessage = _buildErrorMessage(err);
       
-      _printSection('ERROR DETAILS');
-      _printKV('Type', _formatErrorType(err.type));
-      _printKV('Message', err.message ?? 'No message');
+      // Create structured log data
+      final logData = ApiLogData.error(
+        formattedMessage: formattedMessage,
+        method: err.requestOptions.method,
+        url: err.requestOptions.uri.toString(),
+        error: err,
+        errorMessage: err.message,
+        statusCode: err.response?.statusCode,
+        requestHeaders: Map<String, dynamic>.from(err.requestOptions.headers),
+        responseHeaders: err.response?.headers.map.map((key, value) => MapEntry(key, value.join(', '))),
+        requestData: err.requestOptions.data,
+        responseData: err.response?.data,
+        metadata: {
+          'errorType': err.type.toString(),
+          'stackTrace': err.stackTrace?.toString(),
+        },
+      );
       
-      if (err.response != null) {
-        _printSection('ERROR RESPONSE');
-        _printResponse(err.response!);
-      }
-      
-      _printSeparator();
+      // Send structured data or print formatted message
+      _sendLogData(logData);
     }
 
     handler.next(err);
@@ -372,6 +440,188 @@ class ApiLogInterceptor extends ApiInterceptor {
     }
     
     _printSeparator();
+  }
+
+  /// Builds formatted request message for display.
+  String _buildRequestMessage(RequestOptions options) {
+    final buffer = StringBuffer();
+    
+    buffer.writeln('═' * 80);
+    buffer.writeln('🚀 API REQUEST');
+    buffer.writeln('📍 ${options.method} ${options.uri}');
+    buffer.writeln('');
+    
+    if (request) {
+      buffer.writeln('▶ REQUEST INFO');
+      buffer.writeln('─' * 14);
+      buffer.writeln('Method              : ${options.method}');
+      buffer.writeln('Response Type       : ${_formatResponseType(options.responseType)}');
+      buffer.writeln('Connect Timeout     : ${_formatDuration(options.connectTimeout)}');
+      buffer.writeln('Send Timeout        : ${_formatDuration(options.sendTimeout)}');
+      buffer.writeln('Receive Timeout     : ${_formatDuration(options.receiveTimeout)}');
+    }
+    
+    if (requestHeader && options.headers.isNotEmpty) {
+      buffer.writeln('');
+      buffer.writeln('▶ REQUEST HEADERS');
+      buffer.writeln('─' * 17);
+      options.headers.forEach((key, value) {
+        buffer.writeln('${key.padRight(20)}: $value');
+      });
+    }
+    
+    if (requestBody && options.data != null) {
+      buffer.writeln('');
+      buffer.writeln('▶ REQUEST BODY');
+      buffer.writeln('─' * 14);
+      if (options.data is FormData) {
+        final formData = options.data as FormData;
+        if (formData.fields.isNotEmpty) {
+          buffer.writeln('📝 Form Fields:');
+          for (final field in formData.fields) {
+            buffer.writeln('  ${field.key.padRight(18)}: ${field.value}');
+          }
+        }
+        if (formData.files.isNotEmpty) {
+          buffer.writeln('📎 Form Files:');
+          for (final file in formData.files) {
+            buffer.writeln('  ${file.key.padRight(18)}: ${file.value.filename} (${file.value.length} bytes)');
+          }
+        }
+      } else {
+        buffer.writeln(_formatData(options.data));
+      }
+    }
+    
+    buffer.writeln('═' * 80);
+    return buffer.toString();
+  }
+
+  /// Builds formatted response message for display.
+  String _buildResponseMessage(Response response) {
+    final buffer = StringBuffer();
+    
+    buffer.writeln('═' * 80);
+    final statusEmoji = _getStatusEmoji(response.statusCode);
+    buffer.writeln('$statusEmoji API RESPONSE');
+    buffer.writeln('📍 ${response.statusCode} ${response.requestOptions.uri}');
+    buffer.writeln('');
+    
+    if (responseHeader) {
+      buffer.writeln('▶ RESPONSE INFO');
+      buffer.writeln('─' * 15);
+      buffer.writeln('Status Code         : ${response.statusCode} ${_getStatusMessage(response.statusCode)}');
+      buffer.writeln('Content Type        : ${response.headers.value('content-type') ?? 'Unknown'}');
+      buffer.writeln('Content Length      : ${response.headers.value('content-length') ?? 'Unknown'}');
+      
+      if (response.isRedirect == true) {
+        buffer.writeln('Redirect            : ${response.realUri}');
+      }
+
+      if (response.headers.map.isNotEmpty) {
+        buffer.writeln('');
+        buffer.writeln('▶ RESPONSE HEADERS');
+        buffer.writeln('─' * 18);
+        response.headers.forEach((key, values) {
+          final value = values.length == 1 ? values.first : values.join(', ');
+          buffer.writeln('${key.padRight(20)}: $value');
+        });
+      }
+    }
+    
+    if (responseBody && response.data != null) {
+      buffer.writeln('');
+      buffer.writeln('▶ RESPONSE BODY');
+      buffer.writeln('─' * 15);
+      buffer.writeln(_formatData(response.data));
+    }
+    
+    buffer.writeln('═' * 80);
+    return buffer.toString();
+  }
+
+  /// Builds formatted error message for display.
+  String _buildErrorMessage(DioException err) {
+    final buffer = StringBuffer();
+    
+    buffer.writeln('═' * 80);
+    buffer.writeln('❌ API ERROR');
+    buffer.writeln('📍 ${err.requestOptions.method} ${err.requestOptions.uri}');
+    buffer.writeln('');
+    
+    buffer.writeln('▶ ERROR DETAILS');
+    buffer.writeln('─' * 15);
+    buffer.writeln('Type                : ${_formatErrorType(err.type)}');
+    buffer.writeln('Message             : ${err.message ?? 'No message'}');
+    
+    if (err.response != null) {
+      buffer.writeln('');
+      buffer.writeln('▶ ERROR RESPONSE');
+      buffer.writeln('─' * 16);
+      buffer.writeln('Status Code         : ${err.response!.statusCode} ${_getStatusMessage(err.response!.statusCode)}');
+      
+      if (err.response!.data != null) {
+        buffer.writeln('Response Data:');
+        buffer.writeln(_formatData(err.response!.data));
+      }
+    }
+    
+    buffer.writeln('═' * 80);
+    return buffer.toString();
+  }
+
+  /// Formats data for display with proper indentation.
+  String _formatData(dynamic data) {
+    if (data == null) return '  null';
+    
+    try {
+      // Try to format as JSON if it's a string that looks like JSON
+      if (data is String && (data.startsWith('{') || data.startsWith('['))) {
+        return _formatJson(data);
+      } else if (data is Map || data is List) {
+        return _formatJson(data.toString());
+      } else {
+        // Add indentation to each line
+        return data.toString().split('\n').map((line) => '  $line').join('\n');
+      }
+    } catch (e) {
+      // Fallback to simple indented printing
+      return data.toString().split('\n').map((line) => '  $line').join('\n');
+    }
+  }
+
+  /// Formats JSON data with proper indentation.
+  String _formatJson(String jsonString) {
+    try {
+      // Simple JSON formatting - add indentation for readability
+      final lines = <String>[];
+      var indent = 0;
+      
+      for (int i = 0; i < jsonString.length; i++) {
+        final char = jsonString[i];
+        
+        if (char == '{' || char == '[') {
+          lines.add('  ' * (indent + 1) + char);
+          indent++;
+        } else if (char == '}' || char == ']') {
+          indent--;
+          lines.add('  ' * (indent + 1) + char);
+        } else if (char == ',' && i + 1 < jsonString.length) {
+          lines.add(char);
+        } else if (char != ' ' && char != '\n' && char != '\r') {
+          if (lines.isEmpty || lines.last.endsWith('\n')) {
+            lines.add('  ' * (indent + 1) + char);
+          } else {
+            lines[lines.length - 1] += char;
+          }
+        }
+      }
+      
+      return lines.join('\n');
+    } catch (e) {
+      // Fallback to simple line-by-line printing with indentation
+      return jsonString.split('\n').map((line) => '  $line').join('\n');
+    }
   }
 
   /// Prints a separator line for visual clarity.
