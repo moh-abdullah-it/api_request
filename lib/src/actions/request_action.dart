@@ -361,6 +361,15 @@ abstract class RequestAction<T, R extends ApiRequest> {
   /// Custom headers to include with the request
   Map<String, dynamic> _headers = {};
 
+  /// General progress handler for both upload and download progress
+  ProgressHandler? _progressHandler;
+
+  /// Upload-specific progress handler
+  UploadProgressHandler? _uploadProgressHandler;
+
+  /// Download-specific progress handler
+  DownloadProgressHandler? _downloadProgressHandler;
+
   /// Internal method to handle and propagate errors through the stream.
   ///
   /// This method:
@@ -939,5 +948,183 @@ abstract class RequestAction<T, R extends ApiRequest> {
   RequestAction withHeader(String key, dynamic value) {
     _headers[key] = value;
     return this;
+  }
+
+  /// Sets a progress handler for both upload and download progress updates.
+  ///
+  /// This method configures a callback that will be invoked during request
+  /// execution to provide real-time progress information for both upload
+  /// and download operations.
+  ///
+  /// Parameters:
+  /// - [handler]: The progress handler callback that receives [ProgressData]
+  ///
+  /// Returns the action instance for method chaining.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await action
+  ///   .withProgress((progress) {
+  ///     print('${progress.type.name}: ${progress.percentage.toStringAsFixed(1)}%');
+  ///     
+  ///     if (progress.isUpload) {
+  ///       updateUploadProgressBar(progress.percentage);
+  ///     } else if (progress.isDownload) {
+  ///       updateDownloadProgressBar(progress.percentage);
+  ///     }
+  ///   })
+  ///   .execute();
+  /// ```
+  ///
+  /// ## Progress Types
+  ///
+  /// The handler will receive both upload and download progress:
+  /// - Upload progress during request data transmission
+  /// - Download progress during response data reception
+  ///
+  /// ## Performance Considerations
+  ///
+  /// - Keep handler logic lightweight to avoid blocking the request
+  /// - Consider throttling UI updates for better performance
+  /// - Avoid async operations that might delay progress updates
+  ///
+  /// See also:
+  /// - [withUploadProgress] for upload-only progress tracking
+  /// - [withDownloadProgress] for download-only progress tracking
+  /// - [ProgressData] for progress information structure
+  RequestAction withProgress(ProgressHandler handler) {
+    _progressHandler = handler;
+    return this;
+  }
+
+  /// Sets a progress handler specifically for upload progress updates.
+  ///
+  /// This method configures a callback that will only be invoked for
+  /// upload progress during request data transmission to the server.
+  ///
+  /// Parameters:
+  /// - [handler]: The upload progress handler that receives upload [ProgressData]
+  ///
+  /// Returns the action instance for method chaining.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await FileUploadAction(file)
+  ///   .withUploadProgress((progress) {
+  ///     print('Uploading: ${progress.percentage.toStringAsFixed(1)}%');
+  ///     updateUploadProgressBar(progress.percentage);
+  ///     
+  ///     if (progress.isCompleted) {
+  ///       showSnackBar('Upload completed!');
+  ///     }
+  ///   })
+  ///   .execute();
+  /// ```
+  ///
+  /// ## Use Cases
+  ///
+  /// - File upload progress tracking
+  /// - Form submission with large data
+  /// - Media upload with progress indicators
+  /// - Bulk data synchronization
+  ///
+  /// ## Combining with Other Progress Handlers
+  ///
+  /// You can combine upload, download, and general progress handlers:
+  ///
+  /// ```dart
+  /// action
+  ///   .withUploadProgress((progress) => handleUpload(progress))
+  ///   .withDownloadProgress((progress) => handleDownload(progress))
+  ///   .execute();
+  /// ```
+  ///
+  /// See also:
+  /// - [withProgress] for general progress tracking
+  /// - [withDownloadProgress] for download-only progress tracking
+  /// - [UploadProgressHandler] for the handler type definition
+  RequestAction withUploadProgress(UploadProgressHandler handler) {
+    _uploadProgressHandler = handler;
+    return this;
+  }
+
+  /// Sets a progress handler specifically for download progress updates.
+  ///
+  /// This method configures a callback that will only be invoked for
+  /// download progress during response data reception from the server.
+  ///
+  /// Parameters:
+  /// - [handler]: The download progress handler that receives download [ProgressData]
+  ///
+  /// Returns the action instance for method chaining.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await DownloadFileAction(url)
+  ///   .withDownloadProgress((progress) {
+  ///     print('Downloading: ${progress.percentage.toStringAsFixed(1)}%');
+  ///     updateDownloadProgressBar(progress.percentage);
+  ///     
+  ///     if (progress.isCompleted) {
+  ///       showSnackBar('Download completed!');
+  ///     }
+  ///   })
+  ///   .execute();
+  /// ```
+  ///
+  /// ## Use Cases
+  ///
+  /// - File download progress tracking
+  /// - Large API response loading
+  /// - Media streaming with progress
+  /// - Data synchronization from server
+  ///
+  /// ## Combining with Other Progress Handlers
+  ///
+  /// You can combine upload, download, and general progress handlers:
+  ///
+  /// ```dart
+  /// action
+  ///   .withUploadProgress((progress) => handleUpload(progress))
+  ///   .withDownloadProgress((progress) => handleDownload(progress))
+  ///   .execute();
+  /// ```
+  ///
+  /// See also:
+  /// - [withProgress] for general progress tracking
+  /// - [withUploadProgress] for upload-only progress tracking
+  /// - [DownloadProgressHandler] for the handler type definition
+  RequestAction withDownloadProgress(DownloadProgressHandler handler) {
+    _downloadProgressHandler = handler;
+    return this;
+  }
+
+  /// Internal method to handle progress updates and invoke appropriate handlers.
+  ///
+  /// This method is called by the HTTP client layer to propagate progress
+  /// updates to the configured handlers. It ensures that handlers are only
+  /// invoked with their appropriate progress types.
+  ///
+  /// Parameters:
+  /// - [progress]: The progress data to propagate
+  ///
+  /// The method invokes handlers in this order:
+  /// 1. General progress handler (receives all progress types)
+  /// 2. Type-specific handler (upload or download based on progress type)
+  void _handleProgress(ProgressData progress) {
+    try {
+      // Invoke general progress handler if set
+      _progressHandler?.call(progress);
+
+      // Invoke type-specific handler based on progress type
+      if (progress.isUpload && _uploadProgressHandler != null) {
+        _uploadProgressHandler!.call(progress);
+      } else if (progress.isDownload && _downloadProgressHandler != null) {
+        _downloadProgressHandler!.call(progress);
+      }
+    } catch (e) {
+      // Log progress handler errors but don't interrupt the request
+      log('Progress handler error: $e', name: 'RequestAction');
+    }
   }
 }
