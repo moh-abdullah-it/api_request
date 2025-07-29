@@ -11,10 +11,11 @@ A Flutter package that introduces a clean, testable approach to organizing API l
 ## ✨ Features
 
 - **Single Responsibility Principle**: Each action class handles one specific API request
-- **File Download Support**: Action-based and direct file download with progress tracking
+- **Progress Tracking**: Unified upload/download progress monitoring across all request types
+- **File Operations**: Complete file upload and download support with progress tracking
 - **Functional Error Handling**: Uses `Either<Error, Success>` pattern with fpdart
 - **Dynamic Configuration**: Runtime base URL and token resolution
-- **Performance Monitoring**: Built-in request timing and reporting
+- **Performance Monitoring**: Built-in request timing and data transfer reporting
 - **Flexible Authentication**: Multiple token provider strategies
 - **Path Variables**: Dynamic URL path substitution
 - **Global Error Handling**: Centralized error management
@@ -218,6 +219,232 @@ final action = DownloadFileAction('/downloads/large-file.zip')
 Timer(Duration(seconds: 10), () => cancelToken.cancel());
 ```
 
+## 📊 Progress Tracking
+
+Track upload and download progress across all request types with a unified progress system.
+
+### Basic Progress Tracking with Actions
+
+Add progress tracking to any RequestAction:
+
+```dart
+// Basic progress tracking
+final result = await CreatePostAction(request)
+  .withProgress((progress) {
+    print('${progress.type.name}: ${progress.percentage.toStringAsFixed(1)}%');
+    updateProgressBar(progress.percentage);
+  })
+  .execute();
+
+// Separate upload and download tracking
+final result = await FileUploadAction({'file': file})
+  .withUploadProgress((progress) {
+    print('Uploading: ${progress.percentage}% (${progress.sentBytes}/${progress.totalBytes} bytes)');
+    updateUploadUI(progress);
+  })
+  .withDownloadProgress((progress) {
+    print('Processing response: ${progress.percentage}%');
+    updateDownloadUI(progress);
+  })
+  .execute();
+```
+
+### Progress with SimpleApiRequest
+
+Use fluent API for direct HTTP requests with progress:
+
+```dart
+final client = SimpleApiRequest.init()
+  .withProgress((progress) {
+    if (progress.isUpload) {
+      showUploadProgress(progress.percentage);
+    } else if (progress.isDownload) {
+      showDownloadProgress(progress.percentage);
+    }
+  });
+
+// Progress is automatically tracked for all requests
+final result = await client.post<Post>('/posts', data: largeData);
+
+// Or use specific progress handlers
+final client = SimpleApiRequest.withAuth()
+  .withUploadProgress((progress) => updateUploadBar(progress.percentage))
+  .withDownloadProgress((progress) => updateDownloadBar(progress.percentage));
+```
+
+### File Upload with Progress
+
+Upload files with comprehensive progress tracking:
+
+```dart
+class UploadAvatarAction extends FileUploadAction<User> {
+  UploadAvatarAction(File avatarFile) : super({'avatar': avatarFile});
+
+  @override
+  String get path => '/users/avatar';
+
+  @override
+  ResponseBuilder<User> get responseBuilder => (data) => User.fromJson(data);
+}
+
+// Single file upload with progress
+final result = await UploadAvatarAction(avatarFile)
+  .withUploadProgress((progress) {
+    setState(() {
+      uploadProgress = progress.percentage;
+    });
+    
+    if (progress.isCompleted) {
+      showSnackBar('Upload completed!');
+    }
+  })
+  .withFormData({
+    'description': 'Profile photo',
+    'category': 'avatar',
+  })
+  .execute();
+
+// Multi-file upload
+class UploadDocumentsAction extends FileUploadAction<List<Document>> {
+  UploadDocumentsAction(List<File> files)
+      : super(Map.fromEntries(
+          files.asMap().entries.map((entry) => 
+            MapEntry('document_${entry.key}', entry.value)
+          )
+        ));
+
+  @override
+  String get path => '/documents/upload';
+
+  @override
+  ResponseBuilder<List<Document>> get responseBuilder => 
+      (data) => (data as List).map((doc) => Document.fromJson(doc)).toList();
+}
+
+final documents = await UploadDocumentsAction([file1, file2, file3])
+  .withProgress((progress) {
+    print('${progress.type.name}: ${progress.percentage}% complete');
+    print('${(progress.sentBytes / 1024).round()} KB transferred');
+  })
+  .execute();
+```
+
+### Enhanced File Downloads
+
+File downloads with unified progress system (backward compatible):
+
+```dart
+class DownloadVideoAction extends FileDownloadAction {
+  DownloadVideoAction(String savePath) : super(savePath);
+  
+  @override
+  String get path => '/videos/{videoId}/download';
+}
+
+// New unified progress system
+final result = await DownloadVideoAction('/downloads/video.mp4')
+  .where('videoId', 'abc123')
+  .withDownloadProgress((progress) {
+    print('Download: ${progress.percentage.toStringAsFixed(1)}%');
+    print('Speed: ${calculateSpeed(progress)} MB/s');
+    
+    if (progress.isCompleted) {
+      showNotification('Download completed!');
+    }
+  })
+  .execute();
+
+// Legacy progress callback still works
+final result = await DownloadVideoAction('/downloads/video.mp4')
+  .where('videoId', 'abc123')
+  .onProgress((received, total) {
+    final percentage = (received / total * 100).round();
+    print('Legacy progress: $percentage%');
+  })
+  .execute();
+
+// Both systems can be used together
+final result = await DownloadVideoAction('/downloads/video.mp4')
+  .onProgress((received, total) => updateLegacyUI(received, total))
+  .withDownloadProgress((progress) => updateModernUI(progress))
+  .execute();
+```
+
+### Stream-Based Progress
+
+Use Dart Streams for reactive progress updates:
+
+```dart
+class ProgressStreamExample extends StatefulWidget {
+  @override
+  _ProgressStreamExampleState createState() => _ProgressStreamExampleState();
+}
+
+class _ProgressStreamExampleState extends State<ProgressStreamExample> {
+  final StreamController<ProgressData> _progressController = 
+      StreamController<ProgressData>.broadcast();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<ProgressData>(
+      stream: _progressController.stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final progress = snapshot.data!;
+          return LinearProgressIndicator(
+            value: progress.percentage / 100,
+            backgroundColor: Colors.grey[300],
+            valueColor: AlwaysStoppedAnimation<Color>(
+              progress.isUpload ? Colors.blue : Colors.green,
+            ),
+          );
+        }
+        return LinearProgressIndicator(value: 0);
+      },
+    );
+  }
+
+  Future<void> uploadFile(File file) async {
+    final result = await UploadFileAction(file)
+      .withProgress((progress) {
+        _progressController.add(progress);
+      })
+      .execute();
+  }
+}
+```
+
+### Performance Monitoring with Progress Data
+
+Enhanced performance reports include transfer data:
+
+```dart
+// Execute request with progress tracking
+final result = await CreatePostAction(request)
+  .withProgress((progress) => updateUI(progress))
+  .execute();
+
+// Access enhanced performance report
+final report = action.performanceReport;
+if (report != null) {
+  print('Request completed in: ${report.duration?.inMilliseconds}ms');
+  
+  if (report.hasProgressData) {
+    print('Data uploaded: ${report.uploadBytes} bytes');
+    print('Data downloaded: ${report.downloadBytes} bytes');
+    print('Total transferred: ${report.bytesTransferred} bytes');
+    print('Average transfer rate: ${(report.transferRate / 1024).toStringAsFixed(2)} KB/s');
+    print('Upload rate: ${(report.uploadRate / 1024).toStringAsFixed(2)} KB/s');
+    print('Download rate: ${(report.downloadRate / 1024).toStringAsFixed(2)} KB/s');
+  }
+}
+
+// Global performance overview with transfer data
+final performance = ApiRequestPerformance.instance;
+print('All API Performance with Transfer Data:');
+print(performance.toString()); // Now includes transfer rates and bytes
+```
+
 ## 🔧 Advanced Features
 
 ### Dynamic Path Variables
@@ -324,11 +551,14 @@ The package follows these core principles:
 
 - `ApiRequestAction<T>`: Base class for simple requests
 - `RequestAction<T, R>`: Base class for requests with data
-- `FileDownloadAction`: Specialized action class for file downloads
-- `SimpleApiRequest`: Direct HTTP client with download support
+- `FileDownloadAction`: Specialized action class for file downloads with progress
+- `FileUploadAction<T>`: Specialized action class for file uploads with progress
+- `SimpleApiRequest`: Direct HTTP client with progress tracking support
 - `ApiRequestOptions`: Global configuration singleton
 - `RequestClient`: HTTP client wrapper around Dio
-- `ApiRequestPerformance`: Performance monitoring
+- `ApiRequestPerformance`: Performance monitoring with transfer data
+- `ProgressData`: Unified progress information structure
+- `ProgressHandler`: Progress callback function types
 
 ## 🧪 Testing
 
@@ -356,9 +586,9 @@ void main() {
 Check out the [example directory](example/) for a complete Flutter app demonstrating:
 
 - CRUD operations
-- File download operations
+- File upload and download operations with progress tracking
 - Error handling
-- Performance monitoring
+- Performance monitoring with transfer data
 - Mock vs live API switching
 - Clean architecture implementation
 
@@ -368,6 +598,13 @@ To run the example:
 cd example
 flutter run
 ```
+
+## 📋 Migration Guide
+
+Upgrading from an older version? Check out our comprehensive guides:
+
+- **[Progress Tracking Migration Guide](PROGRESS_MIGRATION_GUIDE.md)** - Add progress tracking to existing actions
+- **[Progress Examples](PROGRESS_EXAMPLES.md)** - Real-world examples and UI integration patterns
 
 ## 🤝 Contributing
 
