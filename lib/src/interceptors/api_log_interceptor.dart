@@ -288,28 +288,32 @@ class ApiLogInterceptor extends ApiInterceptor {
     final logLevel = ApiRequestOptions.instance?.logLevel ?? ApiLogLevel.info;
     final globalOnLog = ApiRequestOptions.instance?.onLog;
     
-    // Always send to custom callback if configured
-    if (globalOnLog != null) {
-      globalOnLog(logData);
-    }
-    
-    // Handle console output based on log level
+    // Handle console output and custom callback based on log level
     switch (logLevel) {
       case ApiLogLevel.none:
         // No output (shouldn't reach here since interceptor isn't added)
         break;
       case ApiLogLevel.error:
-        // Only print errors
+        // For errors: both console output AND custom callback
         if (logData.type == ApiLogType.error) {
           logPrint(logData.formattedMessage);
         }
+        if (globalOnLog != null) {
+          globalOnLog(logData);
+        }
         break;
       case ApiLogLevel.info:
-        // Print all logs to console
+        // For info: both console output AND custom callback  
         logPrint(logData.formattedMessage);
+        if (globalOnLog != null) {
+          globalOnLog(logData);
+        }
         break;
       case ApiLogLevel.debug:
-        // Only send to callback, no console output
+        // For debug: only custom callback, no console output
+        if (globalOnLog != null) {
+          globalOnLog(logData);
+        }
         break;
     }
   }
@@ -330,7 +334,7 @@ class ApiLogInterceptor extends ApiInterceptor {
     
     final logLevel = ApiRequestOptions.instance?.logLevel ?? ApiLogLevel.info;
     
-    // Only log requests for info level (error level skips requests)
+    // Log requests for info and debug levels (error level skips requests)
     if (logLevel == ApiLogLevel.info || logLevel == ApiLogLevel.debug) {
       // Build formatted message for display
       final formattedMessage = _buildRequestMessage(options);
@@ -370,7 +374,7 @@ class ApiLogInterceptor extends ApiInterceptor {
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
     final logLevel = ApiRequestOptions.instance?.logLevel ?? ApiLogLevel.info;
     
-    // Only log responses for info level (error level skips responses)
+    // Log responses for info and debug levels (error level skips responses)
     if (logLevel == ApiLogLevel.info || logLevel == ApiLogLevel.debug) {
       // Build formatted message for display
       final formattedMessage = _buildResponseMessage(response);

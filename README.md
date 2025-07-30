@@ -559,8 +559,8 @@ ApiRequestOptions.instance!.config(
 **Available Log Levels:**
 
 - **`ApiLogLevel.none`** - No logging at all
-- **`ApiLogLevel.error`** - Only log API errors and exceptions
-- **`ApiLogLevel.info`** - Log all request/response data to console (default)
+- **`ApiLogLevel.error`** - Only log API errors and exceptions (console + custom `onLog`)
+- **`ApiLogLevel.info`** - Log all request/response data (console + custom `onLog`) - default
 - **`ApiLogLevel.debug`** - Send all data only to custom `onLog` callback (no console output)
 
 #### Advanced Logging Examples
@@ -583,10 +583,10 @@ ApiRequestOptions.instance!.config(
 **Error Monitoring:**
 ```dart
 ApiRequestOptions.instance!.config(
-  logLevel: ApiLogLevel.error,  // Only errors to console
+  logLevel: ApiLogLevel.error,  // Errors to both console AND custom callback
   onLog: (logData) {
     if (logData.type == ApiLogType.error) {
-      // Send errors to monitoring service
+      // Send errors to monitoring service (also printed to console)
       errorTracker.captureException(
         logData.error,
         extra: {
@@ -603,9 +603,9 @@ ApiRequestOptions.instance!.config(
 **Development with Custom Logger:**
 ```dart
 ApiRequestOptions.instance!.config(
-  logLevel: ApiLogLevel.info,  // Full console logging
+  logLevel: ApiLogLevel.info,  // Full console logging + custom callback
   onLog: (logData) {
-    // Also send to custom logger
+    // Also send to custom logger (in addition to console)
     logger.info('API ${logData.type.name}: ${logData.method} ${logData.url}');
     
     // Performance tracking

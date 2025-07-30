@@ -54,7 +54,7 @@ enum ApiLogLevel {
 
   /// Only log API errors and exceptions.
   ///
-  /// Logs error information to console and triggers [onLog] callback for errors only.
+  /// Logs error information to both console AND [onLog] callback for errors only.
   /// Request and response information is not logged.
   ///
   /// Use this in production to capture only failures without verbose logging.
@@ -62,7 +62,7 @@ enum ApiLogLevel {
 
   /// Log basic request and response information plus errors.
   ///
-  /// Logs comprehensive request/response data to console and triggers [onLog] callback.
+  /// Logs comprehensive request/response data to both console AND [onLog] callback.
   /// This includes:
   /// - Request method, URL, headers, and body
   /// - Response status, headers, and body
