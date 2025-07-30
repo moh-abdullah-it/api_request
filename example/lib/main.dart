@@ -26,7 +26,7 @@ void main() {
   if (!AppConfig.useMockData) {
     ApiRequestOptions.instance?.config(
       // Enable request/response logging in debug mode
-      enableLog: AppConfig.enableNetworkLogs,
+      logLevel: AppConfig.enableNetworkLogs ? ApiLogLevel.debug : ApiLogLevel.none,
 
       // Base URL for all API requests
       baseUrl: AppConfig.baseUrl,
@@ -59,6 +59,9 @@ void main() {
 
       // Connection timeout
       connectTimeout: AppConfig.networkTimeout,
+      onLog: (log) {
+        print('My Log: ${log.url}');
+      }
     );
   }
 

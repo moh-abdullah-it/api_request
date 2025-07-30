@@ -1,5 +1,6 @@
 import '../api_request.dart';
 import 'api_log_data.dart';
+import 'api_log_level.dart';
 
 /// Function type for synchronous option retrieval.
 ///
@@ -94,7 +95,31 @@ class ApiRequestOptions {
   /// list of global interceptors
   List<ApiInterceptor> interceptors = <ApiInterceptor>[];
 
-  /// to disable log set it to false
+  /// Controls the logging level for API requests and responses.
+  ///
+  /// This property replaces the deprecated [enableLog] boolean with more
+  /// granular control over logging behavior:
+  ///
+  /// - [ApiLogLevel.none]: No logging at all
+  /// - [ApiLogLevel.error]: Only log errors
+  /// - [ApiLogLevel.info]: Log all request/response data to console (default)
+  /// - [ApiLogLevel.debug]: Send data only to custom [onLog] callback
+  ///
+  /// Example:
+  /// ```dart
+  /// ApiRequestOptions.instance!.config(
+  ///   logLevel: ApiLogLevel.debug,
+  ///   onLog: (logData) => customLogger.log(logData.formattedMessage),
+  /// );
+  /// ```
+  ApiLogLevel logLevel = ApiLogLevel.info;
+
+  /// @deprecated Use [logLevel] instead. Will be removed in v2.0.0.
+  ///
+  /// For backward compatibility:
+  /// - `enableLog: true` → `logLevel: ApiLogLevel.info`
+  /// - `enableLog: false` → `logLevel: ApiLogLevel.none`
+  @Deprecated('Use logLevel instead. This will be removed in v2.0.0.')
   bool enableLog = true;
 
   /// Timeout in milliseconds for opening url.
@@ -211,7 +236,8 @@ class ApiRequestOptions {
   /// - [listFormat]: Format for list serialization in form data
   ///
   /// **Development:**
-  /// - [enableLog]: Enable request/response logging in debug mode
+  /// - [logLevel]: Controls logging level (none, error, info, debug)
+  /// - [enableLog]: @deprecated Use logLevel instead
   /// - [interceptors]: Global interceptors for all requests
   ///
   /// **Error Handling:**
@@ -226,7 +252,7 @@ class ApiRequestOptions {
   /// await ApiRequestOptions.instance!.config(
   ///   baseUrl: 'https://api.example.com',
   ///   token: 'abc123',
-  ///   enableLog: true,
+  ///   logLevel: ApiLogLevel.info,
   /// );
   /// ```
   ///
@@ -253,7 +279,8 @@ class ApiRequestOptions {
       Map<String, dynamic>? defaultHeaders,
       String? tokenType,
       Duration? connectTimeout,
-      bool? enableLog,
+      ApiLogLevel? logLevel,
+      @Deprecated('Use logLevel instead') bool? enableLog,
       List<ApiInterceptor>? interceptors,
       Function(ActionRequestError error)? onError,
       Function(ApiLogData logData)? onLog,
@@ -287,7 +314,17 @@ class ApiRequestOptions {
 
     this.tokenType = tokenType ?? this.tokenType;
     this.connectTimeout = connectTimeout ?? this.connectTimeout;
-    this.enableLog = enableLog ?? this.enableLog;
+    
+    // Handle logLevel and backward compatibility with enableLog
+    if (logLevel != null) {
+      this.logLevel = logLevel;
+      // Sync deprecated enableLog for backward compatibility
+      this.enableLog = logLevel != ApiLogLevel.none;
+    } else if (enableLog != null) {
+      // Support deprecated enableLog parameter
+      this.enableLog = enableLog;
+      this.logLevel = enableLog ? ApiLogLevel.info : ApiLogLevel.none;
+    }
     this.onError = onError ?? this.onError;
     this.onLog = onLog ?? this.onLog;
     this.errorBuilder = errorBuilder ?? this.errorBuilder;

@@ -62,7 +62,7 @@ void main() {
     },
     
     // Development settings
-    enableLog: true,
+    logLevel: ApiLogLevel.info,
     connectTimeout: const Duration(seconds: 30),
   );
   
@@ -535,6 +535,101 @@ class MyAction extends ApiRequestAction<Data> {
   ErrorHandler get onError => 
       (error) => print('Request failed: ${error.message}');
 }
+```
+
+### Logging and Debugging
+
+The package provides flexible logging with multiple levels to suit different environments:
+
+#### Log Levels
+
+```dart
+ApiRequestOptions.instance!.config(
+  // Choose your logging level
+  logLevel: ApiLogLevel.info,  // Default: full console logging
+  
+  // Optional: Custom log handler
+  onLog: (logData) {
+    // Handle logs however you want
+    customLogger.log(logData.formattedMessage);
+  },
+);
+```
+
+**Available Log Levels:**
+
+- **`ApiLogLevel.none`** - No logging at all
+- **`ApiLogLevel.error`** - Only log API errors and exceptions
+- **`ApiLogLevel.info`** - Log all request/response data to console (default)
+- **`ApiLogLevel.debug`** - Send all data only to custom `onLog` callback (no console output)
+
+#### Advanced Logging Examples
+
+**File Logging (Production):**
+```dart
+ApiRequestOptions.instance!.config(
+  logLevel: ApiLogLevel.debug,  // No console output
+  onLog: (logData) {
+    // Write to file with timestamp
+    final timestamp = DateTime.now().toIso8601String();
+    logFile.writeAsStringSync(
+      '[$timestamp] ${logData.formattedMessage}\n',
+      mode: FileMode.append,
+    );
+  },
+);
+```
+
+**Error Monitoring:**
+```dart
+ApiRequestOptions.instance!.config(
+  logLevel: ApiLogLevel.error,  // Only errors to console
+  onLog: (logData) {
+    if (logData.type == ApiLogType.error) {
+      // Send errors to monitoring service
+      errorTracker.captureException(
+        logData.error,
+        extra: {
+          'url': logData.url,
+          'method': logData.method,
+          'statusCode': logData.statusCode,
+        },
+      );
+    }
+  },
+);
+```
+
+**Development with Custom Logger:**
+```dart
+ApiRequestOptions.instance!.config(
+  logLevel: ApiLogLevel.info,  // Full console logging
+  onLog: (logData) {
+    // Also send to custom logger
+    logger.info('API ${logData.type.name}: ${logData.method} ${logData.url}');
+    
+    // Performance tracking
+    if (logData.metadata?['duration'] != null) {
+      performanceTracker.record(
+        logData.url!,
+        Duration(milliseconds: logData.metadata!['duration']),
+      );
+    }
+  },
+);
+```
+
+#### Migration from enableLog
+
+The old `enableLog` parameter is deprecated but still supported:
+
+```dart
+// Old way (deprecated)
+enableLog: true   // → logLevel: ApiLogLevel.info
+enableLog: false  // → logLevel: ApiLogLevel.none
+
+// New way (recommended)
+logLevel: ApiLogLevel.info,
 ```
 
 ## 🏗️ Architecture

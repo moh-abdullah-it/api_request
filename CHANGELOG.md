@@ -1,3 +1,15 @@
+## 1.4.0
+* 🎉 **NEW**: Introduced `ApiLogLevel` enum for granular logging control (none, error, info, debug)
+* ✨ **NEW**: `ApiLogLevel.debug` - Send logs only to custom `onLog` callback (no console output)
+* ✨ **NEW**: `ApiLogLevel.error` - Log only API errors and exceptions to console
+* ✨ **NEW**: `ApiLogLevel.info` - Full request/response logging to console (default behavior)
+* ✨ **NEW**: `ApiLogLevel.none` - Disable all logging completely
+* 🔧 **ENHANCED**: Dual logging support - custom `onLog` callbacks work alongside console output
+* 🔧 **ENHANCED**: `ApiLogData` includes comprehensive request/response metadata and timing information
+* 📚 **DOCS**: Added complete logging documentation with file logging, error monitoring, and performance tracking examples
+* 🗑️ **DEPRECATED**: `enableLog` parameter deprecated in favor of `logLevel` (still works for backward compatibility)
+* 🔄 **COMPATIBILITY**: 100% backward compatible - existing code continues to work unchanged
+
 ## 1.3.0
 * 🎉 **NEW**: Unified progress tracking system with `ProgressData` and `ProgressHandler`
 * ✨ **NEW**: `FileUploadAction<T>` for file uploads with progress tracking

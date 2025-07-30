@@ -5,7 +5,7 @@ import '../api_log_data.dart';
 ///
 /// This interceptor provides comprehensive logging of HTTP requests and responses
 /// for debugging purposes. It's automatically enabled in debug mode when
-/// [ApiRequestOptions.enableLog] is true.
+/// [ApiRequestOptions.logLevel] is not [ApiLogLevel.none].
 ///
 /// ## Features
 ///
@@ -92,7 +92,7 @@ import '../api_log_data.dart';
 ///
 /// This interceptor is automatically added by [RequestClient] when:
 /// - The app is running in debug mode (not release mode)
-/// - [ApiRequestOptions.enableLog] is true (default)
+/// - [ApiRequestOptions.logLevel] is not [ApiLogLevel.none] (default: [ApiLogLevel.info])
 ///
 /// ## Example Output
 ///
@@ -133,7 +133,7 @@ import '../api_log_data.dart';
 /// ```
 ///
 /// See also:
-/// - [ApiRequestOptions.enableLog] for enabling/disabling logs
+/// - [ApiRequestOptions.logLevel] for controlling log levels
 /// - [ApiRequestOptions.onLog] for global log message handling
 /// - [RequestClient] for automatic interceptor management
 /// - [ApiInterceptor] for the base interceptor class
@@ -265,7 +265,7 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// Default log print function that checks for global onLog callback.
   ///
   /// This function first attempts to use the global [ApiRequestOptions.onLog]
-  /// callback if configured, otherwise falls back to the standard [print] function.
+  /// callback if configured, then always falls back to the standard [print] function.
   static void _defaultLogPrint(Object object) {
     final logMessage = object.toString();
     
@@ -278,20 +278,40 @@ class ApiLogInterceptor extends ApiInterceptor {
         formattedMessage: logMessage,
       );
       globalOnLog(logData);
-      return;
     }
     
-    // Fallback to standard print
+    // Always print to console as well
     print(object);
   }
 
-  /// Sends structured log data to global callback or prints formatted message.
+  /// Sends structured log data to global callback and prints formatted message based on log level.
   void _sendLogData(ApiLogData logData) {
+    final logLevel = ApiRequestOptions.instance?.logLevel ?? ApiLogLevel.info;
     final globalOnLog = ApiRequestOptions.instance?.onLog;
+    
+    // Always send to custom callback if configured
     if (globalOnLog != null) {
       globalOnLog(logData);
-    } else {
-      logPrint(logData.formattedMessage);
+    }
+    
+    // Handle console output based on log level
+    switch (logLevel) {
+      case ApiLogLevel.none:
+        // No output (shouldn't reach here since interceptor isn't added)
+        break;
+      case ApiLogLevel.error:
+        // Only print errors
+        if (logData.type == ApiLogType.error) {
+          logPrint(logData.formattedMessage);
+        }
+        break;
+      case ApiLogLevel.info:
+        // Print all logs to console
+        logPrint(logData.formattedMessage);
+        break;
+      case ApiLogLevel.debug:
+        // Only send to callback, no console output
+        break;
     }
   }
 
@@ -309,26 +329,31 @@ class ApiLogInterceptor extends ApiInterceptor {
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
     
-    // Build formatted message for display
-    final formattedMessage = _buildRequestMessage(options);
+    final logLevel = ApiRequestOptions.instance?.logLevel ?? ApiLogLevel.info;
     
-    // Create structured log data
-    final logData = ApiLogData.request(
-      formattedMessage: formattedMessage,
-      method: options.method,
-      url: options.uri.toString(),
-      headers: Map<String, dynamic>.from(options.headers),
-      data: options.data,
-      metadata: {
-        'connectTimeout': options.connectTimeout?.inMilliseconds,
-        'sendTimeout': options.sendTimeout?.inMilliseconds,
-        'receiveTimeout': options.receiveTimeout?.inMilliseconds,
-        'responseType': options.responseType.toString(),
-      },
-    );
-    
-    // Send structured data or print formatted message
-    _sendLogData(logData);
+    // Only log requests for info level (error level skips requests)
+    if (logLevel == ApiLogLevel.info || logLevel == ApiLogLevel.debug) {
+      // Build formatted message for display
+      final formattedMessage = _buildRequestMessage(options);
+      
+      // Create structured log data
+      final logData = ApiLogData.request(
+        formattedMessage: formattedMessage,
+        method: options.method,
+        url: options.uri.toString(),
+        headers: Map<String, dynamic>.from(options.headers),
+        data: options.data,
+        metadata: {
+          'connectTimeout': options.connectTimeout?.inMilliseconds,
+          'sendTimeout': options.sendTimeout?.inMilliseconds,
+          'receiveTimeout': options.receiveTimeout?.inMilliseconds,
+          'responseType': options.responseType.toString(),
+        },
+      );
+      
+      // Send structured data or print formatted message
+      _sendLogData(logData);
+    }
     
     handler.next(options);
   }
@@ -344,29 +369,34 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// - Response body (if [responseBody] is true)
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
-    // Build formatted message for display
-    final formattedMessage = _buildResponseMessage(response);
+    final logLevel = ApiRequestOptions.instance?.logLevel ?? ApiLogLevel.info;
     
-    // Create structured log data
-    final logData = ApiLogData.response(
-      formattedMessage: formattedMessage,
-      method: response.requestOptions.method,
-      url: response.requestOptions.uri.toString(),
-      statusCode: response.statusCode,
-      requestHeaders: Map<String, dynamic>.from(response.requestOptions.headers),
-      responseHeaders: response.headers.map.map((key, value) => MapEntry(key, value.join(', '))),
-      requestData: response.requestOptions.data,
-      responseData: response.data,
-      metadata: {
-        'isRedirect': response.isRedirect,
-        'realUri': response.realUri?.toString(),
-        'contentType': response.headers.value('content-type'),
-        'contentLength': response.headers.value('content-length'),
-      },
-    );
-    
-    // Send structured data or print formatted message
-    _sendLogData(logData);
+    // Only log responses for info level (error level skips responses)
+    if (logLevel == ApiLogLevel.info || logLevel == ApiLogLevel.debug) {
+      // Build formatted message for display
+      final formattedMessage = _buildResponseMessage(response);
+      
+      // Create structured log data
+      final logData = ApiLogData.response(
+        formattedMessage: formattedMessage,
+        method: response.requestOptions.method,
+        url: response.requestOptions.uri.toString(),
+        statusCode: response.statusCode,
+        requestHeaders: Map<String, dynamic>.from(response.requestOptions.headers),
+        responseHeaders: response.headers.map.map((key, value) => MapEntry(key, value.join(', '))),
+        requestData: response.requestOptions.data,
+        responseData: response.data,
+        metadata: {
+          'isRedirect': response.isRedirect,
+          'realUri': response.realUri?.toString(),
+          'contentType': response.headers.value('content-type'),
+          'contentLength': response.headers.value('content-length'),
+        },
+      );
+      
+      // Send structured data or print formatted message
+      _sendLogData(logData);
+    }
     
     handler.next(response);
   }

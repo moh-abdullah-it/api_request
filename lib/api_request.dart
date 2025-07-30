@@ -63,6 +63,7 @@ export 'src/interceptors/api_log_interceptor.dart';
 
 /// Log data structures for API request logging
 export 'src/api_log_data.dart';
+export 'src/api_log_level.dart';
 
 /// Performance monitoring and reporting tools
 export 'src/performance/api_request_performance.dart';
