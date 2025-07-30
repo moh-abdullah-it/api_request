@@ -1,10 +1,8 @@
-import 'package:api_request/src/interceptors/api_log_interceptor.dart';
 import 'package:api_request/src/interceptors/token_interceptor.dart';
 import 'package:api_request/src/interceptors/unauthenticated_interceptor.dart';
 import 'package:flutter/foundation.dart';
 
 import '../api_request.dart';
-import 'api_log_level.dart';
 
 /// A singleton HTTP client wrapper around Dio with automatic configuration.
 ///

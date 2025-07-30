@@ -1,6 +1,4 @@
 import '../api_request.dart';
-import 'api_log_data.dart';
-import 'api_log_level.dart';
 
 /// Function type for synchronous option retrieval.
 ///
@@ -97,7 +95,7 @@ class ApiRequestOptions {
 
   /// Controls the logging level for API requests and responses.
   ///
-  /// This property replaces the deprecated [enableLog] boolean with more
+  /// This property replaces the deprecated enableLog boolean with more
   /// granular control over logging behavior:
   ///
   /// - [ApiLogLevel.none]: No logging at all
@@ -319,9 +317,11 @@ class ApiRequestOptions {
     if (logLevel != null) {
       this.logLevel = logLevel;
       // Sync deprecated enableLog for backward compatibility
+      // ignore: deprecated_member_use_from_same_package
       this.enableLog = logLevel != ApiLogLevel.none;
     } else if (enableLog != null) {
       // Support deprecated enableLog parameter
+      // ignore: deprecated_member_use_from_same_package
       this.enableLog = enableLog;
       this.logLevel = enableLog ? ApiLogLevel.info : ApiLogLevel.none;
     }

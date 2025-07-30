@@ -1,5 +1,4 @@
 import 'package:api_request/api_request.dart';
-import '../api_log_data.dart';
 
 /// A logging interceptor for API requests and responses.
 ///
@@ -388,7 +387,7 @@ class ApiLogInterceptor extends ApiInterceptor {
         responseData: response.data,
         metadata: {
           'isRedirect': response.isRedirect,
-          'realUri': response.realUri?.toString(),
+          'realUri': response.realUri.toString(),
           'contentType': response.headers.value('content-type'),
           'contentLength': response.headers.value('content-length'),
         },
@@ -431,7 +430,7 @@ class ApiLogInterceptor extends ApiInterceptor {
         responseData: err.response?.data,
         metadata: {
           'errorType': err.type.toString(),
-          'stackTrace': err.stackTrace?.toString(),
+          'stackTrace': err.stackTrace.toString(),
         },
       );
       
@@ -442,35 +441,6 @@ class ApiLogInterceptor extends ApiInterceptor {
     handler.next(err);
   }
 
-  /// Prints response information based on logging configuration.
-  ///
-  /// This helper method formats and logs response data including
-  /// status codes, headers, redirects, and response body.
-  void _printResponse(Response response) {
-    if (responseHeader) {
-      _printSection('RESPONSE INFO');
-      _printKV('Status Code', '${response.statusCode} ${_getStatusMessage(response.statusCode)}');
-      _printKV('Content Type', response.headers.value('content-type') ?? 'Unknown');
-      _printKV('Content Length', response.headers.value('content-length') ?? 'Unknown');
-      
-      if (response.isRedirect == true) {
-        _printKV('Redirect', response.realUri.toString());
-      }
-
-      if (response.headers.map.isNotEmpty) {
-        _printSection('RESPONSE HEADERS');
-        response.headers.forEach((key, values) => 
-          _printKV(key, values.length == 1 ? values.first : values.join(', ')));
-      }
-    }
-    
-    if (responseBody && response.data != null) {
-      _printSection('RESPONSE BODY');
-      _printData(response.data);
-    }
-    
-    _printSeparator();
-  }
 
   /// Builds formatted request message for display.
   String _buildRequestMessage(RequestOptions options) {
@@ -654,96 +624,6 @@ class ApiLogInterceptor extends ApiInterceptor {
     }
   }
 
-  /// Prints a separator line for visual clarity.
-  void _printSeparator() {
-    logPrint('═' * 80);
-  }
-
-  /// Prints a formatted header with icon and description.
-  void _printHeader(String title, String subtitle) {
-    logPrint('$title');
-    logPrint('📍 $subtitle');
-    logPrint('');
-  }
-
-  /// Prints a section header with visual formatting.
-  void _printSection(String title) {
-    logPrint('');
-    logPrint('▶ $title');
-    logPrint('─' * (title.length + 2));
-  }
-
-  /// Prints a key-value pair in a consistent format.
-  ///
-  /// Helper method for formatting log output with consistent key-value styling.
-  void _printKV(String key, Object? value, {int indent = 0}) {
-    final spaces = '  ' * indent;
-    final formattedKey = key.padRight(20);
-    logPrint('$spaces$formattedKey: $value');
-  }
-
-  /// Prints data with proper formatting for different types.
-  void _printData(dynamic data) {
-    if (data == null) {
-      logPrint('null');
-      return;
-    }
-    
-    try {
-      // Try to format as JSON if it's a string that looks like JSON
-      if (data is String && (data.startsWith('{') || data.startsWith('['))) {
-        _printFormattedJson(data);
-      } else if (data is Map || data is List) {
-        _printFormattedJson(data.toString());
-      } else {
-        // Print as-is for other types
-        data.toString().split('\n').forEach((line) => logPrint('  $line'));
-      }
-    } catch (e) {
-      // Fallback to simple printing
-      data.toString().split('\n').forEach((line) => logPrint('  $line'));
-    }
-  }
-
-  /// Formats and prints JSON data with proper indentation.
-  void _printFormattedJson(String jsonString) {
-    try {
-      // Simple JSON formatting - add indentation for readability
-      var indent = 0;
-      final formatted = <String>[];
-      
-      for (int i = 0; i < jsonString.length; i++) {
-        final char = jsonString[i];
-        
-        if (char == '{' || char == '[') {
-          formatted.add('  ' * indent + char);
-          indent++;
-        } else if (char == '}' || char == ']') {
-          indent--;
-          formatted.add('  ' * indent + char);
-        } else if (char == ',') {
-          formatted.add(char);
-        } else if (char != ' ' && char != '\n' && char != '\r') {
-          if (formatted.isEmpty || formatted.last.endsWith('\n')) {
-            formatted.add('  ' * indent + char);
-          } else {
-            formatted[formatted.length - 1] += char;
-          }
-        }
-      }
-      
-      // Print each line
-      final lines = formatted.join('').split('\n');
-      for (final line in lines) {
-        if (line.trim().isNotEmpty) {
-          logPrint('  $line');
-        }
-      }
-    } catch (e) {
-      // Fallback to simple line-by-line printing
-      jsonString.split('\n').forEach((line) => logPrint('  $line'));
-    }
-  }
 
   /// Gets appropriate emoji for HTTP status code.
   String _getStatusEmoji(int? statusCode) {
