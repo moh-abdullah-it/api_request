@@ -1,3 +1,17 @@
+## 1.5.0
+* 🎨 **NEW**: Complete visual overhaul of API request/response logging with beautiful colored output
+* ✨ **NEW**: JSON syntax highlighting with cyan keys, green strings, yellow numbers, and magenta booleans
+* 🌈 **NEW**: Color-coded HTTP methods (GET=blue, POST=green, DELETE=red, PUT=yellow, PATCH=magenta)
+* 📊 **NEW**: Status code aware coloring (2xx=green, 3xx=yellow, 4xx=red, 5xx=bright red)
+* 🎯 **NEW**: Structured color themes - cyan for requests, green for responses, red for errors
+* 🔧 **NEW**: `LogColors` utility class with 30+ ANSI color methods and smart detection
+* 📝 **NEW**: `JsonFormatter` with intelligent key detection and proper indentation
+* 🔧 **ENHANCED**: Completely redesigned console output with professional formatting and visual hierarchy
+* 🔧 **ENHANCED**: Better handling of large JSON responses with proper syntax highlighting
+* ⚙️ **TECHNICAL**: Colors automatically disabled in release mode for performance
+* ⚙️ **TECHNICAL**: Graceful fallback to plain text when colors not supported
+* 🔄 **COMPATIBILITY**: 100% backward compatible - existing logging configurations unchanged
+
 ## 1.4.0
 * 🎉 **NEW**: Introduced `ApiLogLevel` enum for granular logging control (none, error, info, debug)
 * ✨ **NEW**: `ApiLogLevel.debug` - Send logs only to custom `onLog` callback (no console output)

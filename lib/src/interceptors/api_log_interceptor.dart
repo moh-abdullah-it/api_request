@@ -1,4 +1,6 @@
 import 'package:api_request/api_request.dart';
+import '../utils/log_colors.dart';
+import '../utils/json_formatter.dart';
 
 /// A logging interceptor for API requests and responses.
 ///
@@ -261,25 +263,12 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// ```
   void Function(Object object) logPrint;
 
-  /// Default log print function that checks for global onLog callback.
+  /// Default log print function that only prints to console.
   ///
-  /// This function first attempts to use the global [ApiRequestOptions.onLog]
-  /// callback if configured, then always falls back to the standard [print] function.
+  /// This function only prints to console. The global [ApiRequestOptions.onLog]
+  /// callback is handled separately by [_sendLogData] to avoid duplicate calls.
   static void _defaultLogPrint(Object object) {
-    final logMessage = object.toString();
-    
-    // Use global onLog callback if configured
-    final globalOnLog = ApiRequestOptions.instance?.onLog;
-    if (globalOnLog != null) {
-      // For backward compatibility, create a simple log data when only string is provided
-      final logData = ApiLogData(
-        type: ApiLogType.request, // Default type, will be overridden by structured calls
-        formattedMessage: logMessage,
-      );
-      globalOnLog(logData);
-    }
-    
-    // Always print to console as well
+    // Only print to console - structured logging handles onLog callback separately
     print(object);
   }
 
@@ -450,46 +439,46 @@ class ApiLogInterceptor extends ApiInterceptor {
   String _buildRequestMessage(RequestOptions options) {
     final buffer = StringBuffer();
     
-    buffer.writeln('═' * 80);
-    buffer.writeln('🚀 API REQUEST');
-    buffer.writeln('📍 ${options.method} ${options.uri}');
+    buffer.writeln(LogColors.cyan('═' * 80));
+    buffer.writeln(LogColors.boldCyan('🚀 API REQUEST'));
+    buffer.writeln(LogColors.cyan('📍 ${LogColors.httpMethod(options.method, options.method)} ${LogColors.brightBlue(options.uri.toString())}'));
     buffer.writeln('');
     
     if (request) {
-      buffer.writeln('▶ REQUEST INFO');
-      buffer.writeln('─' * 14);
-      buffer.writeln('Method              : ${options.method}');
-      buffer.writeln('Response Type       : ${_formatResponseType(options.responseType)}');
-      buffer.writeln('Connect Timeout     : ${_formatDuration(options.connectTimeout)}');
-      buffer.writeln('Send Timeout        : ${_formatDuration(options.sendTimeout)}');
-      buffer.writeln('Receive Timeout     : ${_formatDuration(options.receiveTimeout)}');
+      buffer.writeln(LogColors.boldBlue('▶ REQUEST INFO'));
+      buffer.writeln(LogColors.blue('─' * 14));
+      buffer.writeln('${LogColors.gray('Method              :')} ${LogColors.httpMethod(options.method, options.method)}');
+      buffer.writeln('${LogColors.gray('Response Type       :')} ${LogColors.yellow(_formatResponseType(options.responseType))}');
+      buffer.writeln('${LogColors.gray('Connect Timeout     :')} ${LogColors.yellow(_formatDuration(options.connectTimeout))}');
+      buffer.writeln('${LogColors.gray('Send Timeout        :')} ${LogColors.yellow(_formatDuration(options.sendTimeout))}');
+      buffer.writeln('${LogColors.gray('Receive Timeout     :')} ${LogColors.yellow(_formatDuration(options.receiveTimeout))}');
     }
     
     if (requestHeader && options.headers.isNotEmpty) {
       buffer.writeln('');
-      buffer.writeln('▶ REQUEST HEADERS');
-      buffer.writeln('─' * 17);
+      buffer.writeln(LogColors.boldMagenta('▶ REQUEST HEADERS'));
+      buffer.writeln(LogColors.magenta('─' * 17));
       options.headers.forEach((key, value) {
-        buffer.writeln('${key.padRight(20)}: $value');
+        buffer.writeln('${LogColors.gray(key.padRight(20))}: ${LogColors.white(value.toString())}');
       });
     }
     
     if (requestBody && options.data != null) {
       buffer.writeln('');
-      buffer.writeln('▶ REQUEST BODY');
-      buffer.writeln('─' * 14);
+      buffer.writeln(LogColors.boldGreen('▶ REQUEST BODY'));
+      buffer.writeln(LogColors.green('─' * 14));
       if (options.data is FormData) {
         final formData = options.data as FormData;
         if (formData.fields.isNotEmpty) {
-          buffer.writeln('📝 Form Fields:');
+          buffer.writeln(LogColors.green('📝 Form Fields:'));
           for (final field in formData.fields) {
-            buffer.writeln('  ${field.key.padRight(18)}: ${field.value}');
+            buffer.writeln('  ${LogColors.gray(field.key.padRight(18))}: ${LogColors.white(field.value)}');
           }
         }
         if (formData.files.isNotEmpty) {
-          buffer.writeln('📎 Form Files:');
+          buffer.writeln(LogColors.green('📎 Form Files:'));
           for (final file in formData.files) {
-            buffer.writeln('  ${file.key.padRight(18)}: ${file.value.filename} (${file.value.length} bytes)');
+            buffer.writeln('  ${LogColors.gray(file.key.padRight(18))}: ${LogColors.white('${file.value.filename} (${file.value.length} bytes)')}');
           }
         }
       } else {
@@ -497,7 +486,7 @@ class ApiLogInterceptor extends ApiInterceptor {
       }
     }
     
-    buffer.writeln('═' * 80);
+    buffer.writeln(LogColors.cyan('═' * 80));
     return buffer.toString();
   }
 
@@ -505,42 +494,44 @@ class ApiLogInterceptor extends ApiInterceptor {
   String _buildResponseMessage(Response response) {
     final buffer = StringBuffer();
     
-    buffer.writeln('═' * 80);
+    buffer.writeln(LogColors.green('═' * 80));
     final statusEmoji = _getStatusEmoji(response.statusCode);
-    buffer.writeln('$statusEmoji API RESPONSE');
-    buffer.writeln('📍 ${response.statusCode} ${response.requestOptions.uri}');
+    final statusColor = LogColors.statusCode(response.statusCode, '$statusEmoji API RESPONSE');
+    buffer.writeln(LogColors.bold(statusColor));
+    buffer.writeln(LogColors.green('📍 ${LogColors.statusCode(response.statusCode, response.statusCode.toString())} ${LogColors.brightBlue(response.requestOptions.uri.toString())}'));
     buffer.writeln('');
     
     if (responseHeader) {
-      buffer.writeln('▶ RESPONSE INFO');
-      buffer.writeln('─' * 15);
-      buffer.writeln('Status Code         : ${response.statusCode} ${_getStatusMessage(response.statusCode)}');
-      buffer.writeln('Content Type        : ${response.headers.value('content-type') ?? 'Unknown'}');
-      buffer.writeln('Content Length      : ${response.headers.value('content-length') ?? 'Unknown'}');
+      buffer.writeln(LogColors.boldBlue('▶ RESPONSE INFO'));
+      buffer.writeln(LogColors.blue('─' * 15));
+      final statusText = '${response.statusCode} ${_getStatusMessage(response.statusCode)}';
+      buffer.writeln('${LogColors.gray('Status Code         :')} ${LogColors.statusCode(response.statusCode, statusText)}');
+      buffer.writeln('${LogColors.gray('Content Type        :')} ${LogColors.yellow(response.headers.value('content-type') ?? 'Unknown')}');
+      buffer.writeln('${LogColors.gray('Content Length      :')} ${LogColors.yellow(response.headers.value('content-length') ?? 'Unknown')}');
       
       if (response.isRedirect == true) {
-        buffer.writeln('Redirect            : ${response.realUri}');
+        buffer.writeln('${LogColors.gray('Redirect            :')} ${LogColors.brightBlue(response.realUri.toString())}');
       }
 
       if (response.headers.map.isNotEmpty) {
         buffer.writeln('');
-        buffer.writeln('▶ RESPONSE HEADERS');
-        buffer.writeln('─' * 18);
+        buffer.writeln(LogColors.boldMagenta('▶ RESPONSE HEADERS'));
+        buffer.writeln(LogColors.magenta('─' * 18));
         response.headers.forEach((key, values) {
           final value = values.length == 1 ? values.first : values.join(', ');
-          buffer.writeln('${key.padRight(20)}: $value');
+          buffer.writeln('${LogColors.gray(key.padRight(20))}: ${LogColors.white(value)}');
         });
       }
     }
     
     if (responseBody && response.data != null) {
       buffer.writeln('');
-      buffer.writeln('▶ RESPONSE BODY');
-      buffer.writeln('─' * 15);
+      buffer.writeln(LogColors.boldGreen('▶ RESPONSE BODY'));
+      buffer.writeln(LogColors.green('─' * 15));
       buffer.writeln(_formatData(response.data));
     }
     
-    buffer.writeln('═' * 80);
+    buffer.writeln(LogColors.green('═' * 80));
     return buffer.toString();
   }
 
@@ -548,85 +539,66 @@ class ApiLogInterceptor extends ApiInterceptor {
   String _buildErrorMessage(DioException err) {
     final buffer = StringBuffer();
     
-    buffer.writeln('═' * 80);
-    buffer.writeln('❌ API ERROR');
-    buffer.writeln('📍 ${err.requestOptions.method} ${err.requestOptions.uri}');
+    buffer.writeln(LogColors.red('═' * 80));
+    buffer.writeln(LogColors.boldRed('❌ API ERROR'));
+    buffer.writeln(LogColors.red('📍 ${LogColors.httpMethod(err.requestOptions.method, err.requestOptions.method)} ${LogColors.brightBlue(err.requestOptions.uri.toString())}'));
     buffer.writeln('');
     
-    buffer.writeln('▶ ERROR DETAILS');
-    buffer.writeln('─' * 15);
-    buffer.writeln('Type                : ${_formatErrorType(err.type)}');
-    buffer.writeln('Message             : ${err.message ?? 'No message'}');
+    buffer.writeln(LogColors.boldRed('▶ ERROR DETAILS'));
+    buffer.writeln(LogColors.red('─' * 15));
+    buffer.writeln('${LogColors.gray('Type                :')} ${LogColors.brightRed(_formatErrorType(err.type))}');
+    buffer.writeln('${LogColors.gray('Message             :')} ${LogColors.red(err.message ?? 'No message')}');
     
     if (err.response != null) {
       buffer.writeln('');
-      buffer.writeln('▶ ERROR RESPONSE');
-      buffer.writeln('─' * 16);
-      buffer.writeln('Status Code         : ${err.response!.statusCode} ${_getStatusMessage(err.response!.statusCode)}');
+      buffer.writeln(LogColors.boldRed('▶ ERROR RESPONSE'));
+      buffer.writeln(LogColors.red('─' * 16));
+      final statusText = '${err.response!.statusCode} ${_getStatusMessage(err.response!.statusCode)}';
+      buffer.writeln('${LogColors.gray('Status Code         :')} ${LogColors.statusCode(err.response!.statusCode, statusText)}');
       
       if (err.response!.data != null) {
-        buffer.writeln('Response Data:');
+        buffer.writeln(LogColors.gray('Response Data:'));
         buffer.writeln(_formatData(err.response!.data));
       }
     }
     
-    buffer.writeln('═' * 80);
+    buffer.writeln(LogColors.red('═' * 80));
     return buffer.toString();
   }
 
-  /// Formats data for display with proper indentation.
+  /// Formats data for display with proper indentation and JSON syntax highlighting.
   String _formatData(dynamic data) {
-    if (data == null) return '  null';
+    if (data == null) return LogColors.jsonNull('  null');
     
     try {
-      // Try to format as JSON if it's a string that looks like JSON
-      if (data is String && (data.startsWith('{') || data.startsWith('['))) {
-        return _formatJson(data);
-      } else if (data is Map || data is List) {
-        return _formatJson(data.toString());
+      // Check if it's JSON-like data that can be syntax highlighted
+      if (_isJsonData(data)) {
+        return JsonFormatter.formatWithColors(data, indent: 2);
       } else {
-        // Add indentation to each line
-        return data.toString().split('\n').map((line) => '  $line').join('\n');
+        // Add indentation to each line for non-JSON data
+        return data.toString().split('\n').map((line) => '  ${LogColors.white(line)}').join('\n');
       }
     } catch (e) {
       // Fallback to simple indented printing
-      return data.toString().split('\n').map((line) => '  $line').join('\n');
+      return data.toString().split('\n').map((line) => '  ${LogColors.white(line)}').join('\n');
     }
   }
 
-  /// Formats JSON data with proper indentation.
-  String _formatJson(String jsonString) {
-    try {
-      // Simple JSON formatting - add indentation for readability
-      final lines = <String>[];
-      var indent = 0;
-      
-      for (int i = 0; i < jsonString.length; i++) {
-        final char = jsonString[i];
-        
-        if (char == '{' || char == '[') {
-          lines.add('  ' * (indent + 1) + char);
-          indent++;
-        } else if (char == '}' || char == ']') {
-          indent--;
-          lines.add('  ' * (indent + 1) + char);
-        } else if (char == ',' && i + 1 < jsonString.length) {
-          lines.add(char);
-        } else if (char != ' ' && char != '\n' && char != '\r') {
-          if (lines.isEmpty || lines.last.endsWith('\n')) {
-            lines.add('  ' * (indent + 1) + char);
-          } else {
-            lines[lines.length - 1] += char;
-          }
-        }
-      }
-      
-      return lines.join('\n');
-    } catch (e) {
-      // Fallback to simple line-by-line printing with indentation
-      return jsonString.split('\n').map((line) => '  $line').join('\n');
+  /// Checks if the data is JSON-like and can benefit from syntax highlighting.
+  bool _isJsonData(dynamic data) {
+    if (data is Map || data is List) {
+      return true;
     }
+    
+    if (data is String) {
+      final trimmed = data.trim();
+      return (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+             (trimmed.startsWith('[') && trimmed.endsWith(']'));
+    }
+    
+    return false;
   }
+
 
 
   /// Gets appropriate emoji for HTTP status code.

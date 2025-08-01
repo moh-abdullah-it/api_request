@@ -76,3 +76,7 @@ export 'src/progress/progress_handler.dart';
 /// Utility classes for simplified API requests
 export 'src/simple_api_request.dart';
 export 'src/api_resource.dart';
+
+/// Logging utilities for colored console output
+export 'src/utils/log_colors.dart';
+export 'src/utils/json_formatter.dart';

@@ -19,7 +19,8 @@ A Flutter package that introduces a clean, testable approach to organizing API l
 - **Flexible Authentication**: Multiple token provider strategies
 - **Path Variables**: Dynamic URL path substitution
 - **Global Error Handling**: Centralized error management
-- **Comprehensive Logging**: Request/response debugging
+- **🎨 Colored Logging**: Beautiful syntax-highlighted console output with JSON formatting
+- **Comprehensive Logging**: Request/response debugging with professional visual design
 
 ## 📦 Installation
 
@@ -27,7 +28,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  api_request: ^1.0.9
+  api_request: ^1.5.0
 ```
 
 Then run:
@@ -632,6 +633,95 @@ enableLog: false  // → logLevel: ApiLogLevel.none
 logLevel: ApiLogLevel.info,
 ```
 
+### 🎨 Colored Console Logging
+
+The package now includes beautiful colored console output that makes debugging API requests much more pleasant and efficient.
+
+#### Visual Features
+
+- **🎯 HTTP Method Colors**: GET (blue), POST (green), DELETE (red), PUT (yellow), PATCH (magenta)
+- **📊 Status Code Colors**: 2xx (green), 3xx (yellow), 4xx (red), 5xx (bright red)
+- **🌈 JSON Syntax Highlighting**: 
+  - Cyan property keys for easy identification
+  - Green string values 
+  - Yellow numbers
+  - Magenta booleans (true/false)
+  - Gray null values
+  - Bright cyan brackets and braces
+- **🎨 Structured Themes**: 
+  - Cyan theme for outgoing requests
+  - Green theme for successful responses
+  - Red theme for errors and failures
+
+#### Automatic Color Management
+
+Colors are intelligently managed for optimal performance:
+
+```dart
+// Colors are automatically:
+// ✅ Enabled in debug mode for development
+// ❌ Disabled in release mode for production performance
+// 🔄 Gracefully fallback to plain text when not supported
+
+ApiRequestOptions.instance!.config(
+  logLevel: ApiLogLevel.info, // Beautiful colored output
+);
+```
+
+#### Custom Color Integration
+
+You can still use custom logging while benefiting from colored output:
+
+```dart
+ApiRequestOptions.instance!.config(
+  logLevel: ApiLogLevel.info, // Colored console + custom callback
+  onLog: (logData) {
+    // Custom processing while keeping colored console output
+    if (logData.type == ApiLogType.error) {
+      errorTracker.captureException(logData.error);
+    }
+    
+    // Access structured data
+    print('Request to: ${logData.url}');
+    print('Status: ${logData.statusCode}');
+    print('Duration: ${logData.metadata?['duration']}ms');
+  },
+);
+```
+
+#### Production Logging
+
+For production environments, use debug mode to keep colors out of production logs:
+
+```dart
+ApiRequestOptions.instance!.config(
+  // Send colored output only to custom callback (no console)
+  logLevel: ApiLogLevel.debug,
+  onLog: (logData) {
+    // Clean, uncolored logs for production
+    productionLogger.log(logData.formattedMessage);
+  },
+);
+```
+
+#### Color Utility Access
+
+Access the color utilities directly for custom logging:
+
+```dart
+import 'package:api_request/api_request.dart';
+
+// Use color utilities in your own logging
+print(LogColors.green('✅ Success!'));
+print(LogColors.red('❌ Error occurred'));
+print(LogColors.statusCode(200, 'OK')); // Auto-colored based on status
+print(LogColors.httpMethod('GET', 'GET')); // Auto-colored based on method
+
+// Format JSON with syntax highlighting
+final coloredJson = JsonFormatter.formatWithColors({'key': 'value'});
+print(coloredJson);
+```
+
 ## 🏗️ Architecture
 
 The package follows these core principles:
@@ -654,6 +744,8 @@ The package follows these core principles:
 - `ApiRequestPerformance`: Performance monitoring with transfer data
 - `ProgressData`: Unified progress information structure
 - `ProgressHandler`: Progress callback function types
+- **🎨 `LogColors`**: ANSI color utility with 30+ color methods and smart detection
+- **📝 `JsonFormatter`**: Advanced JSON syntax highlighting with intelligent formatting
 
 ## 🧪 Testing
 
