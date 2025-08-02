@@ -1,6 +1,6 @@
 name: api_request
 description: Action-based HTTP client for Flutter with beautiful colored logging, progress tracking, and comprehensive API request management.
-version: 1.5.1
+version: 1.5.2
 homepage: https://github.com/moh-abdullah-it/api_request
 environment:
   sdk: ">=3.5.0 <4.0.0"

@@ -91,7 +91,7 @@ class ApiRequestOptions {
   }
 
   /// list of global interceptors
-  List<ApiInterceptor> interceptors = <ApiInterceptor>[];
+  List<Interceptor> interceptors = <ApiInterceptor>[];
 
   /// Controls the logging level for API requests and responses.
   ///
@@ -279,7 +279,7 @@ class ApiRequestOptions {
       Duration? connectTimeout,
       ApiLogLevel? logLevel,
       @Deprecated('Use logLevel instead') bool? enableLog,
-      List<ApiInterceptor>? interceptors,
+      List<Interceptor>? interceptors,
       Function(ActionRequestError error)? onError,
       Function(ApiLogData logData)? onLog,
       Function(Map<String, dynamic> data)? errorBuilder,

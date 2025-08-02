@@ -1,3 +1,6 @@
+## 1.5.2
+* 🔧 **ENHANCED**: Replace `ApiInterceptor` with `Interceptor` for consistency
+
 ## 1.5.1
 * 🐛 **FIX**: Integrate `path_provider_foundation` and disable ANSI colors on iOS
 * 🐛 **FIX**: Replace `print` with `debugPrint` for improved logging consistency
