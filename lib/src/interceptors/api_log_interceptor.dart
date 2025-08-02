@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:api_request/api_request.dart';
 import '../utils/log_colors.dart';
 import '../utils/json_formatter.dart';
@@ -265,11 +266,11 @@ class ApiLogInterceptor extends ApiInterceptor {
 
   /// Default log print function that only prints to console.
   ///
-  /// This function only prints to console. The global [ApiRequestOptions.onLog]
+  /// This function only prints to console using debugPrint. The global [ApiRequestOptions.onLog]
   /// callback is handled separately by [_sendLogData] to avoid duplicate calls.
   static void _defaultLogPrint(Object object) {
-    // Only print to console - structured logging handles onLog callback separately
-    print(object);
+    // Only print to console using debugPrint - structured logging handles onLog callback separately
+    debugPrint(object.toString());
   }
 
   /// Sends structured log data to global callback and prints formatted message based on log level.

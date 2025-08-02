@@ -238,7 +238,7 @@ class ActionRequestError<E> implements Exception {
               ApiRequestOptions.instance?.errorBuilder!(errorData);
         }
       }
-      print(
+      debugPrint(
           "🛑️ 🛑️ 🛑️ 🛑️ 🛑️ 🛑 🛑️ 🛑 Start Action Request Error 🛑 🛑 🛑 🛑 🛑 🛑 🛑 🛑️ \n"
           "message: ${this.message}\n"
           "statusCode: ${this.statusCode}\n"
@@ -260,7 +260,7 @@ class ActionRequestError<E> implements Exception {
       this.message = apiError.toString();
       this.stackTrace = apiError.stackTrace;
       error = apiError;
-      print(
+      debugPrint(
           "⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ Start Action Request Error ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ ⚠️ \n"
           "message: ${this.message}\n"
           "statusCode: ${res?.statusCode}\n"
@@ -271,7 +271,7 @@ class ActionRequestError<E> implements Exception {
           "response: ${res?.data}");
     } else {
       this.type = ActionErrorType.Unknown;
-      print('Error: $apiError');
+      debugPrint('Error: $apiError');
       debugPrintStack(stackTrace: this.stackTrace, label: "Unknown Error");
       throw Exception('Unknown Error');
     }
