@@ -4,8 +4,10 @@ import 'package:dio/dio.dart';
 enum ApiLogType {
   /// Request being sent
   request,
+
   /// Response received
   response,
+
   /// Error occurred
   error,
 }

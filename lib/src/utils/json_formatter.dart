@@ -48,7 +48,7 @@ class JsonFormatter {
   static String formatWithColors(dynamic data, {int indent = 2}) {
     try {
       String jsonString;
-      
+
       // Convert data to JSON string if it's not already
       if (data is String) {
         // Try to parse and re-stringify to ensure valid JSON
@@ -77,37 +77,37 @@ class JsonFormatter {
     final indentStr = ' ' * indent;
     bool inString = false;
     bool escapeNext = false;
-    
+
     for (int i = 0; i < jsonString.length; i++) {
       final char = jsonString[i];
       final nextChar = i + 1 < jsonString.length ? jsonString[i + 1] : null;
-      
+
       // Handle string escape sequences
       if (escapeNext) {
         buffer.write(char);
         escapeNext = false;
         continue;
       }
-      
+
       if (char == '\\' && inString) {
         buffer.write(char);
         escapeNext = true;
         continue;
       }
-      
+
       // Handle string delimiters
       if (char == '"') {
         inString = !inString;
         buffer.write(LogColors.jsonQuote(char));
         continue;
       }
-      
+
       // If we're inside a string, determine if it's a key or value
       if (inString) {
         // Look ahead to see if this string is followed by a colon (making it a key)
         final remainingText = jsonString.substring(i);
         final isKey = _isStringAKey(remainingText, i);
-        
+
         if (isKey) {
           buffer.write(LogColors.jsonKey(char));
         } else {
@@ -115,7 +115,7 @@ class JsonFormatter {
         }
         continue;
       }
-      
+
       // Handle JSON structure characters
       switch (char) {
         case '{':
@@ -125,15 +125,16 @@ class JsonFormatter {
             buffer.write('\n${indentStr * currentIndent}');
           }
           break;
-          
+
         case '}':
           if (jsonString[i - 1] != '{') {
-            currentIndent = (currentIndent - 1).clamp(0, double.infinity).toInt();
+            currentIndent =
+                (currentIndent - 1).clamp(0, double.infinity).toInt();
             buffer.write('\n${indentStr * currentIndent}');
           }
           buffer.write(LogColors.jsonBraces(char));
           break;
-          
+
         case '[':
           buffer.write(LogColors.jsonBrackets(char));
           if (nextChar != ']') {
@@ -141,32 +142,33 @@ class JsonFormatter {
             buffer.write('\n${indentStr * currentIndent}');
           }
           break;
-          
+
         case ']':
           if (jsonString[i - 1] != '[') {
-            currentIndent = (currentIndent - 1).clamp(0, double.infinity).toInt();
+            currentIndent =
+                (currentIndent - 1).clamp(0, double.infinity).toInt();
             buffer.write('\n${indentStr * currentIndent}');
           }
           buffer.write(LogColors.jsonBrackets(char));
           break;
-          
+
         case ':':
           buffer.write(LogColors.jsonColon(char));
           buffer.write(' ');
           break;
-          
+
         case ',':
           buffer.write(LogColors.jsonComma(char));
           buffer.write('\n${indentStr * currentIndent}');
           break;
-          
+
         case ' ':
         case '\t':
         case '\n':
         case '\r':
           // Skip whitespace as we're adding our own formatting
           break;
-          
+
         default:
           // Handle values (numbers, booleans, null)
           final value = _extractValue(jsonString, i);
@@ -179,50 +181,56 @@ class JsonFormatter {
           break;
       }
     }
-    
+
     return buffer.toString();
   }
 
   /// Extracts a complete value (number, boolean, null) starting at the given index.
   static String _extractValue(String jsonString, int startIndex) {
     final buffer = StringBuffer();
-    
+
     for (int i = startIndex; i < jsonString.length; i++) {
       final char = jsonString[i];
-      
+
       // Stop at JSON delimiters
-      if (char == ',' || char == '}' || char == ']' || char == ':' || 
-          char == ' ' || char == '\t' || char == '\n' || char == '\r') {
+      if (char == ',' ||
+          char == '}' ||
+          char == ']' ||
+          char == ':' ||
+          char == ' ' ||
+          char == '\t' ||
+          char == '\n' ||
+          char == '\r') {
         break;
       }
-      
+
       buffer.write(char);
     }
-    
+
     return buffer.toString();
   }
 
   /// Colors a JSON value based on its type.
   static String _colorValue(String value) {
     final trimmed = value.trim();
-    
+
     if (trimmed.isEmpty) return value;
-    
+
     // Check for null
     if (trimmed == 'null') {
       return LogColors.jsonNull(value);
     }
-    
+
     // Check for boolean
     if (trimmed == 'true' || trimmed == 'false') {
       return LogColors.jsonBoolean(value);
     }
-    
+
     // Check for number
     if (RegExp(r'^-?\d+\.?\d*([eE][+-]?\d+)?$').hasMatch(trimmed)) {
       return LogColors.jsonNumber(value);
     }
-    
+
     // Default to white for unknown values
     return LogColors.white(value);
   }
@@ -232,26 +240,26 @@ class JsonFormatter {
     // Find the closing quote of the current string
     var quoteIndex = 0;
     var escapeNext = false;
-    
+
     for (int i = 0; i < remainingText.length; i++) {
       final char = remainingText[i];
-      
+
       if (escapeNext) {
         escapeNext = false;
         continue;
       }
-      
+
       if (char == '\\') {
         escapeNext = true;
         continue;
       }
-      
+
       if (char == '"') {
         quoteIndex = i;
         break;
       }
     }
-    
+
     // Look for a colon after the closing quote (ignoring whitespace)
     for (int i = quoteIndex + 1; i < remainingText.length; i++) {
       final char = remainingText[i];
@@ -261,7 +269,7 @@ class JsonFormatter {
         return false;
       }
     }
-    
+
     return false;
   }
 
@@ -278,7 +286,7 @@ class JsonFormatter {
   static String formatPlain(dynamic data, {int indent = 2}) {
     try {
       String jsonString;
-      
+
       if (data is String) {
         try {
           final parsed = json.decode(data);
@@ -294,7 +302,7 @@ class JsonFormatter {
       const encoder = JsonEncoder.withIndent('  ');
       final parsed = json.decode(jsonString);
       final formatted = encoder.convert(parsed);
-      
+
       return _addIndentation(formatted, indent);
     } catch (e) {
       return _addIndentation(data.toString(), indent);

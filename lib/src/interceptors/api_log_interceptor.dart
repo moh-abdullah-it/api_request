@@ -57,7 +57,7 @@ import '../utils/json_formatter.dart';
 ///   onLog: (logMessage) {
 ///     // Send to custom logger
 ///     Logger.instance.debug(logMessage);
-///     
+///
 ///     // Write to file
 ///     logFile.writeAsStringSync('$logMessage\n', mode: FileMode.append);
 ///   },
@@ -102,29 +102,29 @@ import '../utils/json_formatter.dart';
 /// ═══════════════════════════════════════════════════════════════════════════════
 /// 🚀 API REQUEST
 /// 📍 GET https://api.example.com/posts/123
-/// 
+///
 /// ▶ REQUEST INFO
 /// ──────────────
 /// Method              : GET
 /// Response Type       : JSON
 /// Connect Timeout     : 30s
-/// 
+///
 /// ▶ REQUEST HEADERS
 /// ─────────────────
 /// Authorization       : Bearer abc123
 /// Content-Type        : application/json
 /// ═══════════════════════════════════════════════════════════════════════════════
-/// 
+///
 /// ═══════════════════════════════════════════════════════════════════════════════
 /// ✅ API RESPONSE
 /// 📍 200 https://api.example.com/posts/123
-/// 
+///
 /// ▶ RESPONSE INFO
 /// ───────────────
 /// Status Code         : 200 OK
 /// Content Type        : application/json
 /// Content Length      : 42
-/// 
+///
 /// ▶ RESPONSE BODY
 /// ───────────────
 ///   {
@@ -248,7 +248,7 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// Function used to output log messages.
   ///
   /// Defaults to [_defaultLogPrint] which checks for global [onLog] callback
-  /// first, then falls back to [print]. You can customize this to redirect 
+  /// first, then falls back to [print]. You can customize this to redirect
   /// logs to files, use [debugPrint] in Flutter, or integrate with logging frameworks.
   ///
   /// Examples:
@@ -277,7 +277,7 @@ class ApiLogInterceptor extends ApiInterceptor {
   void _sendLogData(ApiLogData logData) {
     final logLevel = ApiRequestOptions.instance?.logLevel ?? ApiLogLevel.info;
     final globalOnLog = ApiRequestOptions.instance?.onLog;
-    
+
     // Handle console output and custom callback based on log level
     switch (logLevel) {
       case ApiLogLevel.none:
@@ -293,7 +293,7 @@ class ApiLogInterceptor extends ApiInterceptor {
         }
         break;
       case ApiLogLevel.info:
-        // For info: both console output AND custom callback  
+        // For info: both console output AND custom callback
         logPrint(logData.formattedMessage);
         if (globalOnLog != null) {
           globalOnLog(logData);
@@ -321,14 +321,13 @@ class ApiLogInterceptor extends ApiInterceptor {
   @override
   void onRequest(
       RequestOptions options, RequestInterceptorHandler handler) async {
-    
     final logLevel = ApiRequestOptions.instance?.logLevel ?? ApiLogLevel.info;
-    
+
     // Log requests for info and debug levels (error level skips requests)
     if (logLevel == ApiLogLevel.info || logLevel == ApiLogLevel.debug) {
       // Build formatted message for display
       final formattedMessage = _buildRequestMessage(options);
-      
+
       // Create structured log data
       final logData = ApiLogData.request(
         formattedMessage: formattedMessage,
@@ -343,11 +342,11 @@ class ApiLogInterceptor extends ApiInterceptor {
           'responseType': options.responseType.toString(),
         },
       );
-      
+
       // Send structured data or print formatted message
       _sendLogData(logData);
     }
-    
+
     handler.next(options);
   }
 
@@ -363,20 +362,22 @@ class ApiLogInterceptor extends ApiInterceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
     final logLevel = ApiRequestOptions.instance?.logLevel ?? ApiLogLevel.info;
-    
+
     // Log responses for info and debug levels (error level skips responses)
     if (logLevel == ApiLogLevel.info || logLevel == ApiLogLevel.debug) {
       // Build formatted message for display
       final formattedMessage = _buildResponseMessage(response);
-      
+
       // Create structured log data
       final logData = ApiLogData.response(
         formattedMessage: formattedMessage,
         method: response.requestOptions.method,
         url: response.requestOptions.uri.toString(),
         statusCode: response.statusCode,
-        requestHeaders: Map<String, dynamic>.from(response.requestOptions.headers),
-        responseHeaders: response.headers.map.map((key, value) => MapEntry(key, value.join(', '))),
+        requestHeaders:
+            Map<String, dynamic>.from(response.requestOptions.headers),
+        responseHeaders: response.headers.map
+            .map((key, value) => MapEntry(key, value.join(', '))),
         requestData: response.requestOptions.data,
         responseData: response.data,
         metadata: {
@@ -386,11 +387,11 @@ class ApiLogInterceptor extends ApiInterceptor {
           'contentLength': response.headers.value('content-length'),
         },
       );
-      
+
       // Send structured data or print formatted message
       _sendLogData(logData);
     }
-    
+
     handler.next(response);
   }
 
@@ -409,7 +410,7 @@ class ApiLogInterceptor extends ApiInterceptor {
     if (error) {
       // Build formatted message for display
       final formattedMessage = _buildErrorMessage(err);
-      
+
       // Create structured log data
       final logData = ApiLogData.error(
         formattedMessage: formattedMessage,
@@ -419,7 +420,8 @@ class ApiLogInterceptor extends ApiInterceptor {
         errorMessage: err.message,
         statusCode: err.response?.statusCode,
         requestHeaders: Map<String, dynamic>.from(err.requestOptions.headers),
-        responseHeaders: err.response?.headers.map.map((key, value) => MapEntry(key, value.join(', '))),
+        responseHeaders: err.response?.headers.map
+            .map((key, value) => MapEntry(key, value.join(', '))),
         requestData: err.requestOptions.data,
         responseData: err.response?.data,
         metadata: {
@@ -427,7 +429,7 @@ class ApiLogInterceptor extends ApiInterceptor {
           'stackTrace': err.stackTrace.toString(),
         },
       );
-      
+
       // Send structured data or print formatted message
       _sendLogData(logData);
     }
@@ -435,35 +437,41 @@ class ApiLogInterceptor extends ApiInterceptor {
     handler.next(err);
   }
 
-
   /// Builds formatted request message for display.
   String _buildRequestMessage(RequestOptions options) {
     final buffer = StringBuffer();
-    
+
     buffer.writeln(LogColors.cyan('═' * 80));
     buffer.writeln(LogColors.boldCyan('🚀 API REQUEST'));
-    buffer.writeln(LogColors.cyan('📍 ${LogColors.httpMethod(options.method, options.method)} ${LogColors.brightBlue(options.uri.toString())}'));
+    buffer.writeln(LogColors.cyan(
+        '📍 ${LogColors.httpMethod(options.method, options.method)} ${LogColors.brightBlue(options.uri.toString())}'));
     buffer.writeln('');
-    
+
     if (request) {
       buffer.writeln(LogColors.boldBlue('▶ REQUEST INFO'));
       buffer.writeln(LogColors.blue('─' * 14));
-      buffer.writeln('${LogColors.gray('Method              :')} ${LogColors.httpMethod(options.method, options.method)}');
-      buffer.writeln('${LogColors.gray('Response Type       :')} ${LogColors.yellow(_formatResponseType(options.responseType))}');
-      buffer.writeln('${LogColors.gray('Connect Timeout     :')} ${LogColors.yellow(_formatDuration(options.connectTimeout))}');
-      buffer.writeln('${LogColors.gray('Send Timeout        :')} ${LogColors.yellow(_formatDuration(options.sendTimeout))}');
-      buffer.writeln('${LogColors.gray('Receive Timeout     :')} ${LogColors.yellow(_formatDuration(options.receiveTimeout))}');
+      buffer.writeln(
+          '${LogColors.gray('Method              :')} ${LogColors.httpMethod(options.method, options.method)}');
+      buffer.writeln(
+          '${LogColors.gray('Response Type       :')} ${LogColors.yellow(_formatResponseType(options.responseType))}');
+      buffer.writeln(
+          '${LogColors.gray('Connect Timeout     :')} ${LogColors.yellow(_formatDuration(options.connectTimeout))}');
+      buffer.writeln(
+          '${LogColors.gray('Send Timeout        :')} ${LogColors.yellow(_formatDuration(options.sendTimeout))}');
+      buffer.writeln(
+          '${LogColors.gray('Receive Timeout     :')} ${LogColors.yellow(_formatDuration(options.receiveTimeout))}');
     }
-    
+
     if (requestHeader && options.headers.isNotEmpty) {
       buffer.writeln('');
       buffer.writeln(LogColors.boldMagenta('▶ REQUEST HEADERS'));
       buffer.writeln(LogColors.magenta('─' * 17));
       options.headers.forEach((key, value) {
-        buffer.writeln('${LogColors.gray(key.padRight(20))}: ${LogColors.white(value.toString())}');
+        buffer.writeln(
+            '${LogColors.gray(key.padRight(20))}: ${LogColors.white(value.toString())}');
       });
     }
-    
+
     if (requestBody && options.data != null) {
       buffer.writeln('');
       buffer.writeln(LogColors.boldGreen('▶ REQUEST BODY'));
@@ -473,20 +481,22 @@ class ApiLogInterceptor extends ApiInterceptor {
         if (formData.fields.isNotEmpty) {
           buffer.writeln(LogColors.green('📝 Form Fields:'));
           for (final field in formData.fields) {
-            buffer.writeln('  ${LogColors.gray(field.key.padRight(18))}: ${LogColors.white(field.value)}');
+            buffer.writeln(
+                '  ${LogColors.gray(field.key.padRight(18))}: ${LogColors.white(field.value)}');
           }
         }
         if (formData.files.isNotEmpty) {
           buffer.writeln(LogColors.green('📎 Form Files:'));
           for (final file in formData.files) {
-            buffer.writeln('  ${LogColors.gray(file.key.padRight(18))}: ${LogColors.white('${file.value.filename} (${file.value.length} bytes)')}');
+            buffer.writeln(
+                '  ${LogColors.gray(file.key.padRight(18))}: ${LogColors.white('${file.value.filename} (${file.value.length} bytes)')}');
           }
         }
       } else {
         buffer.writeln(_formatData(options.data));
       }
     }
-    
+
     buffer.writeln(LogColors.cyan('═' * 80));
     return buffer.toString();
   }
@@ -494,24 +504,31 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// Builds formatted response message for display.
   String _buildResponseMessage(Response response) {
     final buffer = StringBuffer();
-    
+
     buffer.writeln(LogColors.green('═' * 80));
     final statusEmoji = _getStatusEmoji(response.statusCode);
-    final statusColor = LogColors.statusCode(response.statusCode, '$statusEmoji API RESPONSE');
+    final statusColor =
+        LogColors.statusCode(response.statusCode, '$statusEmoji API RESPONSE');
     buffer.writeln(LogColors.bold(statusColor));
-    buffer.writeln(LogColors.green('📍 ${LogColors.statusCode(response.statusCode, response.statusCode.toString())} ${LogColors.brightBlue(response.requestOptions.uri.toString())}'));
+    buffer.writeln(LogColors.green(
+        '📍 ${LogColors.statusCode(response.statusCode, response.statusCode.toString())} ${LogColors.brightBlue(response.requestOptions.uri.toString())}'));
     buffer.writeln('');
-    
+
     if (responseHeader) {
       buffer.writeln(LogColors.boldBlue('▶ RESPONSE INFO'));
       buffer.writeln(LogColors.blue('─' * 15));
-      final statusText = '${response.statusCode} ${_getStatusMessage(response.statusCode)}';
-      buffer.writeln('${LogColors.gray('Status Code         :')} ${LogColors.statusCode(response.statusCode, statusText)}');
-      buffer.writeln('${LogColors.gray('Content Type        :')} ${LogColors.yellow(response.headers.value('content-type') ?? 'Unknown')}');
-      buffer.writeln('${LogColors.gray('Content Length      :')} ${LogColors.yellow(response.headers.value('content-length') ?? 'Unknown')}');
-      
+      final statusText =
+          '${response.statusCode} ${_getStatusMessage(response.statusCode)}';
+      buffer.writeln(
+          '${LogColors.gray('Status Code         :')} ${LogColors.statusCode(response.statusCode, statusText)}');
+      buffer.writeln(
+          '${LogColors.gray('Content Type        :')} ${LogColors.yellow(response.headers.value('content-type') ?? 'Unknown')}');
+      buffer.writeln(
+          '${LogColors.gray('Content Length      :')} ${LogColors.yellow(response.headers.value('content-length') ?? 'Unknown')}');
+
       if (response.isRedirect == true) {
-        buffer.writeln('${LogColors.gray('Redirect            :')} ${LogColors.brightBlue(response.realUri.toString())}');
+        buffer.writeln(
+            '${LogColors.gray('Redirect            :')} ${LogColors.brightBlue(response.realUri.toString())}');
       }
 
       if (response.headers.map.isNotEmpty) {
@@ -520,18 +537,19 @@ class ApiLogInterceptor extends ApiInterceptor {
         buffer.writeln(LogColors.magenta('─' * 18));
         response.headers.forEach((key, values) {
           final value = values.length == 1 ? values.first : values.join(', ');
-          buffer.writeln('${LogColors.gray(key.padRight(20))}: ${LogColors.white(value)}');
+          buffer.writeln(
+              '${LogColors.gray(key.padRight(20))}: ${LogColors.white(value)}');
         });
       }
     }
-    
+
     if (responseBody && response.data != null) {
       buffer.writeln('');
       buffer.writeln(LogColors.boldGreen('▶ RESPONSE BODY'));
       buffer.writeln(LogColors.green('─' * 15));
       buffer.writeln(_formatData(response.data));
     }
-    
+
     buffer.writeln(LogColors.green('═' * 80));
     return buffer.toString();
   }
@@ -539,30 +557,35 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// Builds formatted error message for display.
   String _buildErrorMessage(DioException err) {
     final buffer = StringBuffer();
-    
+
     buffer.writeln(LogColors.red('═' * 80));
     buffer.writeln(LogColors.boldRed('❌ API ERROR'));
-    buffer.writeln(LogColors.red('📍 ${LogColors.httpMethod(err.requestOptions.method, err.requestOptions.method)} ${LogColors.brightBlue(err.requestOptions.uri.toString())}'));
+    buffer.writeln(LogColors.red(
+        '📍 ${LogColors.httpMethod(err.requestOptions.method, err.requestOptions.method)} ${LogColors.brightBlue(err.requestOptions.uri.toString())}'));
     buffer.writeln('');
-    
+
     buffer.writeln(LogColors.boldRed('▶ ERROR DETAILS'));
     buffer.writeln(LogColors.red('─' * 15));
-    buffer.writeln('${LogColors.gray('Type                :')} ${LogColors.brightRed(_formatErrorType(err.type))}');
-    buffer.writeln('${LogColors.gray('Message             :')} ${LogColors.red(err.message ?? 'No message')}');
-    
+    buffer.writeln(
+        '${LogColors.gray('Type                :')} ${LogColors.brightRed(_formatErrorType(err.type))}');
+    buffer.writeln(
+        '${LogColors.gray('Message             :')} ${LogColors.red(err.message ?? 'No message')}');
+
     if (err.response != null) {
       buffer.writeln('');
       buffer.writeln(LogColors.boldRed('▶ ERROR RESPONSE'));
       buffer.writeln(LogColors.red('─' * 16));
-      final statusText = '${err.response!.statusCode} ${_getStatusMessage(err.response!.statusCode)}';
-      buffer.writeln('${LogColors.gray('Status Code         :')} ${LogColors.statusCode(err.response!.statusCode, statusText)}');
-      
+      final statusText =
+          '${err.response!.statusCode} ${_getStatusMessage(err.response!.statusCode)}';
+      buffer.writeln(
+          '${LogColors.gray('Status Code         :')} ${LogColors.statusCode(err.response!.statusCode, statusText)}');
+
       if (err.response!.data != null) {
         buffer.writeln(LogColors.gray('Response Data:'));
         buffer.writeln(_formatData(err.response!.data));
       }
     }
-    
+
     buffer.writeln(LogColors.red('═' * 80));
     return buffer.toString();
   }
@@ -570,18 +593,26 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// Formats data for display with proper indentation and JSON syntax highlighting.
   String _formatData(dynamic data) {
     if (data == null) return LogColors.jsonNull('  null');
-    
+
     try {
       // Check if it's JSON-like data that can be syntax highlighted
       if (_isJsonData(data)) {
         return JsonFormatter.formatWithColors(data, indent: 2);
       } else {
         // Add indentation to each line for non-JSON data
-        return data.toString().split('\n').map((line) => '  ${LogColors.white(line)}').join('\n');
+        return data
+            .toString()
+            .split('\n')
+            .map((line) => '  ${LogColors.white(line)}')
+            .join('\n');
       }
     } catch (e) {
       // Fallback to simple indented printing
-      return data.toString().split('\n').map((line) => '  ${LogColors.white(line)}').join('\n');
+      return data
+          .toString()
+          .split('\n')
+          .map((line) => '  ${LogColors.white(line)}')
+          .join('\n');
     }
   }
 
@@ -590,54 +621,71 @@ class ApiLogInterceptor extends ApiInterceptor {
     if (data is Map || data is List) {
       return true;
     }
-    
+
     if (data is String) {
       final trimmed = data.trim();
       return (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
-             (trimmed.startsWith('[') && trimmed.endsWith(']'));
+          (trimmed.startsWith('[') && trimmed.endsWith(']'));
     }
-    
+
     return false;
   }
-
-
 
   /// Gets appropriate emoji for HTTP status code.
   String _getStatusEmoji(int? statusCode) {
     if (statusCode == null) return '❓';
-    
+
     if (statusCode >= 200 && statusCode < 300) return '✅';
     if (statusCode >= 300 && statusCode < 400) return '🔄';
     if (statusCode >= 400 && statusCode < 500) return '⚠️';
     if (statusCode >= 500) return '❌';
-    
+
     return '❓';
   }
 
   /// Gets human-readable status message for HTTP status code.
   String _getStatusMessage(int? statusCode) {
     if (statusCode == null) return 'Unknown';
-    
+
     switch (statusCode) {
-      case 200: return 'OK';
-      case 201: return 'Created';
-      case 204: return 'No Content';
-      case 301: return 'Moved Permanently';
-      case 302: return 'Found';
-      case 304: return 'Not Modified';
-      case 400: return 'Bad Request';
-      case 401: return 'Unauthorized';
-      case 403: return 'Forbidden';
-      case 404: return 'Not Found';
-      case 405: return 'Method Not Allowed';
-      case 409: return 'Conflict';
-      case 422: return 'Unprocessable Entity';
-      case 429: return 'Too Many Requests';
-      case 500: return 'Internal Server Error';
-      case 502: return 'Bad Gateway';
-      case 503: return 'Service Unavailable';
-      case 504: return 'Gateway Timeout';
-      default: return '';
+      case 200:
+        return 'OK';
+      case 201:
+        return 'Created';
+      case 204:
+        return 'No Content';
+      case 301:
+        return 'Moved Permanently';
+      case 302:
+        return 'Found';
+      case 304:
+        return 'Not Modified';
+      case 400:
+        return 'Bad Request';
+      case 401:
+        return 'Unauthorized';
+      case 403:
+        return 'Forbidden';
+      case 404:
+        return 'Not Found';
+      case 405:
+        return 'Method Not Allowed';
+      case 409:
+        return 'Conflict';
+      case 422:
+        return 'Unprocessable Entity';
+      case 429:
+        return 'Too Many Requests';
+      case 500:
+        return 'Internal Server Error';
+      case 502:
+        return 'Bad Gateway';
+      case 503:
+        return 'Service Unavailable';
+      case 504:
+        return 'Gateway Timeout';
+      default:
+        return '';
     }
   }
 
@@ -649,7 +697,7 @@ class ApiLogInterceptor extends ApiInterceptor {
   /// Formats duration for display.
   String _formatDuration(Duration? duration) {
     if (duration == null) return 'Not set';
-    
+
     if (duration.inMilliseconds < 1000) {
       return '${duration.inMilliseconds}ms';
     } else if (duration.inSeconds < 60) {

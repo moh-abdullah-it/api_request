@@ -141,7 +141,8 @@ class RequestClient {
       headers: ApiRequestOptions.instance!.defaultHeaders,
     );
 
-    if (!kReleaseMode && ApiRequestOptions.instance!.logLevel != ApiLogLevel.none) {
+    if (!kReleaseMode &&
+        ApiRequestOptions.instance!.logLevel != ApiLogLevel.none) {
       addInterceptorOnce(ApiLogInterceptor());
     }
 

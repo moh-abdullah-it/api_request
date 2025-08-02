@@ -185,14 +185,14 @@ class ApiRequestOptions {
   ///       'statusCode': logData.statusCode,
   ///       'duration': logData.durationMs,
   ///     });
-  ///     
+  ///
   ///     // Log to custom logger with context
   ///     Logger.instance.log(
   ///       logData.formattedMessage,
   ///       level: logData.type == ApiLogType.error ? LogLevel.error : LogLevel.info,
   ///       context: logData.toJson(),
   ///     );
-  ///     
+  ///
   ///     // Write detailed logs to file
   ///     logFile.writeAsStringSync(
   ///       '${logData.timestamp}: ${logData.formattedMessage}\n',
@@ -312,7 +312,7 @@ class ApiRequestOptions {
 
     this.tokenType = tokenType ?? this.tokenType;
     this.connectTimeout = connectTimeout ?? this.connectTimeout;
-    
+
     // Handle logLevel and backward compatibility with enableLog
     if (logLevel != null) {
       this.logLevel = logLevel;

@@ -1,3 +1,8 @@
+## 1.5.1
+* 🐛 **FIX**: Integrate `path_provider_foundation` and disable ANSI colors on iOS
+* 🐛 **FIX**: Replace `print` with `debugPrint` for improved logging consistency
+* 🔧 **ENHANCED**: Resolved miscellaneous code formatting inconsistencies across multiple files for cleaner readability and structure
+
 ## 1.5.0
 * 🎨 **NEW**: Complete visual overhaul of API request/response logging with beautiful colored output
 * ✨ **NEW**: JSON syntax highlighting with cyan keys, green strings, yellow numbers, and magenta booleans
