@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 /// ANSI color codes for terminal/console output.
 ///
 /// This class provides color formatting for log messages to improve readability
@@ -63,6 +65,7 @@ class LogColors {
   ///
   /// Colors are enabled when running in debug mode and in environments
   /// that support ANSI color codes (most modern terminals).
+  /// Colors are disabled on iOS as the platform doesn't support ANSI codes.
   static bool get isEnabled {
     // Disable colors in release mode for performance
     bool releaseMode = false;
@@ -71,6 +74,9 @@ class LogColors {
       return true;
     }());
     if (releaseMode) return false;
+
+    // Disable colors on iOS as it doesn't support ANSI color codes
+    if (Platform.isIOS) return false;
 
     // Enable colors for most development environments
     // In a real implementation, you might check environment variables
