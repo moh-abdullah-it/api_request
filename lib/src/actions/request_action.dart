@@ -5,7 +5,7 @@ import 'package:dartz/dartz.dart';
 
 import '../utils/api_request_utils.dart';
 
-enum RequestMethod { GET, POST, PUT, DELETE }
+enum RequestMethod { GET, POST, PUT, DELETE, PATCH }
 
 typedef ResponseBuilder<T> = T Function(dynamic);
 typedef ErrorHandler<E> = Function(ActionRequestError<E> error);
@@ -159,6 +159,9 @@ abstract class RequestAction<T, R extends ApiRequest> {
       case RequestMethod.PUT:
         _response = await put();
         break;
+      case RequestMethod.PATCH:
+        _response = await patch();
+        break;
       case RequestMethod.DELETE:
         _response = await delete();
         break;
@@ -183,6 +186,9 @@ abstract class RequestAction<T, R extends ApiRequest> {
         break;
       case RequestMethod.PUT:
         _dynamicCall = put();
+        break;
+      case RequestMethod.PATCH:
+        _dynamicCall = patch();
         break;
       case RequestMethod.DELETE:
         _dynamicCall = delete();
@@ -221,6 +227,16 @@ abstract class RequestAction<T, R extends ApiRequest> {
       return await _buildTestResponse("PUT");
     }
     return await _requestClient?.dio.put(_dynamicPath,
+        data: _dataMap,
+        queryParameters: _query,
+        options: Options(headers: _headers));
+  }
+
+  Future<Response?> patch() async {
+    if (_testResponse != null) {
+      return await _buildTestResponse("PATCH");
+    }
+    return await _requestClient?.dio.patch(_dynamicPath,
         data: _dataMap,
         queryParameters: _query,
         options: Options(headers: _headers));
