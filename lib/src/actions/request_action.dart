@@ -140,6 +140,9 @@ abstract class RequestAction<T, R extends ApiRequest> {
       return either;
     } else {
       log('You Need To Login to Request This action: ${this.runtimeType}');
+      if (ApiRequestOptions.instance?.onMissingToken != null) {
+        ApiRequestOptions.instance?.onMissingToken!();
+      }
     }
     return null;
   }

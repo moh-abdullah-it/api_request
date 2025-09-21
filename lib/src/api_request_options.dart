@@ -62,6 +62,8 @@ class ApiRequestOptions {
 
   Function(Map<String, dynamic> data)? errorBuilder;
 
+  Function? onMissingToken;
+
   ListFormat listFormat = ListFormat.multiCompatible;
 
   void config(
@@ -77,6 +79,7 @@ class ApiRequestOptions {
       String? tokenType,
       Duration? connectTimeout,
       bool? enableLog,
+      Function? onMissingToken,
       List<ApiInterceptor>? interceptors,
       Function(ActionRequestError error)? onError,
       Function(Map<String, dynamic> data)? errorBuilder,
@@ -113,6 +116,7 @@ class ApiRequestOptions {
     this.onError = onError ?? this.onError;
     this.errorBuilder = errorBuilder ?? this.errorBuilder;
     this.listFormat = listFormat ?? this.listFormat;
+    this.onMissingToken = onMissingToken ?? this.onMissingToken;
   }
 
   static refreshConfig() {
@@ -133,7 +137,6 @@ class ApiRequestOptions {
   }
 
   Future<String> getBaseUrlString() async {
-
     if (ApiRequestOptions.instance?.getBaseUrl != null) {
       baseUrl = getBaseUrl!.call();
     }
@@ -141,7 +144,7 @@ class ApiRequestOptions {
     if (ApiRequestOptions.instance?.getAsyncBaseUrl != null) {
       baseUrl = await getAsyncBaseUrl!.call();
     }
-      assert(baseUrl != null , 'BaseUrl cannot be Null');
+    assert(baseUrl != null, 'BaseUrl cannot be Null');
     return baseUrl!;
   }
 }
