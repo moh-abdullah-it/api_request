@@ -42,7 +42,7 @@ abstract class RequestAction<T, R extends ApiRequest> {
   ResponseBuilder<T> get responseBuilder;
 
   Map<String, dynamic> get toMap => {};
-  Object? get toDynamicData;
+  Object? get toDynamicData => null;
 
   var _dataMap;
 
