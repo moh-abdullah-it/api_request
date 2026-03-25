@@ -1,3 +1,7 @@
+## 1.5.3
+* 🐛 **FIX**: Resolve `LateInitializationError` on `statusCode` and `requestOptions` in `ActionRequestError` for non-`DioException` errors
+* 🗑️ **REMOVED**: Drop unused `json` dependency from example app (incompatible with current Dart SDK)
+
 ## 1.5.2
 * 🔧 **ENHANCED**: Replace `ApiInterceptor` with `Interceptor` for consistency
 
