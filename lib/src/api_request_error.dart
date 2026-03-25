@@ -102,7 +102,7 @@ class ActionRequestError<E> implements Exception {
   ///
   /// Contains details such as URL, method, headers, and other request
   /// configuration. This is null for non-HTTP errors.
-  late RequestOptions? requestOptions;
+  RequestOptions? requestOptions;
 
   /// The category of error that occurred.
   ///
@@ -114,7 +114,7 @@ class ActionRequestError<E> implements Exception {
   ///
   /// This is null for errors that don't involve HTTP communication
   /// (e.g., parsing errors, network connectivity issues).
-  late int? statusCode;
+  int? statusCode;
 
   /// The HTTP response received from the server.
   ///

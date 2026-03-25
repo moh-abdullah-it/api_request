@@ -25,7 +25,6 @@ dependencies:
     sdk: flutter
   api_request:
     path: ../
-  json: ^0.20.2
   path_provider: ^2.1.1
   fpdart: ^1.1.0
 
